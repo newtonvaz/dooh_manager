@@ -1,0 +1,55 @@
+[
+  {
+    "id": "sch1784247039264",
+    "createdAt": "2026-07-17T00:10:39.264Z",
+    "updatedAt": "2026-07-17T00:10:39.264Z",
+    "name": "Horários - teste_Demo 1",
+    "type": "player",
+    "targetId": "1784245659172",
+    "targetName": "Demo 3 - teste",
+    "timeSlots": [
+      {
+        "dayOfWeek": 0,
+        "startTime": "08:00",
+        "endTime": "18:00"
+      },
+      {
+        "dayOfWeek": 1,
+        "startTime": "08:00",
+        "endTime": "18:00"
+      },
+      {
+        "dayOfWeek": 2,
+        "startTime": "08:00",
+        "endTime": "18:00"
+      },
+      {
+        "dayOfWeek": 3,
+        "startTime": "08:00",
+        "endTime": "18:00"
+      },
+      {
+        "dayOfWeek": 4,
+        "startTime": "08:00",
+        "endTime": "18:00"
+      },
+      {
+        "dayOfWeek": 4,
+        "startTime": "12:00",
+        "endTime": "18:00"
+      },
+      {
+        "dayOfWeek": 5,
+        "startTime": "12:00",
+        "endTime": "18:00"
+      },
+      {
+        "dayOfWeek": 6,
+        "startTime": "12:00",
+        "endTime": "18:00"
+      }
+    ],
+    "enabled": true,
+    "replicatedFromGroup": "Demo"
+  }
+]

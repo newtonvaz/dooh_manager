@@ -1,0 +1,68 @@
+[
+  {
+    "id": "pl1784000548266",
+    "createdAt": "2026-07-14T03:42:28.266Z",
+    "updatedAt": "2026-07-14T04:05:30.065Z",
+    "totalDuration": 20,
+    "name": "Demo2",
+    "category": "Demo",
+    "description": "",
+    "items": [
+      {
+        "type": "content",
+        "contentId": "c1783996259284",
+        "duration": 10
+      },
+      {
+        "type": "content",
+        "contentId": "c1783996259284",
+        "duration": 10
+      }
+    ],
+    "isSubplaylist": true,
+    "order": 1
+  },
+  {
+    "id": "pl1784001038438",
+    "createdAt": "2026-07-14T03:50:38.438Z",
+    "updatedAt": "2026-07-18T01:11:48.758Z",
+    "totalDuration": 160,
+    "name": "demo 1_teste",
+    "category": "Demo",
+    "description": "",
+    "items": [
+      {
+        "type": "content",
+        "contentId": "c1783996259284",
+        "duration": 10
+      },
+      {
+        "type": "content",
+        "contentId": "c1784314375916",
+        "duration": 30
+      },
+      {
+        "type": "content",
+        "contentId": "c1784313697352",
+        "duration": 30
+      },
+      {
+        "type": "content",
+        "contentId": "c1784317330674",
+        "duration": 30
+      },
+      {
+        "type": "content",
+        "contentId": "c1784336310489",
+        "duration": 30
+      },
+      {
+        "type": "content",
+        "contentId": "c1784320941046",
+        "duration": 30
+      }
+    ],
+    "isSubplaylist": false,
+    "order": 0
+  }
+]

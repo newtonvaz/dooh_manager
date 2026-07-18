@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1783997615939",
+    "code": "DOOH-001",
+    "status": "online",
+    "lastSeen": "2026-07-18T01:47:00.270Z",
+    "storageUsed": 0,
+    "totalStorage": 32,
+    "version": "2.1.0",
+    "ip": "0.0.0.0",
+    "createdAt": "2026-07-14T02:53:35.939Z",
+    "name": "teste_Demo 1",
+    "group": "Demo",
+    "location": "Recife/PE",
+    "playlistId": "pl1784001038438"
+  }
+]

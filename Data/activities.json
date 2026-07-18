@@ -1,0 +1,101 @@
+[
+  {
+    "id": "act1784336310521kn1e",
+    "type": "upload",
+    "description": "Arquivo sunglass enviado para o CMS",
+    "playerName": "",
+    "playerCode": "",
+    "timestamp": "2026-07-18T00:58:30.521Z",
+    "user": "Sistema"
+  },
+  {
+    "id": "act1784333977929x7ni",
+    "type": "online",
+    "description": "teste_Demo 1 está online",
+    "playerName": "teste_Demo 1",
+    "playerCode": "DOOH-001",
+    "timestamp": "2026-07-18T00:19:37.929Z",
+    "user": "Sistema"
+  },
+  {
+    "id": "act1784327242410fofx",
+    "type": "offline",
+    "description": "teste_Demo 1 ficou offline",
+    "playerName": "teste_Demo 1",
+    "playerCode": "DOOH-001",
+    "timestamp": "2026-07-17T22:27:22.410Z",
+    "user": "Sistema"
+  },
+  {
+    "id": "act17843202079971p4h",
+    "type": "status",
+    "description": "teste_Demo 1 está online",
+    "playerName": "teste_Demo 1",
+    "playerCode": "DOOH-001",
+    "timestamp": "2026-07-17T20:30:07.997Z",
+    "user": "Sistema"
+  },
+  {
+    "id": "act17843201657643rb6",
+    "type": "status",
+    "description": "teste_Demo 1 ficou offline",
+    "playerName": "teste_Demo 1",
+    "playerCode": "DOOH-001",
+    "timestamp": "2026-07-17T20:29:25.764Z",
+    "user": "Sistema"
+  },
+  {
+    "id": "act1784320044865jx8k",
+    "type": "status",
+    "description": "teste_Demo 1 está online",
+    "playerName": "teste_Demo 1",
+    "playerCode": "DOOH-001",
+    "timestamp": "2026-07-17T20:27:24.865Z",
+    "user": "Sistema"
+  },
+  {
+    "id": "act1784320030996xsom",
+    "type": "status",
+    "description": "teste_Demo 1 ficou offline",
+    "playerName": "teste_Demo 1",
+    "playerCode": "DOOH-001",
+    "timestamp": "2026-07-17T20:27:10.996Z",
+    "user": "Sistema"
+  },
+  {
+    "id": "act17843191113231q24",
+    "type": "status",
+    "description": "teste_Demo 1 está online",
+    "playerName": "teste_Demo 1",
+    "playerCode": "DOOH-001",
+    "timestamp": "2026-07-17T20:11:51.323Z",
+    "user": "Sistema"
+  },
+  {
+    "id": "act1784319024524sx8i",
+    "type": "status",
+    "description": "teste_Demo 1 ficou offline",
+    "playerName": "teste_Demo 1",
+    "playerCode": "DOOH-001",
+    "timestamp": "2026-07-17T20:10:24.524Z",
+    "user": "Sistema"
+  },
+  {
+    "id": "act1784318997757as4p",
+    "type": "status",
+    "description": "Teste 2 ficou offline",
+    "playerName": "Teste 2",
+    "playerCode": "DOOH-002",
+    "timestamp": "2026-07-17T20:09:57.757Z",
+    "user": "Sistema"
+  },
+  {
+    "id": "act1784318876807gz7z",
+    "type": "status",
+    "description": "Teste 2 está online",
+    "playerName": "Teste 2",
+    "playerCode": "DOOH-002",
+    "timestamp": "2026-07-17T20:07:56.807Z",
+    "user": "Sistema"
+  }
+]
