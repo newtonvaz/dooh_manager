@@ -2,6 +2,7 @@
 
 import { usePlayer } from "@/hooks/use-players"
 import { useParams } from "next/navigation"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { PlayerStatusBadge } from "@/components/players/player-status-badge"
@@ -29,11 +30,11 @@ export default function PlayerDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <a href="/players">
+        <Link href="/players">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="size-4" />
           </Button>
-        </a>
+        </Link>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{player.name}</h1>
           <p className="text-sm text-muted-foreground font-mono">{player.code}</p>
