@@ -1,0 +1,92 @@
+node_modules/
+.env.local
+.DS_Store
+ds_store
+
+# build
+/dist
+.next
+*.log
+
+# local
+/.vscode
+/.idea
+*.suo
+*.swo
+*.swp
+
+# deploy
+/build
+*.tgz
+*.rar
+*.zip
+
+# editor
+.vscode
+.idea
+
+# OS
+Thumbs.db
+
+# files
+*.mp4
+*.avi
+*.mkv
+*.mov
+
+# uploads
+public/uploads/*
+supabase/storage/uploads/*
+
+# temp files
+*.tmp
+*.temp
+
+# cache
+.cache
+*.cache
+
+# logs
+*.log
+logs/
+
+# database
+*.sqlite
+*.sqlite3
+*.db
+
+# config
+*.cfg
+*.ini
+
+# system files
+.SSH
+*.pem
+*.key
+
+# other
+*.backup
+*.bak
+*.old
+*.orig
+*.temp
+*.swp
+*.swo
+
+# coverage
+coverage/
+.nyc_report.json
+
+# dependencies
+.env
+.env.local
+.env.local.example
+*.key
+*.pem
+package-lock.json
+
+# misc
+.DS_Store
+*.sqlite
+*.db
+*.sqlite3
