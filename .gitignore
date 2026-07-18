@@ -48,11 +48,11 @@ supabase/storage/uploads/*
 
 # next build
 .next
-next-swc.darwin-x64.node
 
-node_modules/@next/swc-darwin-x64/next-swc.darwin-x64.node
+*.log
+logs/
 
-# logs
+# database
 *.log
 logs/
 
