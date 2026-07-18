@@ -1,0 +1,4 @@
+# Git Large File Storage - uncomment if needed
+# node_modules/@next/swc-*/**
+# *.bin
+# *.node

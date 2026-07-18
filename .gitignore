@@ -46,6 +46,12 @@ supabase/storage/uploads/*
 .cache
 *.cache
 
+# next build
+.next
+next-swc.darwin-x64.node
+
+node_modules/@next/swc-darwin-x64/next-swc.darwin-x64.node
+
 # logs
 *.log
 logs/
