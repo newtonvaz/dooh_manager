@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import path from "path"
-import { supabase } from "@/lib/supabase"
-import { db } from "@/lib/db"
+import { supabaseAdmin } from "@/lib/supabase-admin"
+import { dbAdmin } from "@/lib/db"
 import type { MediaType } from "@/types/content"
 
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp"])
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       const buffer = Buffer.from(await file.arrayBuffer())
       const sizeMB = Math.round((buffer.length / (1024 * 1024)) * 100) / 100
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabaseAdmin.storage
         .from("uploads")
         .upload(safeName, buffer, {
           contentType: file.type,
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
       if (uploadError) throw uploadError
 
-      const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(safeName)
+      const { data: urlData } = supabaseAdmin.storage.from("uploads").getPublicUrl(safeName)
       const publicUrl = urlData?.publicUrl || `/uploads/${safeName}`
 
       const entry = {
@@ -58,14 +58,14 @@ export async function POST(request: Request) {
         created_at: new Date().toISOString(),
       }
 
-      const { error: insertError } = await supabase.from("content").insert(entry)
+      const { error: insertError } = await supabaseAdmin.from("content").insert(entry)
       if (insertError) throw insertError
 
       created.push(entry)
     }
 
     for (const item of created) {
-      await supabase.from("activities").insert({
+      await supabaseAdmin.from("activities").insert({
         id: `act${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
         type: "upload",
         description: `Arquivo ${item.name} enviado para o CMS`,
