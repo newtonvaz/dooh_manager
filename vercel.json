@@ -4,9 +4,10 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["gru1"],
+  "maxDuration": 120,
   "functions": {
     "src/app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 60
     }
   }
 }
