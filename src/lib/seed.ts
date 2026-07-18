@@ -43,6 +43,15 @@ async function seedTable(filename: string, table: string) {
 }
 
 async function seed() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // Skip seeding if no valid Supabase config
+  if (!url || !key || url.includes("your-project-ref") || key.includes("your-anon-key")) {
+    console.log("Skipping seed: Supabase credentials not configured")
+    return
+  }
+
   console.log("Seeding Supabase database from JSON files...\n")
 
   await seedTable("groups.json", "groups")
