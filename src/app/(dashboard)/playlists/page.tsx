@@ -314,7 +314,12 @@ export default function PlaylistsPage() {
                                 )}
                                 <TableCell>
                                   <div className="flex items-center gap-2">
-                                    <span className="font-medium">{pl.name}</span>
+                                    <button
+                                      onClick={() => handleEdit(pl)}
+                                      className="font-medium text-left hover:underline cursor-pointer"
+                                    >
+                                      {pl.name}
+                                    </button>
                                     {pl.isSubplaylist ? (
                                       <Badge variant="secondary" className="text-[10px]">Subplaylist</Badge>
                                     ) : (
@@ -446,7 +451,12 @@ function PlaylistCard({ pl, showCheckboxes, selectedIds, toggleSelect, handleEdi
         <div className={cn("flex items-start justify-between gap-2", showCheckboxes && "ml-7")}>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-medium truncate">{pl.name}</h3>
+              <button
+                onClick={() => handleEdit(pl)}
+                className="font-medium truncate text-left hover:underline cursor-pointer"
+              >
+                {pl.name}
+              </button>
               {isSub ? (
                 <Badge variant="secondary" className="text-[10px] shrink-0">Subplaylist</Badge>
               ) : (

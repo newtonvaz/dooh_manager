@@ -290,7 +290,14 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
                           />
                         </TableCell>
                       )}
-                      <TableCell className="font-medium">{player.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <button
+                          onClick={() => router.push(`/players/${player.id}`)}
+                          className="text-left hover:underline cursor-pointer"
+                        >
+                          {player.name}
+                        </button>
+                      </TableCell>
                       <TableCell className="font-mono text-xs">{player.code}</TableCell>
                       <TableCell>
                         <PlayerStatusBadge status={player.status} />
@@ -460,7 +467,12 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
                       <div className="mb-3">
                         <MonitorDisplay player={player} size="sm" />
                       </div>
-                      <p className="text-sm font-medium leading-tight">{player.name}</p>
+                      <button
+                        onClick={() => router.push(`/players/${player.id}`)}
+                        className="text-sm font-medium leading-tight hover:underline cursor-pointer"
+                      >
+                        {player.name}
+                      </button>
                       <p className="text-[10px] font-mono text-muted-foreground mt-0.5">{player.code}</p>
                       <div className="mt-2">
                         <PlayerStatusBadge status={player.status} />

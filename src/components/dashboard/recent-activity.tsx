@@ -76,7 +76,7 @@ export function RecentActivity({ activities }: { activities: Activity[] }) {
         <div className="relative">
           <div className="absolute left-[19px] top-3 bottom-3 w-px bg-border" />
           <div className="space-y-0">
-            {activities.map((activity) => {
+            {activities.slice(0, 5).map((activity) => {
               const config = activityConfig[activity.type] || activityConfig.upload
               const Icon = config.icon
 
