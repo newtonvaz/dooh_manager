@@ -212,6 +212,7 @@ export async function POST(request: Request) {
           startTime: data.startTime,
           endTime: data.endTime || data.startTime,
         })
+        await dbAdmin.recordHeartbeatByCode(data.playerCode).catch(() => {})
         break
 
       // Schedules
