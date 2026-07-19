@@ -121,7 +121,7 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
 
         const duration = type === "video" ? await getVideoDuration(file).catch(() => 30) : null
 
-        const { url: signedUrl } = await apiCall({ action: "presign", path: safeName })
+        const { signedUrl } = await apiCall({ action: "presign", path: safeName })
 
         const uploadRes = await fetch(signedUrl, {
           method: "PUT",
