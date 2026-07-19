@@ -62,11 +62,11 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
       files.forEach((f) => body.append("files", f))
 
       const res = await fetch("/api/upload", { method: "POST", body })
+      const text = await res.text()
       let json: any
       try {
-        json = await res.json()
+        json = JSON.parse(text)
       } catch {
-        const text = await res.text()
         throw new Error(`Resposta inesperada do servidor (${res.status}): ${text.slice(0, 200)}`)
       }
       if (!res.ok) throw new Error(json.error)
