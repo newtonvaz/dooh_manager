@@ -643,13 +643,28 @@ function createDb(client?: SupabaseClient) {
       const { data, error } = await q
       if (error) throw error
 
-      return (data || []).map((e: any) => ({
-        contentName: e.content_name,
-        date: e.date,
-        playerName: e.player_name,
-        contentDuration: e.content_duration,
-        insertions: 1,
-      }))
+      const grouped = new Map<string, PlaybackLogRow>()
+      for (const e of data || []) {
+        const key = `${e.date}|${e.content_name}|${e.player_name}`
+        if (grouped.has(key)) {
+          const g = grouped.get(key)!
+          g.insertions++
+          if ((e.content_duration ?? 0) > g.contentDuration) {
+            g.contentDuration = e.content_duration
+          }
+        } else {
+          grouped.set(key, {
+            contentName: e.content_name,
+            date: e.date,
+            playerName: e.player_name,
+            contentDuration: e.content_duration,
+            insertions: 1,
+          })
+        }
+      }
+
+      return Array.from(grouped.values())
+        .sort((a, b) => b.date.localeCompare(a.date) || b.contentName.localeCompare(a.contentName))
     },
 
     async getContentSuggestions(
