@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server"
 import path from "path"
 import { supabaseAdmin } from "@/lib/supabase-admin"
-import { dbAdmin } from "@/lib/db"
 import type { MediaType } from "@/types/content"
+
+export const dynamic = "force-dynamic"
+export const maxDuration = 60
 
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp"])
 const VIDEO_EXTS = new Set([".mp4", ".webm", ".ogg", ".mov", ".avi", ".mkv"])
@@ -13,8 +15,20 @@ function detectType(ext: string): MediaType {
   return "web"
 }
 
+async function ensureBucket() {
+  const { data: buckets } = await supabaseAdmin.storage.listBuckets()
+  if (!buckets?.find((b) => b.name === "uploads")) {
+    await supabaseAdmin.storage.createBucket("uploads", {
+      public: true,
+      fileSizeLimit: 104857600,
+    })
+  }
+}
+
 export async function POST(request: Request) {
   try {
+    await ensureBucket()
+
     const formData = await request.formData()
     const files = formData.getAll("files") as File[]
 
