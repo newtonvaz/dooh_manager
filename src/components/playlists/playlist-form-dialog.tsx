@@ -338,13 +338,17 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
 
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="items">
-                {(provided) => (
+                {(provided, snapshot) => (
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={`overflow-y-auto rounded-md border p-3 ${
+                    className={`overflow-y-auto rounded-md border p-3 transition-all ${
                       view === "grid" ? "h-[260px]" : "h-[200px]"
-                    } ${view === "grid" ? "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2" : "space-y-2"}`}
+                    } ${view === "grid" ? "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2" : "space-y-2"} ${
+                      snapshot.isDraggingOver
+                        ? "border-primary bg-primary/5 shadow-inner"
+                        : ""
+                    }`}
                   >
                     {items.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-8 col-span-full">
@@ -372,7 +376,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                 title={name}
                                 className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-colors cursor-grab active:cursor-grabbing ${
                                   snapshot.isDragging
-                                    ? "shadow-lg border-primary bg-accent"
+                                    ? "shadow-xl border-primary bg-accent scale-105 rotate-2"
                                     : "bg-card hover:bg-muted/50"
                                 }`}
                               >
@@ -405,11 +409,11 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                className={`flex items-center justify-between rounded-lg border p-2 gap-2 transition-colors ${
+                                className={`flex items-center justify-between rounded-lg border p-2 gap-2 transition-all ${
                                   snapshot.isDragging
-                                    ? "shadow-lg border-primary bg-accent"
-                                    : ""
-                                }`}
+                                    ? "shadow-xl border-primary bg-accent scale-[1.02]"
+                                    : "hover:border-muted-foreground/20"
+                                } ${!snapshot.isDragging ? "hover:border-muted-foreground/20" : ""}`}
                               >
                                 <div
                                   {...provided.dragHandleProps}
