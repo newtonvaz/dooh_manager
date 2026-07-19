@@ -71,7 +71,9 @@ export function PlayerFormDialog({ open, onOpenChange, player }: PlayerFormDialo
 
   useEffect(() => {
     if (open && playlists.length > 0) {
-      setPlaylistId(player?.playlistId ?? "")
+      const pid = player?.playlistId
+      const exists = pid ? (playlists as Playlist[]).some((p) => p.id === pid) : false
+      setPlaylistId(exists && pid ? pid : "")
     }
   }, [open, playlists, player?.playlistId])
 

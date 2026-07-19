@@ -45,13 +45,37 @@ function createDb(client?: SupabaseClient) {
 
   return {
     // Players
+    async markOfflinePlayers(): Promise<void> {
+      const cutoff = new Date(Date.now() - HEARTBEAT_TIMEOUT).toISOString()
+      const { data: stalePlayers } = await c
+        .from("players")
+        .select("id, name, code")
+        .eq("status", "online")
+        .lt("last_seen", cutoff)
+
+      if (stalePlayers && stalePlayers.length > 0) {
+        const ids = stalePlayers.map((p: any) => p.id)
+        await c.from("players").update({ status: "offline" }).in("id", ids)
+        for (const player of stalePlayers) {
+          recordActivity(c, {
+            type: "offline",
+            description: `${player.name} está offline`,
+            playerName: player.name,
+            playerCode: player.code,
+          })
+        }
+      }
+    },
+
     async getPlayers(): Promise<Player[]> {
+      await this.markOfflinePlayers()
       const { data, error } = await c.from("players").select("*").order("name")
       if (error) throw error
       return (data || []).map(mapPlayer)
     },
 
     async getPlayer(id: string): Promise<Player | undefined> {
+      await this.markOfflinePlayers()
       const { data, error } = await c.from("players").select("*").eq("id", id).single()
       if (error) return undefined
       return mapPlayer(data)
@@ -394,6 +418,7 @@ function createDb(client?: SupabaseClient) {
 
     // Derived
     async getDashboardStats() {
+      await this.markOfflinePlayers()
       const [players, content, playlists] = await Promise.all([
         c.from("players").select("status, total_storage, storage_used"),
         c.from("content").select("id", { count: "exact", head: true }),
@@ -421,6 +446,12 @@ function createDb(client?: SupabaseClient) {
       const { data, error } = await c.from("players").select("*").eq("code", code).single()
       if (error) return undefined
       return mapPlayer(data)
+    },
+
+    async recordHeartbeatByCode(code: string): Promise<Player | undefined> {
+      const player = await this.getPlayerByCode(code)
+      if (!player) return undefined
+      return this.recordHeartbeat(player.id)
     },
 
     async resolvePlayerPlaylist(code: string) {
