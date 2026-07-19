@@ -9,6 +9,7 @@ import {
   BarChart3,
   Settings,
   Tags,
+  AppWindow,
   type LucideIcon,
 } from "lucide-react"
 
@@ -37,5 +38,6 @@ export const navItems: NavItem[] = [
   { title: "Programação", href: "/scheduling", icon: Calendar },
   { title: "Layouts", href: "/layouts", icon: Grid3x3 },
   { title: "Relatórios", href: "/reports", icon: BarChart3 },
+  { title: "Apps", href: "/apps", icon: AppWindow },
   { title: "Configurações", href: "/settings", icon: Settings },
 ]

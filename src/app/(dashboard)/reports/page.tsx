@@ -102,6 +102,10 @@ export default function ReportsPage() {
 
   function handleSearch() {
     setShowDropdown(false)
+    if (!searchQuery.trim()) {
+      setResults([])
+      return
+    }
     fetchLogs(searchQuery, dateFrom, dateTo)
   }
 
@@ -214,7 +218,7 @@ export default function ReportsPage() {
                     if (e.target.value.trim()) setShowDropdown(true)
                     else setShowDropdown(false)
                   }}
-                  onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
+                  onFocus={() => { if (searchQuery.trim() && suggestions.length > 0) setShowDropdown(true) }}
                   onKeyDown={handleKeyDown}
                   placeholder="Digite o nome do conteúdo..."
                   className="pl-8"
@@ -337,8 +341,10 @@ export default function ReportsPage() {
               </div>
             ) : results && results.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <AlertCircle className="size-10 mb-3 opacity-50" />
-                <p className="text-sm">Nenhum registro encontrado</p>
+                <Search className="size-10 mb-3 opacity-50" />
+                <p className="text-sm">
+                  {searchQuery.trim() ? "Nenhum registro encontrado" : "Digite o nome do conteúdo para buscar"}
+                </p>
               </div>
             ) : results ? (
               <div className="overflow-x-auto">
