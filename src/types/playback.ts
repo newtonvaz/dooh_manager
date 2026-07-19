@@ -35,4 +35,5 @@ export interface PlaybackLogRow {
   date: string
   playerName: string
   contentDuration: number
+  insertions: number
 }

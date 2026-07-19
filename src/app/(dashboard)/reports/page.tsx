@@ -16,13 +16,13 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import {
-  FileDown,
   FileText,
   Loader2,
   FileSpreadsheet,
   Calendar,
   Film,
   AlertCircle,
+  Search,
 } from "lucide-react"
 
 function todayLocal() {
@@ -43,6 +43,7 @@ export default function ReportsPage() {
   const [results, setResults] = useState<PlaybackLogRow[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -116,12 +117,76 @@ export default function ReportsPage() {
     inputRef.current?.focus()
   }
 
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      setShowDropdown(false)
+    }
+  }
+
+  async function exportPDF() {
+    if (!results || results.length === 0) return
+    setExporting("pdf")
+    try {
+      const { default: jsPDF } = await import("jspdf")
+      await import("jspdf-autotable")
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" }) as any
+      doc.setFontSize(16)
+      doc.text("Relatório de Conteúdos Veiculados", 14, 20)
+      doc.setFontSize(10)
+      const info = [
+        `Período: ${new Date(dateFrom + "T12:00:00").toLocaleDateString("pt-BR")} a ${new Date(dateTo + "T12:00:00").toLocaleDateString("pt-BR")}`,
+      ]
+      if (searchQuery.trim()) info.push(`Conteúdo: ${searchQuery.trim()}`)
+      const totalRow = results.reduce((s, r) => s + r.insertions, 0)
+      info.push(`Total de inserções: ${totalRow}`)
+      doc.text(info, 14, 30)
+      const rows = results.map((r) => [
+        new Date(r.date + "T12:00:00").toLocaleDateString("pt-BR"),
+        r.contentName,
+        String(r.insertions),
+        `${r.contentDuration}s`,
+        r.playerName,
+      ])
+      doc.autoTable({
+        startY: 40,
+        head: [["Data", "Conteúdo", "Inserções", "Duração", "Player"]],
+        body: rows,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [59, 130, 246] },
+      })
+      doc.save(`relatorio-conteudos-${dateFrom}-${dateTo}.pdf`)
+    } finally {
+      setExporting(null)
+    }
+  }
+
+  async function exportXLSX() {
+    if (!results || results.length === 0) return
+    setExporting("xlsx")
+    try {
+      const XLSX = await import("xlsx")
+      const data = results.map((r) => ({
+        Data: new Date(r.date + "T12:00:00").toLocaleDateString("pt-BR"),
+        Conteúdo: r.contentName,
+        Inserções: r.insertions,
+        "Duração (s)": r.contentDuration,
+        Player: r.playerName,
+      }))
+      const wb = XLSX.utils.book_new()
+      const ws = XLSX.utils.json_to_sheet(data)
+      XLSX.utils.book_append_sheet(wb, ws, "Conteúdos Veiculados")
+      XLSX.writeFile(wb, `relatorio-conteudos-${dateFrom}-${dateTo}.xlsx`)
+    } finally {
+      setExporting(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Relatório por Dia</h1>
         <p className="text-sm text-muted-foreground">
-          Conteúdos veiculados — playback_logs
+          Conteúdos veiculados por período
         </p>
       </div>
 
@@ -147,6 +212,7 @@ export default function ReportsPage() {
                     else setShowDropdown(false)
                   }}
                   onFocus={() => { if (filteredSuggestions.length > 0) setShowDropdown(true) }}
+                  onKeyDown={handleKeyDown}
                   placeholder="Digite o nome do conteúdo..."
                   className="pl-8"
                 />
@@ -193,6 +259,19 @@ export default function ReportsPage() {
                 />
               </div>
             </div>
+
+            <Button
+              onClick={() => fetchLogs(searchQuery, dateFrom, dateTo)}
+              disabled={loading}
+              className="h-8"
+            >
+              {loading ? (
+                <Loader2 className="size-4 mr-1.5 animate-spin" />
+              ) : (
+                <Search className="size-4 mr-1.5" />
+              )}
+              Buscar
+            </Button>
           </div>
           {error && (
             <p className="mt-2 text-xs text-destructive flex items-center gap-1">
@@ -206,7 +285,7 @@ export default function ReportsPage() {
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-sm font-medium">
-              {loading ? "Buscando..." : "Resultados"}
+              {loading ? "Buscando..." : results ? "Resultados" : ""}
             </CardTitle>
             {results && !loading && (
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -214,11 +293,41 @@ export default function ReportsPage() {
                 {searchQuery.trim() && (
                   <> &middot; <span className="font-medium">{searchQuery.trim()}</span></>
                 )}
-                {" \u00b7 "}{new Date(dateFrom).toLocaleDateString("pt-BR")} a{" "}
-                {new Date(dateTo).toLocaleDateString("pt-BR")}
+                {" \u00b7 "}{new Date(dateFrom + "T12:00:00").toLocaleDateString("pt-BR")} a{" "}
+                {new Date(dateTo + "T12:00:00").toLocaleDateString("pt-BR")}
               </p>
             )}
           </div>
+          {results && results.length > 0 && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline" size="sm"
+                onClick={exportPDF}
+                disabled={exporting !== null}
+                className="h-8"
+              >
+                {exporting === "pdf" ? (
+                  <Loader2 className="size-4 mr-1.5 animate-spin" />
+                ) : (
+                  <FileText className="size-4 mr-1.5" />
+                )}
+                PDF
+              </Button>
+              <Button
+                variant="outline" size="sm"
+                onClick={exportXLSX}
+                disabled={exporting !== null}
+                className="h-8"
+              >
+                {exporting === "xlsx" ? (
+                  <Loader2 className="size-4 mr-1.5 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="size-4 mr-1.5" />
+                )}
+                XLSX
+              </Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {loading && !results ? (
@@ -228,7 +337,7 @@ export default function ReportsPage() {
             </div>
           ) : results && results.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <FileDown className="size-10 mb-3 opacity-50" />
+              <AlertCircle className="size-10 mb-3 opacity-50" />
               <p className="text-sm">Nenhum registro encontrado</p>
             </div>
           ) : results ? (
@@ -237,10 +346,11 @@ export default function ReportsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="sticky top-0 bg-background z-10">Data</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10">Dia</TableHead>
                       <TableHead className="sticky top-0 bg-background z-10">Conteúdo</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10 text-right">Inserção</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10 text-right">Secundagem</TableHead>
                       <TableHead className="sticky top-0 bg-background z-10">Player</TableHead>
-                      <TableHead className="sticky top-0 bg-background z-10 text-right">Duração</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -252,10 +362,13 @@ export default function ReportsPage() {
                         <TableCell className="text-xs max-w-[300px] truncate" title={row.contentName}>
                           {row.contentName}
                         </TableCell>
-                        <TableCell className="text-xs">{row.playerName}</TableCell>
                         <TableCell className="text-xs font-mono text-right tabular-nums">
-                          {row.contentDuration ?? 0}s
+                          {row.insertions}
                         </TableCell>
+                        <TableCell className="text-xs font-mono text-right tabular-nums">
+                          {row.contentDuration}
+                        </TableCell>
+                        <TableCell className="text-xs">{row.playerName}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
