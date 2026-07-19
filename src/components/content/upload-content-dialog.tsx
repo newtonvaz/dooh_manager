@@ -12,9 +12,49 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Loader2, Upload, FileImage, Video, Globe, X, File } from "lucide-react"
+import { Loader2, Upload, FileImage, Video, Globe, X } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
+import { supabase } from "@/lib/supabase"
+
+const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"])
+const VIDEO_EXTS = new Set(["mp4", "webm", "ogg", "mov", "avi", "mkv"])
+
+function detectType(ext: string): "image" | "video" | "web" {
+  if (IMAGE_EXTS.has(ext)) return "image"
+  if (VIDEO_EXTS.has(ext)) return "video"
+  return "web"
+}
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+}
+
+function getFileIcon(name: string) {
+  const ext = name.split(".").pop()?.toLowerCase()
+  if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext ?? "")) return FileImage
+  if (["mp4", "webm", "ogg", "mov"].includes(ext ?? "")) return Video
+  return Globe
+}
+
+function getVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const video = document.createElement("video")
+    video.preload = "metadata"
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(url)
+      resolve(Math.round(video.duration))
+    }
+    video.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error("Falha ao ler duração do vídeo"))
+    }
+    video.src = url
+  })
+}
 
 interface UploadContentDialogProps {
   open: boolean
@@ -37,17 +77,14 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  function formatSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes}B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
-  }
-
-  function getFileIcon(name: string) {
-    const ext = name.split(".").pop()?.toLowerCase()
-    if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext ?? "")) return FileImage
-    if (["mp4", "webm", "ogg", "mov"].includes(ext ?? "")) return Video
-    return Globe
+  async function ensureBucket() {
+    const { data: buckets } = await supabase.storage.listBuckets()
+    if (!buckets?.find((b) => b.name === "uploads")) {
+      const { error } = await supabase.storage.createBucket("uploads", {
+        public: true,
+      })
+      if (error) throw error
+    }
   }
 
   async function handleUpload() {
@@ -58,21 +95,56 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
 
     setUploading(true)
     try {
-      const body = new FormData()
-      files.forEach((f) => body.append("files", f))
+      await ensureBucket()
+      const created: { name: string }[] = []
 
-      const res = await fetch("/api/upload", { method: "POST", body })
-      const text = await res.text()
-      let json: any
-      try {
-        json = JSON.parse(text)
-      } catch {
-        throw new Error(`Resposta inesperada do servidor (${res.status}): ${text.slice(0, 200)}`)
+      for (const file of files) {
+        const ext = file.name.split(".").pop()?.toLowerCase() || ""
+        const type = detectType(ext)
+        const timestamp = Date.now()
+        const safeName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`
+
+        const duration = type === "video" ? await getVideoDuration(file).catch(() => 30) : null
+
+        const { error: uploadError } = await supabase.storage
+          .from("uploads")
+          .upload(safeName, file, { upsert: true })
+
+        if (uploadError) throw uploadError
+
+        const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(safeName)
+        const publicUrl = urlData?.publicUrl || ""
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "register",
+            entry: {
+              id: `c${timestamp}`,
+              name: file.name.replace(`.${ext}`, ""),
+              type,
+              url: publicUrl,
+              size: Math.round((file.size / (1024 * 1024)) * 100) / 100,
+              duration,
+            },
+          }),
+        })
+
+        const text = await res.text()
+        let json: any
+        try {
+          json = JSON.parse(text)
+        } catch {
+          throw new Error(`Erro ao registrar metadados (${res.status}): ${text.slice(0, 200)}`)
+        }
+        if (!res.ok) throw new Error(json.error)
+
+        created.push({ name: file.name })
       }
-      if (!res.ok) throw new Error(json.error)
 
       queryClient.invalidateQueries({ queryKey: ["content"] })
-      toast.success(`${files.length} arquivo(s) enviado(s) com sucesso!`)
+      toast.success(`${created.length} arquivo(s) enviado(s) com sucesso!`)
       setFiles([])
       onOpenChange(false)
     } catch (err) {

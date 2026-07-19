@@ -1,96 +1,47 @@
 import { NextResponse } from "next/server"
-import path from "path"
 import { supabaseAdmin } from "@/lib/supabase-admin"
-import type { MediaType } from "@/types/content"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
-const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp"])
-const VIDEO_EXTS = new Set([".mp4", ".webm", ".ogg", ".mov", ".avi", ".mkv"])
-
-function detectType(ext: string): MediaType {
-  if (IMAGE_EXTS.has(ext)) return "image"
-  if (VIDEO_EXTS.has(ext)) return "video"
-  return "web"
-}
-
-async function ensureBucket() {
-  const { data: buckets } = await supabaseAdmin.storage.listBuckets()
-  if (!buckets?.find((b) => b.name === "uploads")) {
-    await supabaseAdmin.storage.createBucket("uploads", {
-      public: true,
-      fileSizeLimit: 104857600,
-    })
-  }
-}
-
 export async function POST(request: Request) {
   try {
-    await ensureBucket()
+    const body = await request.json()
+    const { action, entry } = body
 
-    const formData = await request.formData()
-    const files = formData.getAll("files") as File[]
-
-    if (!files.length) {
-      return NextResponse.json({ error: "Nenhum arquivo enviado" }, { status: 400 })
+    if (action !== "register" || !entry) {
+      return NextResponse.json({ error: "Requisição inválida" }, { status: 400 })
     }
 
-    const created: any[] = []
+    const contentType = entry.type || "web"
 
-    for (const file of files) {
-      const ext = path.extname(file.name).toLowerCase()
-      const type = detectType(ext)
-      const timestamp = Date.now()
-      const safeName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`
-
-      const buffer = Buffer.from(await file.arrayBuffer())
-      const sizeMB = Math.round((buffer.length / (1024 * 1024)) * 100) / 100
-
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from("uploads")
-        .upload(safeName, buffer, {
-          contentType: file.type,
-          upsert: true,
-        })
-
-      if (uploadError) throw uploadError
-
-      const { data: urlData } = supabaseAdmin.storage.from("uploads").getPublicUrl(safeName)
-      const publicUrl = urlData?.publicUrl || `/uploads/${safeName}`
-
-      const entry = {
-        id: `c${timestamp}`,
-        name: file.name.replace(ext, ""),
-        type,
-        url: publicUrl,
-        thumbnail_url: type === "image" ? publicUrl : null,
-        size: sizeMB,
-        duration: type === "video" ? 30 : null,
-        category: "Geral",
-        tags: JSON.stringify([type]),
-        created_at: new Date().toISOString(),
-      }
-
-      const { error: insertError } = await supabaseAdmin.from("content").insert(entry)
-      if (insertError) throw insertError
-
-      created.push(entry)
+    const dbEntry = {
+      id: entry.id || `c${Date.now()}`,
+      name: entry.name || "Sem nome",
+      type: contentType,
+      url: entry.url || "",
+      thumbnail_url: contentType === "image" ? entry.url : null,
+      size: entry.size || 0,
+      duration: entry.duration ?? (contentType === "video" ? 30 : null),
+      category: "Geral",
+      tags: JSON.stringify([contentType]),
+      created_at: new Date().toISOString(),
     }
 
-    for (const item of created) {
-      await supabaseAdmin.from("activities").insert({
-        id: `act${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
-        type: "upload",
-        description: `Arquivo ${item.name} enviado para o CMS`,
-        player_name: "",
-        player_code: "",
-        user: "Sistema",
-        timestamp: new Date().toISOString(),
-      })
-    }
+    const { error: insertError } = await supabaseAdmin.from("content").insert(dbEntry)
+    if (insertError) throw insertError
 
-    return NextResponse.json({ data: created })
+    await supabaseAdmin.from("activities").insert({
+      id: `act${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
+      type: "upload",
+      description: `Arquivo ${dbEntry.name} enviado para o CMS`,
+      player_name: "",
+      player_code: "",
+      user: "Sistema",
+      timestamp: new Date().toISOString(),
+    })
+
+    return NextResponse.json({ data: dbEntry })
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }
