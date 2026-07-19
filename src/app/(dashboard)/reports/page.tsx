@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { api } from "@/lib/api-client"
 import type { PlaybackLogRow } from "@/types/playback"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,38 +44,11 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null)
+  const [suggestions, setSuggestions] = useState<string[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-
-  const fetchLogs = useCallback(async (query: string, from: string, to: string) => {
-    setLoading(true)
-    setError("")
-    try {
-      const data = await api.getPlaybackLogs(query, from, to)
-      setResults(data)
-    } catch (e) {
-      setError(String(e))
-      setResults([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchLogs("", dateFrom, dateTo)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      fetchLogs(searchQuery, dateFrom, dateTo)
-    }, 400)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [searchQuery, dateFrom, dateTo, fetchLogs])
+  const suggestTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -92,35 +65,56 @@ export default function ReportsPage() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
-  const allContentNames = useMemo(() => {
-    if (!results) return []
-    const seen = new Set<string>()
-    return results.filter((r) => {
-      const lower = r.contentName.toLowerCase()
-      if (seen.has(lower)) return false
-      seen.add(lower)
-      return true
-    })
-  }, [results])
+  useEffect(() => {
+    if (suggestTimer.current) clearTimeout(suggestTimer.current)
+    if (!searchQuery.trim()) {
+      setSuggestions([])
+      setShowDropdown(false)
+      return
+    }
+    suggestTimer.current = setTimeout(async () => {
+      try {
+        const res = await api.getContentSuggestions(searchQuery, dateFrom, dateTo)
+        setSuggestions(res)
+        if (res.length > 0) setShowDropdown(true)
+      } catch {
+        setSuggestions([])
+      }
+    }, 300)
+    return () => {
+      if (suggestTimer.current) clearTimeout(suggestTimer.current)
+    }
+  }, [searchQuery, dateFrom, dateTo])
 
-  const filteredSuggestions = useMemo(() => {
-    if (!allContentNames.length) return []
-    const q = searchQuery.toLowerCase()
-    return allContentNames
-      .filter((s) => !q || s.contentName.toLowerCase().includes(q))
-      .slice(0, 20)
-  }, [allContentNames, searchQuery])
+  const fetchLogs = useCallback(async (query: string, from: string, to: string) => {
+    setLoading(true)
+    setError("")
+    try {
+      const data = await api.getPlaybackLogs(query, from, to)
+      setResults(data)
+    } catch (e) {
+      setError(String(e))
+      setResults([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  function handleSearch() {
+    setShowDropdown(false)
+    fetchLogs(searchQuery, dateFrom, dateTo)
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      handleSearch()
+    }
+  }
 
   function selectSuggestion(name: string) {
     setSearchQuery(name)
     setShowDropdown(false)
     inputRef.current?.focus()
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
-      setShowDropdown(false)
-    }
   }
 
   async function exportPDF() {
@@ -137,8 +131,6 @@ export default function ReportsPage() {
         `Período: ${new Date(dateFrom + "T12:00:00").toLocaleDateString("pt-BR")} a ${new Date(dateTo + "T12:00:00").toLocaleDateString("pt-BR")}`,
       ]
       if (searchQuery.trim()) info.push(`Conteúdo: ${searchQuery.trim()}`)
-      const totalRow = results.reduce((s, r) => s + r.insertions, 0)
-      info.push(`Total de inserções: ${totalRow}`)
       doc.text(info, 14, 30)
       const rows = results.map((r) => [
         new Date(r.date + "T12:00:00").toLocaleDateString("pt-BR"),
@@ -168,12 +160,13 @@ export default function ReportsPage() {
       const data = results.map((r) => ({
         Data: new Date(r.date + "T12:00:00").toLocaleDateString("pt-BR"),
         Conteúdo: r.contentName,
-        Inserções: r.insertions,
+        Inserção: r.insertions,
         "Duração (s)": r.contentDuration,
         Player: r.playerName,
       }))
       const ws = XLSX.utils.json_to_sheet(data)
-      const colWidths = ["Data", "Conteúdo", "Inserções", "Duração (s)", "Player"].map((h, i) => {
+      const headers = ["Data", "Conteúdo", "Inserção", "Duração (s)", "Player"]
+      const colWidths = headers.map((h, i) => {
         const maxLen = Math.max(
           h.length,
           ...data.map((r) => String(Object.values(r)[i] ?? "").length)
@@ -188,6 +181,8 @@ export default function ReportsPage() {
       setExporting(null)
     }
   }
+
+  const hasSearched = results !== null
 
   return (
     <div className="space-y-6">
@@ -219,24 +214,24 @@ export default function ReportsPage() {
                     if (e.target.value.trim()) setShowDropdown(true)
                     else setShowDropdown(false)
                   }}
-                  onFocus={() => { if (allContentNames.length > 0) setShowDropdown(true) }}
+                  onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
                   onKeyDown={handleKeyDown}
                   placeholder="Digite o nome do conteúdo..."
                   className="pl-8"
                 />
-                {showDropdown && filteredSuggestions.length > 0 && (
+                {showDropdown && suggestions.length > 0 && (
                   <div
                     ref={dropdownRef}
                     className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border bg-popover shadow-md"
                   >
-                    {filteredSuggestions.map((s, i) => (
+                    {suggestions.map((name, i) => (
                       <button
                         key={i}
                         type="button"
-                        onMouseDown={() => selectSuggestion(s.contentName)}
+                        onMouseDown={() => selectSuggestion(name)}
                         className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
                       >
-                        <span className="font-medium truncate">{s.contentName}</span>
+                        <span className="font-medium truncate">{name}</span>
                       </button>
                     ))}
                   </div>
@@ -268,11 +263,7 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <Button
-              onClick={() => fetchLogs(searchQuery, dateFrom, dateTo)}
-              disabled={loading}
-              className="h-8"
-            >
+            <Button onClick={handleSearch} disabled={loading} className="h-8">
               {loading ? (
                 <Loader2 className="size-4 mr-1.5 animate-spin" />
               ) : (
@@ -289,103 +280,105 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-sm font-medium">
-              {loading ? "Buscando..." : results ? "Resultados" : ""}
-            </CardTitle>
-            {results && !loading && (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {results.length} registro{results.length !== 1 ? "s" : ""}
-                {searchQuery.trim() && (
-                  <> &middot; <span className="font-medium">{searchQuery.trim()}</span></>
-                )}
-                {" \u00b7 "}{new Date(dateFrom + "T12:00:00").toLocaleDateString("pt-BR")} a{" "}
-                {new Date(dateTo + "T12:00:00").toLocaleDateString("pt-BR")}
-              </p>
-            )}
-          </div>
-          {results && results.length > 0 && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline" size="sm"
-                onClick={exportPDF}
-                disabled={exporting !== null}
-                className="h-8"
-              >
-                {exporting === "pdf" ? (
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
-                ) : (
-                  <FileText className="size-4 mr-1.5" />
-                )}
-                PDF
-              </Button>
-              <Button
-                variant="outline" size="sm"
-                onClick={exportXLSX}
-                disabled={exporting !== null}
-                className="h-8"
-              >
-                {exporting === "xlsx" ? (
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
-                ) : (
-                  <FileSpreadsheet className="size-4 mr-1.5" />
-                )}
-                XLSX
-              </Button>
+      {hasSearched && (
+        <Card>
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-medium">
+                {loading ? "Buscando..." : "Resultados"}
+              </CardTitle>
+              {results && !loading && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {results.length} registro{results.length !== 1 ? "s" : ""}
+                  {searchQuery.trim() && (
+                    <> &middot; <span className="font-medium">{searchQuery.trim()}</span></>
+                  )}
+                  {" \u00b7 "}{new Date(dateFrom + "T12:00:00").toLocaleDateString("pt-BR")} a{" "}
+                  {new Date(dateTo + "T12:00:00").toLocaleDateString("pt-BR")}
+                </p>
+              )}
             </div>
-          )}
-        </CardHeader>
-        <CardContent>
-          {loading && !results ? (
-            <div className="flex items-center justify-center py-12 text-muted-foreground">
-              <Loader2 className="size-6 mr-2 animate-spin" />
-              <span className="text-sm">Carregando...</span>
-            </div>
-          ) : results && results.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <AlertCircle className="size-10 mb-3 opacity-50" />
-              <p className="text-sm">Nenhum registro encontrado</p>
-            </div>
-          ) : results ? (
-            <div className="overflow-x-auto">
-              <div className="max-h-[500px] overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="sticky top-0 bg-background z-10">Dia</TableHead>
-                      <TableHead className="sticky top-0 bg-background z-10">Conteúdo</TableHead>
-                      <TableHead className="sticky top-0 bg-background z-10 text-right">Inserção</TableHead>
-                      <TableHead className="sticky top-0 bg-background z-10 text-right">Secundagem</TableHead>
-                      <TableHead className="sticky top-0 bg-background z-10">Player</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {results.map((row, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="text-xs whitespace-nowrap">
-                          {new Date(row.date + "T12:00:00").toLocaleDateString("pt-BR")}
-                        </TableCell>
-                        <TableCell className="text-xs max-w-[300px] truncate" title={row.contentName}>
-                          {row.contentName}
-                        </TableCell>
-                        <TableCell className="text-xs font-mono text-right tabular-nums">
-                          {row.insertions}
-                        </TableCell>
-                        <TableCell className="text-xs font-mono text-right tabular-nums">
-                          {row.contentDuration}
-                        </TableCell>
-                        <TableCell className="text-xs">{row.playerName}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+            {results && results.length > 0 && (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline" size="sm"
+                  onClick={exportPDF}
+                  disabled={exporting !== null}
+                  className="h-8"
+                >
+                  {exporting === "pdf" ? (
+                    <Loader2 className="size-4 mr-1.5 animate-spin" />
+                  ) : (
+                    <FileText className="size-4 mr-1.5" />
+                  )}
+                  PDF
+                </Button>
+                <Button
+                  variant="outline" size="sm"
+                  onClick={exportXLSX}
+                  disabled={exporting !== null}
+                  className="h-8"
+                >
+                  {exporting === "xlsx" ? (
+                    <Loader2 className="size-4 mr-1.5 animate-spin" />
+                  ) : (
+                    <FileSpreadsheet className="size-4 mr-1.5" />
+                  )}
+                  XLSX
+                </Button>
               </div>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+            )}
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-12 text-muted-foreground">
+                <Loader2 className="size-6 mr-2 animate-spin" />
+                <span className="text-sm">Carregando...</span>
+              </div>
+            ) : results && results.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <AlertCircle className="size-10 mb-3 opacity-50" />
+                <p className="text-sm">Nenhum registro encontrado</p>
+              </div>
+            ) : results ? (
+              <div className="overflow-x-auto">
+                <div className="max-h-[500px] overflow-y-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="sticky top-0 bg-background z-10">Dia</TableHead>
+                        <TableHead className="sticky top-0 bg-background z-10">Conteúdo</TableHead>
+                        <TableHead className="sticky top-0 bg-background z-10 text-right">Inserção</TableHead>
+                        <TableHead className="sticky top-0 bg-background z-10 text-right">Secundagem</TableHead>
+                        <TableHead className="sticky top-0 bg-background z-10">Player</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {results.map((row, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {new Date(row.date + "T12:00:00").toLocaleDateString("pt-BR")}
+                          </TableCell>
+                          <TableCell className="text-xs max-w-[300px] truncate" title={row.contentName}>
+                            {row.contentName}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono text-right tabular-nums">
+                            {row.insertions}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono text-right tabular-nums">
+                            {row.contentDuration}
+                          </TableCell>
+                          <TableCell className="text-xs">{row.playerName}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

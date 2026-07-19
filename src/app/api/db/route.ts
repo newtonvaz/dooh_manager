@@ -198,6 +198,9 @@ export async function POST(request: Request) {
       case "getPlaybackLogs":
         result = dbAdmin.getPlaybackLogs(data.search, data.dateFrom, data.dateTo)
         break
+      case "getContentSuggestions":
+        result = dbAdmin.getContentSuggestions(data.search, data.dateFrom, data.dateTo)
+        break
       case "recordPlayback":
         const src = data || params
         const pc = src?.playerCode || src?.player_code || src?.code || ""

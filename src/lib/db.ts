@@ -635,7 +635,7 @@ function createDb(client?: SupabaseClient) {
       dateFrom: string,
       dateTo: string
     ): Promise<PlaybackLogRow[]> {
-      let q = c.from("playback_logs").select("content_name, date, player_name, content_duration, content_id, player_id")
+      let q = c.from("playback_logs").select("content_name, date, player_name, content_duration")
       if (dateFrom) q = q.gte("date", dateFrom)
       if (dateTo) q = q.lte("date", dateTo)
       if (search) q = q.ilike("content_name", `%${search}%`)
@@ -643,26 +643,33 @@ function createDb(client?: SupabaseClient) {
       const { data, error } = await q
       if (error) throw error
 
-      const grouped = new Map<string, PlaybackLogRow & { _key: string }>()
-      for (const e of data || []) {
-        const key = `${e.date}|${e.content_name}|${e.player_name}`
-        if (grouped.has(key)) {
-          grouped.get(key)!.insertions++
-        } else {
-          grouped.set(key, {
-            contentName: e.content_name,
-            date: e.date,
-            playerName: e.player_name,
-            contentDuration: e.content_duration ?? 0,
-            insertions: 1,
-            _key: key,
-          })
-        }
-      }
+      return (data || []).map((e: any) => ({
+        contentName: e.content_name,
+        date: e.date,
+        playerName: e.player_name,
+        contentDuration: e.content_duration,
+        insertions: 1,
+      }))
+    },
 
-      return Array.from(grouped.values())
-        .sort((a, b) => b.date.localeCompare(a.date) || b.insertions - a.insertions)
-        .map(({ _key, ...row }) => row)
+    async getContentSuggestions(
+      search: string,
+      dateFrom: string,
+      dateTo: string
+    ): Promise<string[]> {
+      let q = c.from("playback_logs").select("content_name")
+      if (dateFrom) q = q.gte("date", dateFrom)
+      if (dateTo) q = q.lte("date", dateTo)
+      if (search) q = q.ilike("content_name", `%${search}%`)
+
+      const { data, error } = await q.limit(20)
+      if (error) throw error
+
+      const seen = new Set<string>()
+      for (const e of data || []) {
+        if (e.content_name) seen.add(e.content_name)
+      }
+      return Array.from(seen)
     },
 
     // Schedules

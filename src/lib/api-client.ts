@@ -254,6 +254,15 @@ export const api = {
     return dbCall("getPlaybackLogs", {}, { search, dateFrom, dateTo })
   },
 
+  async getContentSuggestions(
+    search: string,
+    dateFrom: string,
+    dateTo: string
+  ): Promise<string[]> {
+    await delay(50)
+    return dbCall("getContentSuggestions", {}, { search, dateFrom, dateTo })
+  },
+
   async getSchedules(): Promise<OperatingSchedule[]> {
     await delay(100)
     return dbCall("getSchedules")
