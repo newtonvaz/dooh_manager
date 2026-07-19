@@ -342,11 +342,11 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={`overflow-y-auto rounded-md border p-3 transition-all ${
+                    className={`overflow-y-auto rounded-md border p-3 ${
                       view === "grid" ? "h-[260px]" : "h-[200px]"
                     } ${view === "grid" ? "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2" : "space-y-2"} ${
                       snapshot.isDraggingOver
-                        ? "border-primary bg-primary/5 shadow-inner"
+                        ? "border-primary/50 bg-primary/[0.03]"
                         : ""
                     }`}
                   >
@@ -374,9 +374,9 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 title={name}
-                                className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-colors cursor-grab active:cursor-grabbing ${
+                                className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 cursor-grab active:cursor-grabbing ${
                                   snapshot.isDragging
-                                    ? "shadow-xl border-primary bg-accent scale-105 rotate-2"
+                                    ? "shadow-lg border-primary bg-accent"
                                     : "bg-card hover:bg-muted/50"
                                 }`}
                               >
@@ -409,11 +409,11 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                className={`flex items-center justify-between rounded-lg border p-2 gap-2 transition-all ${
+                                className={`flex items-center justify-between rounded-lg border p-2 gap-2 transition-shadow ${
                                   snapshot.isDragging
-                                    ? "shadow-xl border-primary bg-accent scale-[1.02]"
-                                    : "hover:border-muted-foreground/20"
-                                } ${!snapshot.isDragging ? "hover:border-muted-foreground/20" : ""}`}
+                                    ? "shadow-lg border-primary bg-accent"
+                                    : ""
+                                }`}
                               >
                                 <div
                                   {...provided.dragHandleProps}
