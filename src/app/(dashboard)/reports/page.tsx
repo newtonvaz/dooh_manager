@@ -104,11 +104,11 @@ export default function ReportsPage() {
   }, [results])
 
   const filteredSuggestions = useMemo(() => {
-    if (!searchQuery.trim()) return []
+    if (!allContentNames.length) return []
     const q = searchQuery.toLowerCase()
     return allContentNames
-      .filter((s) => s.contentName.toLowerCase().includes(q))
-      .slice(0, 15)
+      .filter((s) => !q || s.contentName.toLowerCase().includes(q))
+      .slice(0, 20)
   }, [allContentNames, searchQuery])
 
   function selectSuggestion(name: string) {
@@ -172,8 +172,16 @@ export default function ReportsPage() {
         "Duração (s)": r.contentDuration,
         Player: r.playerName,
       }))
-      const wb = XLSX.utils.book_new()
       const ws = XLSX.utils.json_to_sheet(data)
+      const colWidths = ["Data", "Conteúdo", "Inserções", "Duração (s)", "Player"].map((h, i) => {
+        const maxLen = Math.max(
+          h.length,
+          ...data.map((r) => String(Object.values(r)[i] ?? "").length)
+        )
+        return { wch: maxLen + 3 }
+      })
+      ws["!cols"] = colWidths
+      const wb = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(wb, ws, "Conteúdos Veiculados")
       XLSX.writeFile(wb, `relatorio-conteudos-${dateFrom}-${dateTo}.xlsx`)
     } finally {
@@ -211,7 +219,7 @@ export default function ReportsPage() {
                     if (e.target.value.trim()) setShowDropdown(true)
                     else setShowDropdown(false)
                   }}
-                  onFocus={() => { if (filteredSuggestions.length > 0) setShowDropdown(true) }}
+                  onFocus={() => { if (allContentNames.length > 0) setShowDropdown(true) }}
                   onKeyDown={handleKeyDown}
                   placeholder="Digite o nome do conteúdo..."
                   className="pl-8"
