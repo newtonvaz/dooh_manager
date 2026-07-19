@@ -520,8 +520,16 @@ function createDb(client?: SupabaseClient) {
       }
 
       const scheduleVersion = schedule?.updatedAt ?? null
+      const playlistUpdatedAt = playlist.updatedAt
 
-      return { player, playlist, items, schedule, scheduleVersion }
+      const assets = items.map((item) => ({
+        contentId: item.contentId,
+        url: item.url,
+        type: item.type,
+        name: item.name,
+      }))
+
+      return { player, playlist, items, assets, schedule, scheduleVersion, playlistUpdatedAt }
     },
 
     async getRecentActivities() {
