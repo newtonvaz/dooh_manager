@@ -196,23 +196,27 @@ export async function POST(request: Request) {
         result = dbAdmin.getContentReport(data)
         break
       case "recordPlayback":
-        if (!data?.playerCode || !data?.contentId || !data?.startTime) {
+        const src = data || params
+        const pc = src?.playerCode || src?.player_code || src?.code || ""
+        const ci = src?.contentId || src?.content_id || ""
+        const st = src?.startTime || src?.start_time || ""
+        if (!pc || !ci || !st) {
           return NextResponse.json(
             { error: "playerCode, contentId e startTime são obrigatórios" },
             { status: 400 }
           )
         }
         result = dbAdmin.recordPlayback({
-          playerCode: data.playerCode,
-          contentId: data.contentId,
-          contentName: data.contentName || "",
-          contentDuration: data.contentDuration || 0,
-          playlistId: data.playlistId || "",
-          playlistName: data.playlistName || "",
-          startTime: data.startTime,
-          endTime: data.endTime || data.startTime,
+          playerCode: pc,
+          contentId: ci,
+          contentName: src?.contentName || src?.content_name || "",
+          contentDuration: src?.contentDuration || src?.content_duration || 0,
+          playlistId: src?.playlistId || src?.playlist_id || "",
+          playlistName: src?.playlistName || src?.playlist_name || "",
+          startTime: st,
+          endTime: src?.endTime || src?.end_time || st,
         })
-        await dbAdmin.recordHeartbeatByCode(data.playerCode).catch(() => {})
+        await dbAdmin.recordHeartbeatByCode(pc).catch(() => {})
         break
 
       // Schedules
