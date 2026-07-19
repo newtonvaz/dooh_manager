@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -60,6 +60,12 @@ export function PlayerFormDialog({ open, onOpenChange, player }: PlayerFormDialo
   })
 
   const isEditing = !!player
+
+  const selectedPlaylistName = useMemo(() => {
+    if (!playlistId) return ""
+    const found = (playlists as Playlist[]).find((p) => p.id === playlistId)
+    return found?.name ?? ""
+  }, [playlistId, playlists])
 
   useEffect(() => {
     if (open) {
@@ -198,7 +204,9 @@ export function PlayerFormDialog({ open, onOpenChange, player }: PlayerFormDialo
             <Label htmlFor="playlist">Playlist</Label>
             <Select value={playlistId} onValueChange={(v) => v && setPlaylistId(v === "null" ? "" : v)}>
               <SelectTrigger id="playlist">
-                <SelectValue placeholder="Nenhuma" />
+                <SelectValue placeholder="Nenhuma">
+                  {selectedPlaylistName || undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="null">Nenhuma</SelectItem>
