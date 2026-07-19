@@ -635,12 +635,12 @@ function createDb(client?: SupabaseClient) {
       dateFrom: string,
       dateTo: string
     ): Promise<PlaybackLogRow[]> {
-      let q = c.from("playback_logs").select("content_name, date, player_name, content_duration")
+      let q = c.from("playback_logs").select("*")
       if (dateFrom) q = q.gte("date", dateFrom)
       if (dateTo) q = q.lte("date", dateTo)
       if (search) q = q.ilike("content_name", `%${search}%`)
 
-      const { data, error } = await q.order("date", { ascending: false })
+      const { data, error } = await q.limit(500)
       if (error) throw error
 
       return (data || []).map((e: any) => ({
