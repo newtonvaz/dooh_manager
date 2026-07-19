@@ -1,10 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef, useMemo } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useState, useEffect, useRef } from "react"
 import { api } from "@/lib/api-client"
 import type { ContentReportRow } from "@/types/playback"
-import type { MediaContent } from "@/types/content"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,23 +24,12 @@ import {
   Calendar,
   Film,
   AlertCircle,
-  FileImage,
-  Video,
-  Globe,
 } from "lucide-react"
-
-const typeIcons = { image: FileImage, video: Video, web: Globe } as const
-const typeLabels = { image: "Imagem", video: "Vídeo", web: "URL" } as const
 
 const DAY_LABELS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 
-function removeAccents(str: string): string {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-}
-
 export default function ReportsPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedContent, setSelectedContent] = useState<MediaContent | null>(null)
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date(); d.setDate(d.getDate() - 30)
     return d.toISOString().split("T")[0]
@@ -53,13 +40,13 @@ export default function ReportsPage() {
   const [error, setError] = useState("")
   const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [playbackSuggestions, setPlaybackSuggestions] = useState<
+    { contentName: string; totalInsertions: number }[]
+  >([])
+  const [searchingPlayback, setSearchingPlayback] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  const { data: allContent = [], isLoading: contentLoading } = useQuery({
-    queryKey: ["content"],
-    queryFn: api.getContent,
-  })
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -76,44 +63,57 @@ export default function ReportsPage() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (!searchQuery.trim()) {
+      setPlaybackSuggestions([])
+      setShowDropdown(false)
+      return
+    }
+    debounceRef.current = setTimeout(async () => {
+      setSearchingPlayback(true)
+      try {
+        const results = await api.searchPlayedContent(searchQuery, dateFrom, dateTo)
+        setPlaybackSuggestions(results)
+        setShowDropdown(true)
+      } catch {
+        setPlaybackSuggestions([])
+      } finally {
+        setSearchingPlayback(false)
+      }
+    }, 300)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [searchQuery, dateFrom, dateTo])
+
   function handleSearchChange(value: string) {
     setSearchQuery(value)
-    setSelectedContent(null)
-    setShowDropdown(true)
   }
 
   function handleFocus() {
-    setShowDropdown(true)
+    if (playbackSuggestions.length > 0) setShowDropdown(true)
   }
 
-  function selectContent(item: MediaContent) {
-    setSearchQuery(item.name)
-    setSelectedContent(item)
+  function selectContent(name: string) {
+    setSearchQuery(name)
     setShowDropdown(false)
     inputRef.current?.focus()
   }
-
-  const suggestions = useMemo(() => {
-    if (searchQuery.length === 0) return []
-    if (contentLoading) return []
-    const q = removeAccents(searchQuery.toLowerCase())
-    return allContent
-      .filter((c) => removeAccents(c.name.toLowerCase()).includes(q))
-      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
-      .slice(0, 10)
-  }, [allContent, searchQuery, contentLoading])
 
   async function handleGenerate() {
     setLoading(true)
     setResults(null)
     setError("")
     try {
-      const data = await api.getContentReport({
-        contentIds: selectedContent ? [selectedContent.id] : undefined,
-        contentName: selectedContent?.name,
+      const query: Parameters<typeof api.getContentReport>[0] = {
         dateFrom,
         dateTo,
-      })
+      }
+      if (searchQuery.trim()) {
+        query.contentName = searchQuery.trim()
+      }
+      const data = await api.getContentReport(query)
       setResults(data)
     } catch (e) {
       setError(String(e))
@@ -136,7 +136,7 @@ export default function ReportsPage() {
       const info = [
         `Período: ${new Date(dateFrom).toLocaleDateString("pt-BR")} a ${new Date(dateTo).toLocaleDateString("pt-BR")}`,
       ]
-      if (selectedContent) info.push(`Arquivo: ${selectedContent.name}`)
+      if (searchQuery.trim()) info.push(`Arquivo: ${searchQuery.trim()}`)
       const totalIns = results.reduce((s, r) => s + r.insertions, 0)
       info.push(`Total de inserções: ${totalIns}`)
       doc.text(info, 14, 30)
@@ -210,7 +210,7 @@ export default function ReportsPage() {
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onFocus={handleFocus}
-                  placeholder="Digite o nome do conteúdo..."
+                  placeholder="Digite o nome do conteúdo veiculado..."
                   className="pl-8"
                 />
                 {showDropdown && searchQuery.length > 0 && (
@@ -218,38 +218,30 @@ export default function ReportsPage() {
                     ref={dropdownRef}
                     className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border bg-popover shadow-md"
                   >
-                    {contentLoading ? (
+                    {searchingPlayback ? (
                       <div className="flex items-center justify-center px-3 py-3 text-xs text-muted-foreground">
                         <Loader2 className="size-3 mr-2 animate-spin" />
-                        Carregando...
+                        Buscando...
                       </div>
-                    ) : suggestions.length === 0 ? (
+                    ) : playbackSuggestions.length === 0 ? (
                       <div className="px-3 py-2 text-xs text-muted-foreground">
-                        Nenhum conteúdo encontrado.
+                        Nenhum conteúdo veiculado encontrado.
                       </div>
                     ) : (
-                      suggestions.map((c) => {
-                        const Icon = typeIcons[c.type]
-                        return (
-                          <button
-                            key={c.id}
-                            type="button"
-                            onMouseDown={() => selectContent(c)}
-                            className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm hover:bg-muted transition-colors"
-                          >
-                            <div className="rounded-lg bg-muted p-1">
-                              <Icon className="size-3.5 text-muted-foreground" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="font-medium truncate block">{c.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {typeLabels[c.type]} &bull; {c.category}
-                                {c.duration ? ` \u2022 ${c.duration}s` : ""}
-                              </span>
-                            </div>
-                          </button>
-                        )
-                      })
+                      playbackSuggestions.map((item) => (
+                        <button
+                          key={item.contentName}
+                          type="button"
+                          onMouseDown={() => selectContent(item.contentName)}
+                          className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm hover:bg-muted transition-colors"
+                        >
+                          <span className="font-medium truncate">{item.contentName}</span>
+                          <span className="shrink-0 text-xs font-mono text-muted-foreground">
+                            {item.totalInsertions} veiculação
+                            {item.totalInsertions !== 1 ? "ões" : ""}
+                          </span>
+                        </button>
+                      ))
                     )}
                   </div>
                 )}
@@ -305,8 +297,8 @@ export default function ReportsPage() {
               <p className="text-xs text-muted-foreground mt-0.5">
                 {results.reduce((s, r) => s + r.insertions, 0)} inserção
                 {results.reduce((s, r) => s + r.insertions, 0) !== 1 ? "ões" : ""} no período
-                {selectedContent && (
-                  <> &middot; <span className="font-medium">{selectedContent.name}</span></>
+                {searchQuery.trim() && (
+                  <> &middot; <span className="font-medium">{searchQuery.trim()}</span></>
                 )}
                 {" \u00b7 "}{new Date(dateFrom).toLocaleDateString("pt-BR")} a{" "}
                 {new Date(dateTo).toLocaleDateString("pt-BR")}

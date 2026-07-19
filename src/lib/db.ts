@@ -630,6 +630,30 @@ function createDb(client?: SupabaseClient) {
         .map(({ _playerId, ...row }) => row)
     },
 
+    async searchPlayedContent(
+      search: string,
+      dateFrom: string,
+      dateTo: string
+    ): Promise<{ contentName: string; totalInsertions: number }[]> {
+      let q = c.from("playback_logs").select("content_name")
+      if (dateFrom) q = q.gte("date", dateFrom)
+      if (dateTo) q = q.lte("date", dateTo)
+      if (search) q = q.ilike("content_name", `%${search}%`)
+
+      const { data, error } = await q
+      if (error) throw error
+
+      const counts = new Map<string, number>()
+      for (const entry of data || []) {
+        counts.set(entry.content_name, (counts.get(entry.content_name) || 0) + 1)
+      }
+
+      return Array.from(counts.entries())
+        .map(([contentName, totalInsertions]) => ({ contentName, totalInsertions }))
+        .sort((a, b) => b.totalInsertions - a.totalInsertions)
+        .slice(0, 10)
+    },
+
     // Schedules
     async getSchedules(): Promise<OperatingSchedule[]> {
       const { data, error } = await c.from("schedules").select("*").order("name")
