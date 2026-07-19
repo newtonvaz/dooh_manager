@@ -21,8 +21,18 @@ export async function POST(request: Request) {
       endTime: endTime || startTime,
     })
 
+    await dbAdmin.recordHeartbeatByCode(playerCode).catch(() => {})
+
     return NextResponse.json({ data: entry })
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    endpoint: "Registro de playback para players Elektron",
+    usage: "POST /api/playback com { playerCode, contentId, startTime }",
+    relatorio: "Acesse /reports no CMS para visualizar os dados",
+  })
 }

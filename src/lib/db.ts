@@ -529,7 +529,19 @@ function createDb(client?: SupabaseClient) {
         name: item.name,
       }))
 
-      return { player, playlist, items, assets, schedule, scheduleVersion, playlistUpdatedAt }
+      return {
+        player,
+        playlist,
+        items,
+        assets,
+        schedule,
+        scheduleVersion,
+        playlistUpdatedAt,
+        endpoints: {
+          playback: "/api/playback",
+          heartbeat: "/api/heartbeat",
+        },
+      }
     },
 
     async getRecentActivities() {
