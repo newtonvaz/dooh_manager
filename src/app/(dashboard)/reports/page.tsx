@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { api } from "@/lib/api-client"
 import type { ContentReportRow } from "@/types/playback"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,7 +16,6 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import {
-  Search,
   FileDown,
   FileText,
   Loader2,
@@ -40,13 +39,73 @@ export default function ReportsPage() {
   const [error, setError] = useState("")
   const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
-  const [playbackSuggestions, setPlaybackSuggestions] = useState<
+  const [suggestions, setSuggestions] = useState<
     { contentName: string; totalInsertions: number }[]
   >([])
-  const [searchingPlayback, setSearchingPlayback] = useState(false)
+  const [searchingSuggestions, setSearchingSuggestions] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const suggestRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  const fetchReport = useCallback(async (query: string, from: string, to: string) => {
+    setLoading(true)
+    setError("")
+    try {
+      const params: Parameters<typeof api.getContentReport>[0] = {
+        dateFrom: from,
+        dateTo: to,
+      }
+      if (query.trim()) {
+        params.contentName = query.trim()
+      }
+      const data = await api.getContentReport(params)
+      setResults(data)
+    } catch (e) {
+      setError(String(e))
+      setResults([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      fetchReport(searchQuery, dateFrom, dateTo)
+    }, 400)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [searchQuery, dateFrom, dateTo, fetchReport])
+
+  useEffect(() => {
+    fetchReport("", dateFrom, dateTo)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (suggestRef.current) clearTimeout(suggestRef.current)
+    if (!searchQuery.trim()) {
+      setSuggestions([])
+      setShowDropdown(false)
+      return
+    }
+    suggestRef.current = setTimeout(async () => {
+      setSearchingSuggestions(true)
+      try {
+        const res = await api.searchPlayedContent(searchQuery, dateFrom, dateTo)
+        setSuggestions(res)
+        if (res.length > 0) setShowDropdown(true)
+      } catch {
+        setSuggestions([])
+      } finally {
+        setSearchingSuggestions(false)
+      }
+    }, 300)
+    return () => {
+      if (suggestRef.current) clearTimeout(suggestRef.current)
+    }
+  }, [searchQuery, dateFrom, dateTo])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -63,64 +122,9 @@ export default function ReportsPage() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!searchQuery.trim()) {
-      setPlaybackSuggestions([])
-      setShowDropdown(false)
-      return
-    }
-    debounceRef.current = setTimeout(async () => {
-      setSearchingPlayback(true)
-      try {
-        const results = await api.searchPlayedContent(searchQuery, dateFrom, dateTo)
-        setPlaybackSuggestions(results)
-        setShowDropdown(true)
-      } catch {
-        setPlaybackSuggestions([])
-      } finally {
-        setSearchingPlayback(false)
-      }
-    }, 300)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [searchQuery, dateFrom, dateTo])
-
-  function handleSearchChange(value: string) {
-    setSearchQuery(value)
-  }
-
-  function handleFocus() {
-    if (playbackSuggestions.length > 0) setShowDropdown(true)
-  }
-
-  function selectContent(name: string) {
+  function selectSuggestion(name: string) {
     setSearchQuery(name)
     setShowDropdown(false)
-    inputRef.current?.focus()
-  }
-
-  async function handleGenerate() {
-    setLoading(true)
-    setResults(null)
-    setError("")
-    try {
-      const query: Parameters<typeof api.getContentReport>[0] = {
-        dateFrom,
-        dateTo,
-      }
-      if (searchQuery.trim()) {
-        query.contentName = searchQuery.trim()
-      }
-      const data = await api.getContentReport(query)
-      setResults(data)
-    } catch (e) {
-      setError(String(e))
-      setResults([])
-    } finally {
-      setLoading(false)
-    }
   }
 
   async function exportPDF() {
@@ -198,7 +202,7 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-end gap-3">
-            <div className="relative flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[200px]">
               <Label htmlFor="searchContent" className="text-xs mb-1 block">
                 Conteúdo
               </Label>
@@ -208,37 +212,33 @@ export default function ReportsPage() {
                   ref={inputRef}
                   id="searchContent"
                   value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onFocus={handleFocus}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
                   placeholder="Digite o nome do conteúdo veiculado..."
                   className="pl-8"
                 />
-                {showDropdown && searchQuery.length > 0 && (
+                {showDropdown && suggestions.length > 0 && (
                   <div
                     ref={dropdownRef}
                     className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border bg-popover shadow-md"
                   >
-                    {searchingPlayback ? (
+                    {searchingSuggestions ? (
                       <div className="flex items-center justify-center px-3 py-3 text-xs text-muted-foreground">
                         <Loader2 className="size-3 mr-2 animate-spin" />
                         Buscando...
                       </div>
-                    ) : playbackSuggestions.length === 0 ? (
-                      <div className="px-3 py-2 text-xs text-muted-foreground">
-                        Nenhum conteúdo veiculado encontrado.
-                      </div>
                     ) : (
-                      playbackSuggestions.map((item) => (
+                      suggestions.map((s) => (
                         <button
-                          key={item.contentName}
+                          key={s.contentName}
                           type="button"
-                          onMouseDown={() => selectContent(item.contentName)}
+                          onMouseDown={() => selectSuggestion(s.contentName)}
                           className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm hover:bg-muted transition-colors"
                         >
-                          <span className="font-medium truncate">{item.contentName}</span>
+                          <span className="font-medium truncate">{s.contentName}</span>
                           <span className="shrink-0 text-xs font-mono text-muted-foreground">
-                            {item.totalInsertions} veiculação
-                            {item.totalInsertions !== 1 ? "ões" : ""}
+                            {s.totalInsertions} veiculação
+                            {s.totalInsertions !== 1 ? "ões" : ""}
                           </span>
                         </button>
                       ))
@@ -271,15 +271,6 @@ export default function ReportsPage() {
                 />
               </div>
             </div>
-
-            <Button onClick={handleGenerate} disabled={loading} className="h-8">
-              {loading ? (
-                <Loader2 className="size-4 mr-1.5 animate-spin" />
-              ) : (
-                <Search className="size-4 mr-1.5" />
-              )}
-              {loading ? "Gerando..." : "Gerar Relatório"}
-            </Button>
           </div>
           {error && (
             <p className="mt-2 text-xs text-destructive flex items-center gap-1">
@@ -289,11 +280,13 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
 
-      {results !== null && (
-        <Card>
-          <CardHeader className="pb-3 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-sm font-medium">Resultados</CardTitle>
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-sm font-medium">
+              {loading ? "Buscando..." : "Resultados"}
+            </CardTitle>
+            {results && !loading && (
               <p className="text-xs text-muted-foreground mt-0.5">
                 {results.reduce((s, r) => s + r.insertions, 0)} inserção
                 {results.reduce((s, r) => s + r.insertions, 0) !== 1 ? "ões" : ""} no período
@@ -303,88 +296,93 @@ export default function ReportsPage() {
                 {" \u00b7 "}{new Date(dateFrom).toLocaleDateString("pt-BR")} a{" "}
                 {new Date(dateTo).toLocaleDateString("pt-BR")}
               </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline" size="sm"
-                onClick={exportPDF}
-                disabled={exporting !== null || results.length === 0}
-                className="h-8"
-              >
-                {exporting === "pdf" ? (
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
-                ) : (
-                  <FileText className="size-4 mr-1.5" />
-                )}
-                PDF
-              </Button>
-              <Button
-                variant="outline" size="sm"
-                onClick={exportXLSX}
-                disabled={exporting !== null || results.length === 0}
-                className="h-8"
-              >
-                {exporting === "xlsx" ? (
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
-                ) : (
-                  <FileSpreadsheet className="size-4 mr-1.5" />
-                )}
-                XLSX
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {results.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <FileDown className="size-10 mb-3 opacity-50" />
-                <p className="text-sm">Nenhum registro encontrado para os filtros informados</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <div className="max-h-[500px] overflow-y-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="sticky top-0 bg-background z-10">Data</TableHead>
-                        <TableHead className="sticky top-0 bg-background z-10">Dia</TableHead>
-                        <TableHead className="sticky top-0 bg-background z-10">Arquivo</TableHead>
-                        <TableHead className="sticky top-0 bg-background z-10">Duração</TableHead>
-                        <TableHead className="sticky top-0 bg-background z-10 text-right">Inserções</TableHead>
-                        <TableHead className="sticky top-0 bg-background z-10">Player</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {results.map((row, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="text-xs">
-                            {new Date(row.date).toLocaleDateString("pt-BR")}
-                          </TableCell>
-                          <TableCell className="text-xs">
-                            <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium">
-                              {DAY_LABELS_SHORT[new Date(row.date).getDay()]}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-xs max-w-[250px] truncate" title={row.contentName}>
-                            {row.contentName}
-                          </TableCell>
-                          <TableCell className="text-xs">{row.contentDuration}s</TableCell>
-                          <TableCell className="text-xs font-mono text-right font-semibold tabular-nums">
-                            {row.insertions}
-                          </TableCell>
-                          <TableCell className="text-xs">
-                            <span className="font-medium">{row.playerName}</span>
-                            <span className="ml-1.5 text-muted-foreground">({row.playerCode})</span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline" size="sm"
+              onClick={exportPDF}
+              disabled={exporting !== null || !results || results.length === 0}
+              className="h-8"
+            >
+              {exporting === "pdf" ? (
+                <Loader2 className="size-4 mr-1.5 animate-spin" />
+              ) : (
+                <FileText className="size-4 mr-1.5" />
+              )}
+              PDF
+            </Button>
+            <Button
+              variant="outline" size="sm"
+              onClick={exportXLSX}
+              disabled={exporting !== null || !results || results.length === 0}
+              className="h-8"
+            >
+              {exporting === "xlsx" ? (
+                <Loader2 className="size-4 mr-1.5 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="size-4 mr-1.5" />
+              )}
+              XLSX
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading && !results ? (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              <Loader2 className="size-6 mr-2 animate-spin" />
+              <span className="text-sm">Carregando...</span>
+            </div>
+          ) : results && results.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <FileDown className="size-10 mb-3 opacity-50" />
+              <p className="text-sm">Nenhum registro encontrado para os filtros informados</p>
+            </div>
+          ) : results ? (
+            <div className="overflow-x-auto">
+              <div className="max-h-[500px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="sticky top-0 bg-background z-10">Data</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10">Dia</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10">Arquivo</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10">Duração</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10 text-right">Inserções</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10">Player</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {results.map((row, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="text-xs">
+                          {new Date(row.date).toLocaleDateString("pt-BR")}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium">
+                            {DAY_LABELS_SHORT[new Date(row.date).getDay()]}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs max-w-[250px] truncate" title={row.contentName}>
+                          {row.contentName}
+                        </TableCell>
+                        <TableCell className="text-xs">{row.contentDuration}s</TableCell>
+                        <TableCell className="text-xs font-mono text-right font-semibold tabular-nums">
+                          {row.insertions}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <span className="font-medium">{row.playerName}</span>
+                          <span className="ml-1.5 text-muted-foreground">({row.playerCode})</span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
     </div>
   )
 }

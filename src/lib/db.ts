@@ -586,7 +586,7 @@ function createDb(client?: SupabaseClient) {
     },
 
     async getContentReport(query: ContentReportQuery): Promise<ContentReportRow[]> {
-      let q = c.from("playback_logs").select("*")
+      let q = c.from("playback_logs").select("content_name, date, player_name, content_duration, content_id, player_id, playlist_name")
 
       if (query.dateFrom) {
         q = q.gte("date", query.dateFrom)
