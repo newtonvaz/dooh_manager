@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { api } from "@/lib/api-client"
 import type { ContentReportRow } from "@/types/playback"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -39,14 +39,9 @@ export default function ReportsPage() {
   const [error, setError] = useState("")
   const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
-  const [suggestions, setSuggestions] = useState<
-    { contentName: string; date: string; playerName: string; contentDuration: number }[]
-  >([])
-  const [searchingSuggestions, setSearchingSuggestions] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const suggestRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const fetchReport = useCallback(async (query: string, from: string, to: string) => {
     setLoading(true)
@@ -70,6 +65,10 @@ export default function ReportsPage() {
   }, [])
 
   useEffect(() => {
+    fetchReport("", dateFrom, dateTo)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       fetchReport(searchQuery, dateFrom, dateTo)
@@ -78,34 +77,6 @@ export default function ReportsPage() {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [searchQuery, dateFrom, dateTo, fetchReport])
-
-  useEffect(() => {
-    fetchReport("", dateFrom, dateTo)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (suggestRef.current) clearTimeout(suggestRef.current)
-    if (!searchQuery.trim()) {
-      setSuggestions([])
-      setShowDropdown(false)
-      return
-    }
-    suggestRef.current = setTimeout(async () => {
-      setSearchingSuggestions(true)
-      try {
-        const res = await api.searchPlayedContent(searchQuery, dateFrom, dateTo)
-        setSuggestions(res)
-        if (res.length > 0) setShowDropdown(true)
-      } catch {
-        setSuggestions([])
-      } finally {
-        setSearchingSuggestions(false)
-      }
-    }, 300)
-    return () => {
-      if (suggestRef.current) clearTimeout(suggestRef.current)
-    }
-  }, [searchQuery, dateFrom, dateTo])
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -122,9 +93,37 @@ export default function ReportsPage() {
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
 
+  const allContentNames = useMemo(() => {
+    if (!results) return []
+    const seen = new Set<string>()
+    return results
+      .filter((r) => {
+        const lower = r.contentName.toLowerCase()
+        if (seen.has(lower)) return false
+        seen.add(lower)
+        return true
+      })
+      .map((r) => ({
+        contentName: r.contentName,
+        date: r.date,
+        playerName: r.playerName,
+        contentDuration: r.contentDuration,
+      }))
+      .sort((a, b) => a.contentName.localeCompare(b.contentName, "pt-BR"))
+  }, [results])
+
+  const filteredSuggestions = useMemo(() => {
+    if (!searchQuery.trim()) return []
+    const q = searchQuery.toLowerCase()
+    return allContentNames.filter((s) =>
+      s.contentName.toLowerCase().includes(q)
+    ).slice(0, 15)
+  }, [allContentNames, searchQuery])
+
   function selectSuggestion(name: string) {
     setSearchQuery(name)
     setShowDropdown(false)
+    inputRef.current?.focus()
   }
 
   async function exportPDF() {
@@ -212,40 +211,37 @@ export default function ReportsPage() {
                   ref={inputRef}
                   id="searchContent"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    if (e.target.value.trim()) setShowDropdown(true)
+                    else setShowDropdown(false)
+                  }}
+                  onFocus={() => { if (filteredSuggestions.length > 0) setShowDropdown(true) }}
                   placeholder="Digite o nome do conteúdo veiculado..."
                   className="pl-8"
                 />
-                {showDropdown && suggestions.length > 0 && (
+                {showDropdown && filteredSuggestions.length > 0 && (
                   <div
                     ref={dropdownRef}
                     className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border bg-popover shadow-md"
                   >
-                    {searchingSuggestions ? (
-                      <div className="flex items-center justify-center px-3 py-3 text-xs text-muted-foreground">
-                        <Loader2 className="size-3 mr-2 animate-spin" />
-                        Buscando...
-                      </div>
-                    ) : (
-                      suggestions.map((s, i) => (
-                        <button
-                          key={`${s.contentName}-${i}`}
-                          type="button"
-                          onMouseDown={() => selectSuggestion(s.contentName)}
-                          className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <span className="font-medium truncate block">{s.contentName}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(s.date).toLocaleDateString("pt-BR")}
-                              {" \u00b7 "}{s.playerName}
-                              {" \u00b7 "}{s.contentDuration}s
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    )}
+                    {filteredSuggestions.map((s, i) => (
+                      <button
+                        key={`${s.contentName}-${i}`}
+                        type="button"
+                        onMouseDown={() => selectSuggestion(s.contentName)}
+                        className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium truncate block">{s.contentName}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(s.date).toLocaleDateString("pt-BR")}
+                            {" \u00b7 "}{s.playerName}
+                            {" \u00b7 "}{s.contentDuration}s
+                          </span>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
