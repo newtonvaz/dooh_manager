@@ -35,7 +35,7 @@ function formatSize(bytes: number): string {
 function getFileIcon(name: string) {
   const ext = name.split(".").pop()?.toLowerCase()
   if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext ?? "")) return FileImage
-  if (["mp4", "webm", "ogg", "mov"].includes(ext ?? "")) return Video
+  if (["mp4", "webm", "ogg", "mov", "avi", "mkv"].includes(ext ?? "")) return Video
   return Globe
 }
 

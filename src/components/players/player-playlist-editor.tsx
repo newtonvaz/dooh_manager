@@ -133,6 +133,11 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
   const contentItemIds = currentPlaylist?.items.filter((i) => i.type === "content").map((i) => i.contentId!) ?? []
   const availableContent = allContent?.filter((c) => !contentItemIds.includes(c.id)) ?? []
 
+  const selectedContent = useMemo(() => {
+    if (!selectedContentId) return null
+    return allContent?.find((c) => c.id === selectedContentId) ?? null
+  }, [selectedContentId, allContent])
+
   const itemContentMap = new Map(allContent?.map((c) => [c.id, c]) ?? [])
 
   return (
@@ -323,14 +328,24 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Duração (segundos)</Label>
+                  <Label htmlFor="duration">
+                    Duração (segundos)
+                    {selectedContent?.type === "video" && (
+                      <span className="text-xs text-muted-foreground font-normal ml-1">
+                        (detectada do vídeo)
+                      </span>
+                    )}
+                  </Label>
                   <Input
                     id="duration"
                     type="number"
-                    min={1}
+                    min={selectedContent?.type === "image" ? 10 : 1}
                     value={newItemDuration}
-                    onChange={(e) => setNewItemDuration(Math.max(1, Number(e.target.value)))}
+                    onChange={(e) => setNewItemDuration(Math.max(selectedContent?.type === "image" ? 10 : 1, Number(e.target.value)))}
                   />
+                  {selectedContent?.type === "image" && (
+                    <p className="text-xs text-muted-foreground">Mínimo de 10 segundos para imagens</p>
+                  )}
                 </div>
               </>
             )}
