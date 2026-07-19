@@ -4,6 +4,16 @@ import { supabaseAdmin } from "@/lib/supabase-admin"
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
+async function ensureBucket() {
+  const { data: buckets } = await supabaseAdmin.storage.listBuckets()
+  if (!buckets?.find((b) => b.name === "uploads")) {
+    await supabaseAdmin.storage.createBucket("uploads", {
+      public: true,
+      fileSizeLimit: 104857600,
+    })
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -12,6 +22,8 @@ export async function POST(request: Request) {
     if (action !== "register" || !entry) {
       return NextResponse.json({ error: "Requisição inválida" }, { status: 400 })
     }
+
+    await ensureBucket()
 
     const contentType = entry.type || "web"
 

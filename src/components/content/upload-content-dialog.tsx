@@ -77,16 +77,6 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  async function ensureBucket() {
-    const { data: buckets } = await supabase.storage.listBuckets()
-    if (!buckets?.find((b) => b.name === "uploads")) {
-      const { error } = await supabase.storage.createBucket("uploads", {
-        public: true,
-      })
-      if (error) throw error
-    }
-  }
-
   async function handleUpload() {
     if (files.length === 0) {
       toast.error("Selecione pelo menos um arquivo")
@@ -95,7 +85,6 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
 
     setUploading(true)
     try {
-      await ensureBucket()
       const created: { name: string }[] = []
 
       for (const file of files) {
