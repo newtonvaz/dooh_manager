@@ -195,9 +195,6 @@ export async function POST(request: Request) {
       case "getContentReport":
         result = dbAdmin.getContentReport(data)
         break
-      case "searchPlayedContent":
-        result = dbAdmin.searchPlayedContent(data.search, data.dateFrom, data.dateTo)
-        break
       case "recordPlayback":
         const src = data || params
         const pc = src?.playerCode || src?.player_code || src?.code || ""

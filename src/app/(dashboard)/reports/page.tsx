@@ -27,13 +27,21 @@ import {
 
 const DAY_LABELS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 
+function todayLocal() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
+function daysAgo(n: number) {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+
 export default function ReportsPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [dateFrom, setDateFrom] = useState(() => {
-    const d = new Date(); d.setDate(d.getDate() - 30)
-    return d.toISOString().split("T")[0]
-  })
-  const [dateTo, setDateTo] = useState(() => new Date().toISOString().split("T")[0])
+  const [dateFrom, setDateFrom] = useState(() => daysAgo(30))
+  const [dateTo, setDateTo] = useState(() => todayLocal())
   const [results, setResults] = useState<ContentReportRow[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -41,7 +49,7 @@ export default function ReportsPage() {
   const [showDropdown, setShowDropdown] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const firstLoad = useRef(true)
 
   const fetchReport = useCallback(async (query: string, from: string, to: string) => {
     setLoading(true)
@@ -65,17 +73,18 @@ export default function ReportsPage() {
   }, [])
 
   useEffect(() => {
-    fetchReport("", dateFrom, dateTo)
+    fetchReport(searchQuery, dateFrom, dateTo)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
+    if (firstLoad.current) {
+      firstLoad.current = false
+      return
+    }
+    const timer = setTimeout(() => {
       fetchReport(searchQuery, dateFrom, dateTo)
     }, 400)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
+    return () => clearTimeout(timer)
   }, [searchQuery, dateFrom, dateTo, fetchReport])
 
   useEffect(() => {

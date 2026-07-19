@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     const playerCode = body.playerCode || body.player_code || body.code || ""
     const contentId = body.contentId || body.content_id || ""
     const contentName = body.contentName || body.content_name || ""
-    const contentDuration = body.contentDuration || body.content_duration || 0
+    const contentDuration = body.contentDuration || body.content_duration || body.duration || 0
     const playlistId = body.playlistId || body.playlist_id || ""
     const playlistName = body.playlistName || body.playlist_name || ""
     const startTime = body.startTime || body.start_time || ""
