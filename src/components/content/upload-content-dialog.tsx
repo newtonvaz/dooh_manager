@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -71,12 +71,40 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
+  const [dragging, setDragging] = useState(false)
 
   function handleSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files ?? [])
     setFiles((prev) => [...prev, ...selected])
     e.target.value = ""
   }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  function handleDragEnter(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragging(true)
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragging(false)
+  }
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragging(false)
+    const dropped = Array.from(e.dataTransfer.files ?? [])
+    if (dropped.length > 0) {
+      setFiles((prev) => [...prev, ...dropped])
+    }
+  }, [])
 
   function removeFile(index: number) {
     setFiles((prev) => prev.filter((_, i) => i !== index))
@@ -172,11 +200,21 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
 
         <div className="flex-1 space-y-4 overflow-hidden flex flex-col">
           <div
-            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center hover:bg-muted/50 transition-colors"
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+              dragging
+                ? "border-primary bg-primary/5"
+                : "hover:bg-muted/50"
+            }`}
             onClick={() => inputRef.current?.click()}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
           >
             <Upload className="size-8 text-muted-foreground mb-2" />
-            <p className="text-sm font-medium">Clique para selecionar arquivos</p>
+            <p className="text-sm font-medium">
+              {dragging ? "Solte os arquivos aqui" : "Clique ou arraste arquivos para enviar"}
+            </p>
             <p className="text-xs text-muted-foreground mt-1">
               Imagens, vídeos ou páginas web
             </p>

@@ -186,6 +186,12 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
                 </div>
                 <Badge variant="secondary">{currentPlaylist.items.length} itens</Badge>
               </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                <span className="flex items-center gap-1">
+                  <Clock className="size-3" />
+                  {formatDuration(currentPlaylist.totalDuration)}
+                </span>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
