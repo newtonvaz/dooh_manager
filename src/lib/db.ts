@@ -108,10 +108,24 @@ function createDb(client?: SupabaseClient) {
     },
 
     async createPlayer(data: Omit<Player, "id" | "code" | "status" | "lastSeen" | "createdAt" | "storageUsed" | "totalStorage" | "version" | "ip">): Promise<Player> {
-      const { count } = await c.from("players").select("*", { count: "exact", head: true })
+      function generateCode(): string {
+        const letters = Array.from({ length: 4 }, () =>
+          String.fromCharCode(65 + Math.floor(Math.random() * 26))
+        ).join("")
+        const numbers = String(Math.floor(Math.random() * 100001)).padStart(6, "0")
+        return `${letters}-${numbers}`
+      }
+
+      let code = generateCode()
+      for (let attempt = 0; attempt < 20; attempt++) {
+        const { data: existing } = await c.from("players").select("id").eq("code", code).maybeSingle()
+        if (!existing) break
+        code = generateCode()
+      }
+
       const player = {
         id: String(Date.now()),
-        code: `DOOH-${String((count || 0) + 1).padStart(3, "0")}`,
+        code,
         status: "never",
         last_seen: new Date(0).toISOString(),
         storage_used: 0,
