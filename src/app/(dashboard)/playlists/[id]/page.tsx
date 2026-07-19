@@ -7,15 +7,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { ArrowLeft, Clock, Film, ListMusic, Play, LayoutList, Grid3X3, FileImage, Video, AppWindow } from "lucide-react"
+import { ArrowLeft, Clock, Film, ListMusic, Play, LayoutList, Grid3X3, FileImage, Video, Globe } from "lucide-react"
 import { api } from "@/lib/api-client"
 import type { Playlist, PlaylistItem } from "@/types/content"
 import { cn } from "@/lib/utils"
 
 type ViewMode = "list" | "grid"
 
-const typeIcons = { image: FileImage, video: Video, web: AppWindow }
-const typeLabels = { image: "Imagem", video: "Vídeo", web: "Apps" }
+const typeIcons = { image: FileImage, video: Video, web: Globe }
+const typeLabels = { image: "Imagem", video: "Vídeo", web: "URL" }
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60)

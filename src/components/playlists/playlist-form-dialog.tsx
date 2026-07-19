@@ -24,12 +24,14 @@ import {
   Trash2,
   FileImage,
   Video,
+  Globe,
   AppWindow,
   Clock,
-  Newspaper,
   Layers,
   ListVideo,
   GripVertical,
+  LayoutList,
+  Grid3X3,
 } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
@@ -38,7 +40,7 @@ import { ContentPickerDialog } from "./content-picker-dialog"
 import { SubplaylistPickerDialog } from "./subplaylist-picker-dialog"
 import type { Playlist, PlaylistItem, MediaContent } from "@/types/content"
 
-const typeIcons = { image: FileImage, video: Video, web: AppWindow }
+const typeIcons = { image: FileImage, video: Video, web: Globe }
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60)
@@ -68,8 +70,10 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
   const [items, setItems] = useState<PlaylistItem[]>([])
   const [loading, setLoading] = useState(false)
   const [contentPickerOpen, setContentPickerOpen] = useState(false)
+  const [contentPickerFilter, setContentPickerFilter] = useState<"image" | "video" | "web" | undefined>(undefined)
   const [subplaylistPickerOpen, setSubplaylistPickerOpen] = useState(false)
   const [isSubplaylist, setIsSubplaylist] = useState(false)
+  const [view, setView] = useState<"list" | "grid">("list")
 
   const isEditing = !!playlist
 
@@ -214,11 +218,18 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
       toast.error(allContent?.length ? "Todos os conteúdos já foram adicionados" : "Nenhum conteúdo disponível")
       return
     }
+    setContentPickerFilter(undefined)
     setContentPickerOpen(true)
   }
 
-  function handleInsertNews() {
-    toast.info("Funcionalidade de notícias em breve")
+  function handleInsertApps() {
+    const apps = availableContent.filter((c) => c.type === "web")
+    if (apps.length === 0) {
+      toast.error("Nenhum App disponível")
+      return
+    }
+    setContentPickerFilter("web")
+    setContentPickerOpen(true)
   }
 
   function handleInsertSubplaylist() {
@@ -283,9 +294,9 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
               <Plus className="mr-1.5 size-4" />
               Inserir Conteúdos
             </Button>
-            <Button type="button" variant="outline" size="sm" onClick={handleInsertNews}>
-              <Newspaper className="mr-1.5 size-4" />
-              Inserir Notícias
+            <Button type="button" variant="outline" size="sm" onClick={handleInsertApps}>
+              <AppWindow className="mr-1.5 size-4" />
+              Inserir Apps
             </Button>
             <Button type="button" variant="outline" size="sm" onClick={handleInsertSubplaylist} disabled={isSubplaylist}>
               <Layers className="mr-1.5 size-4" />
@@ -296,7 +307,33 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
           <div className="flex-1 min-h-0 space-y-2">
             <div className="flex items-center justify-between">
               <Label>Itens da Playlist</Label>
-              <span className="text-xs text-muted-foreground">{items.length} item(ns)</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{items.length} item(ns)</span>
+                <div className="inline-flex items-center rounded-md border bg-muted/50 p-0.5">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={view === "list"}
+                    onClick={() => setView("list")}
+                    className={`inline-flex items-center justify-center rounded-sm h-7 w-7 text-sm font-medium transition-all ${
+                      view === "list" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <LayoutList className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={view === "grid"}
+                    onClick={() => setView("grid")}
+                    className={`inline-flex items-center justify-center rounded-sm h-7 w-7 text-sm font-medium transition-all ${
+                      view === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <Grid3X3 className="size-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
 
             <DragDropContext onDragEnd={handleDragEnd}>
@@ -305,12 +342,72 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="h-[200px] overflow-y-auto rounded-md border p-3 space-y-2"
+                    className={`overflow-y-auto rounded-md border p-3 ${
+                      view === "grid" ? "h-[260px]" : "h-[200px]"
+                    } ${view === "grid" ? "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2" : "space-y-2"}`}
                   >
                     {items.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-8">
+                      <p className="text-sm text-muted-foreground text-center py-8 col-span-full">
                         Nenhum item adicionado
                       </p>
+                    ) : view === "grid" ? (
+                      items.map((item, idx) => {
+                        const isContent = item.type === "content"
+                        const content = isContent ? itemContentMap.get(item.contentId!) : undefined
+                        const subPlaylist = !isContent ? playlistMap.get(item.playlistId!) : undefined
+                        const name = isContent ? content?.name : subPlaylist?.name
+                        if (!name) return null
+                        const Icon = isContent ? typeIcons[content?.type ?? "image"] : ListVideo
+                        return (
+                          <Draggable
+                            key={`${idx}-${isContent ? item.contentId : item.playlistId}`}
+                            draggableId={`item-${idx}`}
+                            index={idx}
+                          >
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={`group relative flex flex-col items-center gap-1 rounded-xl border p-3 transition-colors cursor-grab active:cursor-grabbing ${
+                                  snapshot.isDragging
+                                    ? "shadow-lg border-primary bg-accent"
+                                    : "bg-card hover:bg-muted/50"
+                                }`}
+                              >
+                                <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
+                                  <Icon className="size-5 text-muted-foreground" />
+                                </div>
+                                <span className="text-[10px] font-medium text-center leading-tight line-clamp-2">
+                                  {name}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <Clock className="size-2.5 text-muted-foreground" />
+                                  <Input
+                                    type="number"
+                                    min={1}
+                                    value={item.duration}
+                                    onChange={(e) =>
+                                      handleDurationChange(idx, Number(e.target.value))
+                                    }
+                                    className="w-12 h-6 text-[10px]"
+                                  />
+                                  <span className="text-[10px] text-muted-foreground">s</span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute -top-1.5 -right-1.5 size-5 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleRemoveItem(idx)}
+                                >
+                                  <Trash2 className="size-2.5" />
+                                </Button>
+                              </div>
+                            )}
+                          </Draggable>
+                        )
+                      })
                     ) : (
                       items.map((item, idx) => {
                         const isContent = item.type === "content"
@@ -396,9 +493,13 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
 
           <ContentPickerDialog
             open={contentPickerOpen}
-            onOpenChange={setContentPickerOpen}
+            onOpenChange={(v) => {
+              setContentPickerOpen(v)
+              if (!v) setContentPickerFilter(undefined)
+            }}
             availableContent={availableContent}
             onSelect={handleAddContent}
+            filterType={contentPickerFilter}
           />
 
           <SubplaylistPickerDialog

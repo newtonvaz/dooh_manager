@@ -12,17 +12,18 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { Search, FileImage, Video, AppWindow, Plus, CheckCheck } from "lucide-react"
+import { Search, FileImage, Video, Globe, Plus, CheckCheck } from "lucide-react"
 import type { MediaContent } from "@/types/content"
 
-const typeIcons = { image: FileImage, video: Video, web: AppWindow }
-const typeLabels = { image: "Imagem", video: "Vídeo", web: "Apps" }
+const typeIcons = { image: FileImage, video: Video, web: Globe }
+const typeLabels = { image: "Imagem", video: "Vídeo", web: "URL" }
 
 interface ContentPickerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   availableContent: MediaContent[]
   onSelect: (contentIds: string[]) => void
+  filterType?: "image" | "video" | "web"
 }
 
 export function ContentPickerDialog({
@@ -30,12 +31,16 @@ export function ContentPickerDialog({
   onOpenChange,
   availableContent,
   onSelect,
+  filterType,
 }: ContentPickerDialogProps) {
   const [search, setSearch] = useState("")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const filtered = useMemo(() => {
     let list = availableContent
+    if (filterType) {
+      list = list.filter((c) => c.type === filterType)
+    }
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(
@@ -45,7 +50,7 @@ export function ContentPickerDialog({
       )
     }
     return list
-  }, [availableContent, search])
+  }, [availableContent, search, filterType])
 
   function toggle(id: string) {
     setSelectedIds((prev) => {
@@ -65,11 +70,12 @@ export function ContentPickerDialog({
   }
 
   const counts = useMemo(() => {
-    const image = availableContent.filter((c) => c.type === "image").length
-    const video = availableContent.filter((c) => c.type === "video").length
-    const web = availableContent.filter((c) => c.type === "web").length
+    const list = filterType ? availableContent.filter((c) => c.type === filterType) : availableContent
+    const image = list.filter((c) => c.type === "image").length
+    const video = list.filter((c) => c.type === "video").length
+    const web = list.filter((c) => c.type === "web").length
     return { image, video, web }
-  }, [availableContent])
+  }, [availableContent, filterType])
 
   return (
     <Dialog
@@ -84,9 +90,11 @@ export function ContentPickerDialog({
     >
       <DialogContent className="sm:max-w-xl max-h-[85vh] flex flex-col bg-background">
         <DialogHeader>
-          <DialogTitle>Adicionar Conteúdo</DialogTitle>
+          <DialogTitle>{filterType === "web" ? "Adicionar App" : "Adicionar Conteúdo"}</DialogTitle>
           <DialogDescription>
-            Selecione um ou mais conteúdos para inserir na playlist
+            {filterType === "web"
+              ? "Selecione um ou mais Apps para inserir na playlist"
+              : "Selecione um ou mais conteúdos para inserir na playlist"}
           </DialogDescription>
         </DialogHeader>
 
@@ -108,7 +116,7 @@ export function ContentPickerDialog({
             <Video className="size-3" /> {counts.video} vídeos
           </span>
           <span className="flex items-center gap-1">
-            <AppWindow className="size-3" /> {counts.web} Apps
+            <Globe className="size-3" /> {counts.web} URLs
           </span>
         </div>
 
