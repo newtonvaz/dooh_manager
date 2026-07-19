@@ -1,7 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { Monitor, Wifi, HardDrive, Play, Activity } from "lucide-react"
+import { Monitor, Wifi, HardDrive, Play, Activity, AlertTriangle, RefreshCw } from "lucide-react"
 import { StatsCard } from "@/components/dashboard/stats-card"
 import dynamic from "next/dynamic"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
@@ -49,12 +49,33 @@ export default function DashboardPage() {
     refetchInterval: POLL,
   })
 
-  if (statsLoading || !stats) {
+  if (statsLoading) {
     return (
       <div className="flex items-center justify-center py-32">
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
           <Activity className="size-6 animate-pulse" />
           <p className="text-sm">Carregando dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!stats) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="flex flex-col items-center gap-3 text-destructive">
+          <AlertTriangle className="size-8" />
+          <p className="text-sm font-medium">Erro ao carregar o dashboard</p>
+          <p className="text-xs text-muted-foreground">
+            Verifique se as variáveis de ambiente do Supabase estão configuradas no Vercel.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-medium transition-colors hover:bg-accent"
+          >
+            <RefreshCw className="size-3" />
+            Tentar novamente
+          </button>
         </div>
       </div>
     )

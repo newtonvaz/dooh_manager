@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Loader2, ListMusic } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
 import type { Player } from "@/types/player"
@@ -197,10 +197,7 @@ export function PlayerFormDialog({ open, onOpenChange, player }: PlayerFormDialo
                 <SelectItem value="null">Nenhuma</SelectItem>
                 {(playlists as Playlist[]).map((p) => (
                   <SelectItem key={p.id} value={p.id}>
-                    <span className="flex items-center gap-2">
-                      <ListMusic className="size-3" />
-                      {p.name}
-                    </span>
+                    {p.name}
                   </SelectItem>
                 ))}
               </SelectContent>
