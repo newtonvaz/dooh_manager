@@ -1,14 +1,21 @@
 "use client"
 
+import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Clock, Film, ListMusic, Play } from "lucide-react"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { ArrowLeft, Clock, Film, ListMusic, Play, LayoutList, Grid3X3, FileImage, Video, AppWindow } from "lucide-react"
 import { api } from "@/lib/api-client"
 import type { Playlist, PlaylistItem } from "@/types/content"
 import { cn } from "@/lib/utils"
+
+type ViewMode = "list" | "grid"
+
+const typeIcons = { image: FileImage, video: Video, web: AppWindow }
+const typeLabels = { image: "Imagem", video: "Vídeo", web: "Apps" }
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60)
@@ -23,9 +30,28 @@ function formatTotal(seconds: number): string {
   return `${m}min`
 }
 
+function getRandomColor(name: string): string {
+  const colors = [
+    "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+    "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+    "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+    "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+    "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
+    "bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400",
+    "bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400",
+    "bg-lime-100 text-lime-600 dark:bg-lime-900/30 dark:text-lime-400",
+  ]
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return colors[Math.abs(hash) % colors.length]
+}
+
 export default function PlaylistDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const [view, setView] = useState<ViewMode>("list")
 
   const { data: playlists = [] } = useQuery({
     queryKey: ["playlists"],
@@ -48,10 +74,10 @@ export default function PlaylistDetailPage() {
     return c?.name ?? item.contentId ?? "Conteúdo"
   }
 
-  function getItemDescription(item: PlaylistItem): string {
-    if (item.type === "playlist") return "Subplaylist"
+  function getItemType(item: PlaylistItem): string {
+    if (item.type === "playlist") return "playlist"
     const c = contentItems.find((c: { id: string }) => c.id === item.contentId)
-    return c?.type ?? ""
+    return c?.type ?? "image"
   }
 
   if (!playlist) {
@@ -100,47 +126,119 @@ export default function PlaylistDetailPage() {
       </div>
 
       <div className="space-y-2">
-        <h2 className="text-sm font-medium">Conteúdo da Playlist</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium">Conteúdo da Playlist</h2>
+          <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v as ViewMode)}>
+            <ToggleGroupItem value="list" aria-label="Visualização em lista" size="sm">
+              <LayoutList className="size-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="grid" aria-label="Visualização em grade" size="sm">
+              <Grid3X3 className="size-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+
         {playlist.items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Film className="size-8 mb-2 opacity-30" />
             <p className="text-sm">Nenhum conteúdo nesta playlist</p>
           </div>
+        ) : view === "grid" ? (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+            {playlist.items.map((item, index) => {
+              const name = getItemName(item)
+              const type = getItemType(item)
+              if (type === "playlist") {
+                return (
+                  <div
+                    key={index}
+                    className="group relative flex flex-col items-center gap-2 rounded-xl border bg-card p-4 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex size-16 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
+                      <ListMusic className="size-7" />
+                    </div>
+                    <span className="text-xs font-medium text-center leading-tight line-clamp-2">
+                      {name}
+                    </span>
+                  </div>
+                )
+              }
+              const Icon = typeIcons[type as keyof typeof typeIcons] || FileImage
+              return (
+                <div
+                  key={index}
+                  className="group relative flex flex-col items-center gap-2 rounded-xl border bg-card p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <div className={cn("flex size-16 items-center justify-center rounded-xl", getRandomColor(name))}>
+                    <Icon className="size-7" />
+                  </div>
+                  <span className="text-xs font-medium text-center leading-tight line-clamp-2">
+                    {index + 1}. {name}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {formatDuration(item.duration)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
         ) : (
           <div className="space-y-1.5">
-            {playlist.items.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2.5"
-              >
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-                  {index + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{getItemName(item)}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{getItemDescription(item)}</p>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-[10px] shrink-0",
-                    item.type === "playlist"
-                      ? "border-violet-200 text-violet-600 dark:border-violet-800 dark:text-violet-400"
-                      : "border-amber-200 text-amber-600 dark:border-amber-800 dark:text-amber-400"
-                  )}
+            {playlist.items.map((item, index) => {
+              const name = getItemName(item)
+              const type = getItemType(item)
+              if (type === "playlist") {
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2.5"
+                  >
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-medium text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
+                      {index + 1}
+                    </span>
+                    <div className="rounded-lg bg-violet-100 dark:bg-violet-900/30 p-1.5">
+                      <ListMusic className="size-4 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{name}</p>
+                      <p className="text-xs text-muted-foreground">Subplaylist</p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] shrink-0 border-violet-200 text-violet-600 dark:border-violet-800 dark:text-violet-400">
+                      <ListMusic className="mr-0.5 size-2.5" />
+                      Playlist
+                    </Badge>
+                    <span className="text-xs text-muted-foreground shrink-0 w-12 text-right">
+                      {formatDuration(item.duration)}
+                    </span>
+                  </div>
+                )
+              }
+              const Icon = typeIcons[type as keyof typeof typeIcons] || FileImage
+              return (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2.5"
                 >
-                  {item.type === "playlist" ? (
-                    <ListMusic className="mr-0.5 size-2.5" />
-                  ) : (
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
+                    {index + 1}
+                  </span>
+                  <div className="rounded-lg bg-muted p-1.5">
+                    <Icon className="size-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{name}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{typeLabels[type as keyof typeof typeLabels] || type}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] shrink-0 border-amber-200 text-amber-600 dark:border-amber-800 dark:text-amber-400">
                     <Play className="mr-0.5 size-2.5" />
-                  )}
-                  {item.type === "playlist" ? "Playlist" : "Conteúdo"}
-                </Badge>
-                <span className="text-xs text-muted-foreground shrink-0 w-12 text-right">
-                  {formatDuration(item.duration)}
-                </span>
-              </div>
-            ))}
+                    Conteúdo
+                  </Badge>
+                  <span className="text-xs text-muted-foreground shrink-0 w-12 text-right">
+                    {formatDuration(item.duration)}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

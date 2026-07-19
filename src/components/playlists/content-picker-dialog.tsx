@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -11,17 +12,17 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { Search, FileImage, Video, Globe, Plus, CopyPlus } from "lucide-react"
+import { Search, FileImage, Video, AppWindow, Plus, CheckCheck } from "lucide-react"
 import type { MediaContent } from "@/types/content"
 
-const typeIcons = { image: FileImage, video: Video, web: Globe }
-const typeLabels = { image: "Imagem", video: "Vídeo", web: "URL" }
+const typeIcons = { image: FileImage, video: Video, web: AppWindow }
+const typeLabels = { image: "Imagem", video: "Vídeo", web: "Apps" }
 
 interface ContentPickerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   availableContent: MediaContent[]
-  onSelect: (contentId: string, count: number) => void
+  onSelect: (contentIds: string[]) => void
 }
 
 export function ContentPickerDialog({
@@ -31,8 +32,7 @@ export function ContentPickerDialog({
   onSelect,
 }: ContentPickerDialogProps) {
   const [search, setSearch] = useState("")
-  const [quantity, setQuantity] = useState(1)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const filtered = useMemo(() => {
     let list = availableContent
@@ -47,23 +47,21 @@ export function ContentPickerDialog({
     return list
   }, [availableContent, search])
 
-  function handleSelect(id: string) {
-    if (selectedId === id) {
-      handleConfirm(id)
-    } else {
-      setSelectedId(id)
-      setQuantity(1)
-    }
+  function toggle(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
 
-  function handleConfirm(id?: string) {
-    const targetId = id ?? selectedId
-    if (!targetId) return
-    onSelect(targetId, quantity)
+  function handleConfirm() {
+    if (selectedIds.size === 0) return
+    onSelect(Array.from(selectedIds))
     onOpenChange(false)
     setSearch("")
-    setSelectedId(null)
-    setQuantity(1)
+    setSelectedIds(new Set())
   }
 
   const counts = useMemo(() => {
@@ -74,12 +72,21 @@ export function ContentPickerDialog({
   }, [availableContent])
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) {
+          setSearch("")
+          setSelectedIds(new Set())
+        }
+        onOpenChange(v)
+      }}
+    >
       <DialogContent className="sm:max-w-xl max-h-[85vh] flex flex-col bg-background">
         <DialogHeader>
           <DialogTitle>Adicionar Conteúdo</DialogTitle>
           <DialogDescription>
-            Selecione o conteúdo e a quantidade para inserir na playlist
+            Selecione um ou mais conteúdos para inserir na playlist
           </DialogDescription>
         </DialogHeader>
 
@@ -101,7 +108,7 @@ export function ContentPickerDialog({
             <Video className="size-3" /> {counts.video} vídeos
           </span>
           <span className="flex items-center gap-1">
-            <Globe className="size-3" /> {counts.web} URLs
+            <AppWindow className="size-3" /> {counts.web} Apps
           </span>
         </div>
 
@@ -113,16 +120,17 @@ export function ContentPickerDialog({
           ) : (
             filtered.map((content) => {
               const Icon = typeIcons[content.type]
-              const isSelected = selectedId === content.id
+              const checked = selectedIds.has(content.id)
               return (
                 <button
                   key={content.id}
                   type="button"
-                  onClick={() => handleSelect(content.id)}
+                  onClick={() => toggle(content.id)}
                   className={`flex w-full items-center gap-3 rounded-md border p-2.5 text-left hover:bg-muted transition-colors ${
-                    isSelected ? "border-primary bg-primary/5" : ""
+                    checked ? "border-primary bg-primary/5" : ""
                   }`}
                 >
+                  <Checkbox checked={checked} className="shrink-0" />
                   <div className="rounded-lg bg-muted p-1.5">
                     <Icon className="size-4 text-muted-foreground" />
                   </div>
@@ -140,32 +148,22 @@ export function ContentPickerDialog({
           )}
         </div>
 
-        {selectedId && (
+        {selectedIds.size > 0 && (
           <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3">
-            <CopyPlus className="size-4 text-muted-foreground shrink-0" />
-            <div className="flex items-center gap-2">
-              <Label htmlFor="qty-content" className="text-sm whitespace-nowrap">
-                Quantidade:
-              </Label>
-              <Input
-                id="qty-content"
-                type="number"
-                min={1}
-                max={999}
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-                className="w-20 h-8 text-sm"
-              />
-            </div>
-            <Button type="button" size="sm" className="ml-auto" onClick={() => handleConfirm()}>
-              Adicionar {quantity > 1 ? `(${quantity}x)` : ""}
+            <CheckCheck className="size-4 text-primary shrink-0" />
+            <span className="text-sm text-muted-foreground">
+              {selectedIds.size} conteúdo{selectedIds.size !== 1 ? "s" : ""} selecionado
+              {selectedIds.size !== 1 ? "s" : ""}
+            </span>
+            <Button type="button" size="sm" className="ml-auto" onClick={handleConfirm}>
+              Adicionar {selectedIds.size > 1 ? `(${selectedIds.size})` : ""}
             </Button>
           </div>
         )}
 
-        {!selectedId && (
+        {selectedIds.size === 0 && (
           <p className="text-xs text-muted-foreground text-center py-2">
-            Clique em um conteúdo para selecionar
+            Selecione os conteúdos desejados
           </p>
         )}
       </DialogContent>

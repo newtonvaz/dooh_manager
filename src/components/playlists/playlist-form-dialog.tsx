@@ -24,7 +24,7 @@ import {
   Trash2,
   FileImage,
   Video,
-  Globe,
+  AppWindow,
   Clock,
   Newspaper,
   Layers,
@@ -38,7 +38,7 @@ import { ContentPickerDialog } from "./content-picker-dialog"
 import { SubplaylistPickerDialog } from "./subplaylist-picker-dialog"
 import type { Playlist, PlaylistItem, MediaContent } from "@/types/content"
 
-const typeIcons = { image: FileImage, video: Video, web: Globe }
+const typeIcons = { image: FileImage, video: Video, web: AppWindow }
 
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60)
@@ -123,17 +123,16 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
     [items]
   )
 
-  function handleAddContent(contentId: string, count = 1) {
-    const content = allContent?.find((c) => c.id === contentId)
-    if (!content) return
-    const dur = defaultDuration(content)
+  function handleAddContent(contentIds: string[]) {
+    if (!allContent) return
     setItems((prev) => [
       ...prev,
-      ...Array.from({ length: count }, () => ({
-        type: "content" as const,
-        contentId,
-        duration: dur,
-      })),
+      ...contentIds.flatMap((id) => {
+        const content = allContent.find((c) => c.id === id)
+        if (!content) return []
+        const dur = defaultDuration(content)
+        return { type: "content" as const, contentId: id, duration: dur }
+      }),
     ])
   }
 
