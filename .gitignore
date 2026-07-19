@@ -89,7 +89,6 @@ coverage/
 .env.local.example
 *.key
 *.pem
-package-lock.json
 
 # misc
 .DS_Store
