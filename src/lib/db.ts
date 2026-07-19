@@ -473,10 +473,17 @@ function createDb(client?: SupabaseClient) {
       if (!player) return null
 
       const playlistId = player.playlistId
-      if (!playlistId) return { player, playlist: null, items: [] }
+      if (!playlistId) return { player, playlist: null, items: [], schedule: null }
 
       const playlist = await this.getPlaylist(playlistId)
-      if (!playlist) return { player, playlist: null, items: [] }
+      if (!playlist) return { player, playlist: null, items: [], schedule: null }
+
+      const [playerSchedules, groupSchedules] = await Promise.all([
+        this.getSchedulesByTarget("player", player.id),
+        this.getSchedulesByTarget("group", player.group),
+      ])
+
+      const schedule = playerSchedules[0] || groupSchedules[0] || null
 
       const items: any[] = []
       for (const item of playlist.items) {
@@ -511,7 +518,10 @@ function createDb(client?: SupabaseClient) {
           }
         }
       }
-      return { player, playlist, items }
+
+      const scheduleVersion = schedule?.updatedAt ?? null
+
+      return { player, playlist, items, schedule, scheduleVersion }
     },
 
     async getRecentActivities() {
