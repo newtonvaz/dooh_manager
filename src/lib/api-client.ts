@@ -249,7 +249,7 @@ export const api = {
     search: string,
     dateFrom: string,
     dateTo: string
-  ): Promise<{ contentName: string; totalInsertions: number }[]> {
+  ): Promise<{ contentName: string; date: string; playerName: string; contentDuration: number }[]> {
     await delay(100)
     return dbCall("searchPlayedContent", {}, { search, dateFrom, dateTo })
   },

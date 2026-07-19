@@ -40,7 +40,7 @@ export default function ReportsPage() {
   const [exporting, setExporting] = useState<"pdf" | "xlsx" | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [suggestions, setSuggestions] = useState<
-    { contentName: string; totalInsertions: number }[]
+    { contentName: string; date: string; playerName: string; contentDuration: number }[]
   >([])
   const [searchingSuggestions, setSearchingSuggestions] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -228,18 +228,21 @@ export default function ReportsPage() {
                         Buscando...
                       </div>
                     ) : (
-                      suggestions.map((s) => (
+                      suggestions.map((s, i) => (
                         <button
-                          key={s.contentName}
+                          key={`${s.contentName}-${i}`}
                           type="button"
                           onMouseDown={() => selectSuggestion(s.contentName)}
-                          className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm hover:bg-muted transition-colors"
+                          className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
                         >
-                          <span className="font-medium truncate">{s.contentName}</span>
-                          <span className="shrink-0 text-xs font-mono text-muted-foreground">
-                            {s.totalInsertions} veiculação
-                            {s.totalInsertions !== 1 ? "ões" : ""}
-                          </span>
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium truncate block">{s.contentName}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(s.date).toLocaleDateString("pt-BR")}
+                              {" \u00b7 "}{s.playerName}
+                              {" \u00b7 "}{s.contentDuration}s
+                            </span>
+                          </div>
                         </button>
                       ))
                     )}

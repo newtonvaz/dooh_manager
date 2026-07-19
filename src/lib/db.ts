@@ -586,7 +586,7 @@ function createDb(client?: SupabaseClient) {
     },
 
     async getContentReport(query: ContentReportQuery): Promise<ContentReportRow[]> {
-      let q = c.from("playback_logs").select("content_name, date, player_name, content_duration, content_id, player_id, playlist_name")
+      let q = c.from("playback_logs").select("*")
 
       if (query.dateFrom) {
         q = q.gte("date", query.dateFrom)
@@ -634,24 +634,21 @@ function createDb(client?: SupabaseClient) {
       search: string,
       dateFrom: string,
       dateTo: string
-    ): Promise<{ contentName: string; totalInsertions: number }[]> {
-      let q = c.from("playback_logs").select("content_name")
+    ): Promise<{ contentName: string; date: string; playerName: string; contentDuration: number }[]> {
+      let q = c.from("playback_logs").select("content_name, date, player_name, content_duration")
       if (dateFrom) q = q.gte("date", dateFrom)
       if (dateTo) q = q.lte("date", dateTo)
       if (search) q = q.ilike("content_name", `%${search}%`)
 
-      const { data, error } = await q
+      const { data, error } = await q.order("date", { ascending: false }).limit(20)
       if (error) throw error
 
-      const counts = new Map<string, number>()
-      for (const entry of data || []) {
-        counts.set(entry.content_name, (counts.get(entry.content_name) || 0) + 1)
-      }
-
-      return Array.from(counts.entries())
-        .map(([contentName, totalInsertions]) => ({ contentName, totalInsertions }))
-        .sort((a, b) => b.totalInsertions - a.totalInsertions)
-        .slice(0, 10)
+      return (data || []).map((entry) => ({
+        contentName: entry.content_name,
+        date: entry.date,
+        playerName: entry.player_name,
+        contentDuration: entry.content_duration,
+      }))
     },
 
     // Schedules
