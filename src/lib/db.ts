@@ -3,7 +3,7 @@ import { supabaseAdmin } from "./supabase-admin"
 import type { Player } from "@/types/player"
 import type { MediaContent, Playlist } from "@/types/content"
 import type { OperatingSchedule, TimeSlot } from "@/types/schedule"
-import type { ContentReportQuery, ContentReportRow, PlaybackLog } from "@/types/playback"
+import type { ContentReportQuery, ContentReportRow, PlaybackLog, PlaybackLogRow } from "@/types/playback"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 interface Group {
@@ -586,7 +586,7 @@ function createDb(client?: SupabaseClient) {
     },
 
     async getContentReport(query: ContentReportQuery): Promise<ContentReportRow[]> {
-      let q = c.from("playback_logs").select("*")
+      let q = c.from("playback_logs").select("content_name, date, player_name, content_duration, content_id, player_id, playlist_name")
 
       if (query.dateFrom) {
         q = q.gte("date", query.dateFrom)
@@ -615,7 +615,7 @@ function createDb(client?: SupabaseClient) {
             date: entry.date,
             dayOfWeek: dayNames[new Date(entry.date + "T00:00:00").getDay()],
             contentName: entry.content_name,
-            contentDuration: entry.content_duration ?? 0,
+            contentDuration: entry.content_duration,
             insertions: 1,
             playerName: entry.player_name,
             playerCode: "",
@@ -628,6 +628,27 @@ function createDb(client?: SupabaseClient) {
       return Array.from(grouped.values())
         .sort((a, b) => a.date.localeCompare(b.date) || a.playerName.localeCompare(b.playerName))
         .map(({ _playerId, ...row }) => row)
+    },
+
+    async getPlaybackLogs(
+      search: string,
+      dateFrom: string,
+      dateTo: string
+    ): Promise<PlaybackLogRow[]> {
+      let q = c.from("playback_logs").select("content_name, date, player_name, content_duration")
+      if (dateFrom) q = q.gte("date", dateFrom)
+      if (dateTo) q = q.lte("date", dateTo)
+      if (search) q = q.ilike("content_name", `%${search}%`)
+
+      const { data, error } = await q.order("date", { ascending: false })
+      if (error) throw error
+
+      return (data || []).map((e: any) => ({
+        contentName: e.content_name,
+        date: e.date,
+        playerName: e.player_name,
+        contentDuration: e.content_duration,
+      }))
     },
 
     // Schedules

@@ -1,7 +1,7 @@
 import type { Player } from "@/types/player"
 import type { MediaContent, Playlist } from "@/types/content"
 import type { OperatingSchedule } from "@/types/schedule"
-import type { ContentReportQuery, ContentReportRow } from "@/types/playback"
+import type { ContentReportQuery, ContentReportRow, PlaybackLogRow } from "@/types/playback"
 
 interface Group {
   id: string
@@ -243,6 +243,15 @@ export const api = {
   async getContentReport(query: ContentReportQuery): Promise<ContentReportRow[]> {
     await delay(200)
     return dbCall("getContentReport", {}, query)
+  },
+
+  async getPlaybackLogs(
+    search: string,
+    dateFrom: string,
+    dateTo: string
+  ): Promise<PlaybackLogRow[]> {
+    await delay(100)
+    return dbCall("getPlaybackLogs", {}, { search, dateFrom, dateTo })
   },
 
   async getSchedules(): Promise<OperatingSchedule[]> {

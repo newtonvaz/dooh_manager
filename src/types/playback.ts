@@ -29,3 +29,10 @@ export interface ContentReportRow {
   playerCode: string
   playlistName: string
 }
+
+export interface PlaybackLogRow {
+  contentName: string
+  date: string
+  playerName: string
+  contentDuration: number
+}
