@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -66,7 +66,8 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
 
   useEffect(() => {
     if (playlists && playlists.length > 0 && currentPlaylistId) {
-      setSelectedPlaylistId(currentPlaylistId)
+      const exists = playlists.some((p) => p.id === currentPlaylistId)
+      setSelectedPlaylistId(exists ? currentPlaylistId : "__none__")
     }
   }, [playlists, currentPlaylistId])
 
@@ -75,6 +76,12 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
     queryFn: () => api.getPlaylist(currentPlaylistId!),
     enabled: !!currentPlaylistId,
   })
+
+  const selectedPlaylistName = useMemo(() => {
+    if (!selectedPlaylistId || selectedPlaylistId === "__none__") return ""
+    const found = (playlists ?? []).find((p) => p.id === selectedPlaylistId)
+    return found?.name ?? ""
+  }, [selectedPlaylistId, playlists])
 
   const { data: allContent } = useQuery({
     queryKey: ["content"],
@@ -145,7 +152,9 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
                 onValueChange={(v) => v && setSelectedPlaylistId(v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma playlist" />
+                  <SelectValue placeholder="Selecione uma playlist">
+                    {selectedPlaylistName || undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">Nenhuma</SelectItem>
