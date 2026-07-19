@@ -343,7 +343,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={`overflow-y-auto rounded-md border p-3 ${
-                      view === "grid" ? "h-[260px] flex flex-wrap gap-2 content-start" : "h-[200px] space-y-2"
+                      view === "grid" ? "h-[200px] flex flex-wrap gap-2 content-start" : "h-[200px] space-y-2"
                     } ${
                       snapshot.isDraggingOver
                         ? "border-primary/50 bg-primary/[0.03]"
@@ -374,16 +374,16 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 title={name}
-                                className={`w-24 flex flex-col items-center gap-1.5 rounded-xl border p-2.5 cursor-grab active:cursor-grabbing ${
+                                className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing ${
                                   snapshot.isDragging
                                     ? "shadow-lg border-primary bg-accent"
                                     : "bg-card hover:bg-muted/50"
                                 }`}
                               >
-                                <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
-                                  <Icon className="size-4 text-muted-foreground" />
+                                <div className="flex size-7 items-center justify-center rounded-md bg-muted">
+                                  <Icon className="size-3.5 text-muted-foreground" />
                                 </div>
-                                <span className="text-[10px] font-medium text-center w-full truncate">
+                                <span className="text-[9px] font-medium text-center w-full truncate leading-tight">
                                   {name}
                                 </span>
                               </div>
