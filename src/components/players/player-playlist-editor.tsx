@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -52,7 +52,7 @@ interface PlayerPlaylistEditorProps {
 
 export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlaylistEditorProps) {
   const queryClient = useQueryClient()
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState(currentPlaylistId ?? "__none__")
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState("__none__")
   const [saving, setSaving] = useState(false)
   const [editPlaylistOpen, setEditPlaylistOpen] = useState(false)
   const [addContentOpen, setAddContentOpen] = useState(false)
@@ -63,6 +63,12 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
     queryKey: ["playlists"],
     queryFn: api.getPlaylists,
   })
+
+  useEffect(() => {
+    if (playlists && playlists.length > 0 && currentPlaylistId) {
+      setSelectedPlaylistId(currentPlaylistId)
+    }
+  }, [playlists, currentPlaylistId])
 
   const { data: currentPlaylist } = useQuery({
     queryKey: ["playlist", currentPlaylistId],

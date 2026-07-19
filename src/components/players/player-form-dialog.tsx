@@ -44,7 +44,7 @@ export function PlayerFormDialog({ open, onOpenChange, player }: PlayerFormDialo
   const [name, setName] = useState(player?.name ?? "")
   const [group, setGroup] = useState(player?.group ?? "")
   const [location, setLocation] = useState(player?.location ?? "")
-  const [playlistId, setPlaylistId] = useState(player?.playlistId ?? "")
+  const [playlistId, setPlaylistId] = useState("")
   const [loading, setLoading] = useState(false)
 
   const { data: dbGroups } = useQuery({
@@ -66,9 +66,14 @@ export function PlayerFormDialog({ open, onOpenChange, player }: PlayerFormDialo
       setName(player?.name ?? "")
       setGroup(player?.group ?? "")
       setLocation(player?.location ?? "")
-      setPlaylistId(player?.playlistId ?? "")
     }
   }, [open, player])
+
+  useEffect(() => {
+    if (open && playlists.length > 0) {
+      setPlaylistId(player?.playlistId ?? "")
+    }
+  }, [open, playlists, player?.playlistId])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
