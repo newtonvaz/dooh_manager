@@ -343,15 +343,15 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                     ref={provided.innerRef}
                     {...provided.droppableProps}
                     className={`overflow-y-auto rounded-md border p-3 ${
-                      view === "grid" ? "h-[260px]" : "h-[200px]"
-                    } ${view === "grid" ? "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2" : "space-y-2"} ${
+                      view === "grid" ? "h-[260px] flex flex-wrap gap-2 content-start" : "h-[200px] space-y-2"
+                    } ${
                       snapshot.isDraggingOver
                         ? "border-primary/50 bg-primary/[0.03]"
                         : ""
                     }`}
                   >
                     {items.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-8 col-span-full">
+                      <p className="text-sm text-muted-foreground text-center py-8 w-full">
                         Nenhum item adicionado
                       </p>
                     ) : view === "grid" ? (
@@ -374,7 +374,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 title={name}
-                                className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 cursor-grab active:cursor-grabbing ${
+                                className={`w-24 flex flex-col items-center gap-1.5 rounded-xl border p-2.5 cursor-grab active:cursor-grabbing ${
                                   snapshot.isDragging
                                     ? "shadow-lg border-primary bg-accent"
                                     : "bg-card hover:bg-muted/50"
