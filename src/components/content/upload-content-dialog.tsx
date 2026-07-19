@@ -56,6 +56,11 @@ function getVideoDuration(file: File): Promise<number> {
   })
 }
 
+async function getAccessToken(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession()
+  return data.session?.access_token ?? null
+}
+
 interface UploadContentDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -77,6 +82,27 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
     setFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
+  async function apiCall(body: unknown) {
+    const token = await getAccessToken()
+    const headers: Record<string, string> = { "Content-Type": "application/json" }
+    if (token) headers["authorization"] = `Bearer ${token}`
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    })
+    const text = await res.text()
+    let json: any
+    try {
+      json = JSON.parse(text)
+    } catch {
+      throw new Error(`Resposta inesperada (${res.status}): ${text.slice(0, 200)}`)
+    }
+    if (!res.ok) throw new Error(json.error)
+    return json.data
+  }
+
   async function handleUpload() {
     if (files.length === 0) {
       toast.error("Selecione pelo menos um arquivo")
@@ -95,39 +121,30 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
 
         const duration = type === "video" ? await getVideoDuration(file).catch(() => 30) : null
 
-        const { error: uploadError } = await supabase.storage
-          .from("uploads")
-          .upload(safeName, file, { upsert: true })
+        const { url: signedUrl } = await apiCall({ action: "presign", path: safeName })
 
-        if (uploadError) throw uploadError
-
-        const { data: urlData } = supabase.storage.from("uploads").getPublicUrl(safeName)
-        const publicUrl = urlData?.publicUrl || ""
-
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "register",
-            entry: {
-              id: `c${timestamp}`,
-              name: file.name.replace(`.${ext}`, ""),
-              type,
-              url: publicUrl,
-              size: Math.round((file.size / (1024 * 1024)) * 100) / 100,
-              duration,
-            },
-          }),
+        const uploadRes = await fetch(signedUrl, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": file.type },
         })
-
-        const text = await res.text()
-        let json: any
-        try {
-          json = JSON.parse(text)
-        } catch {
-          throw new Error(`Erro ao registrar metadados (${res.status}): ${text.slice(0, 200)}`)
+        if (!uploadRes.ok) {
+          throw new Error(`Falha no upload do arquivo (${uploadRes.status})`)
         }
-        if (!res.ok) throw new Error(json.error)
+
+        const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/uploads/${safeName}`
+
+        await apiCall({
+          action: "register",
+          entry: {
+            id: `c${timestamp}`,
+            name: file.name.replace(`.${ext}`, ""),
+            type,
+            url: publicUrl,
+            size: Math.round((file.size / (1024 * 1024)) * 100) / 100,
+            duration,
+          },
+        })
 
         created.push({ name: file.name })
       }

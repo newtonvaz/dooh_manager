@@ -1,20 +1,13 @@
 "use client"
 
 import { createContext, useContext, useState, useCallback, useEffect } from "react"
-import { api } from "@/lib/api-client"
-
-const STORAGE_KEY = "dooh-auth"
-const SESSION_DURATION = 24 * 60 * 60 * 1000
-
-interface StoredAuth {
-  user: User
-  token: string
-  timestamp: number
-}
+import { supabase } from "@/lib/supabase"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 interface User {
   name: string
   email: string
+  role: string
 }
 
 interface AuthContextType {
@@ -39,6 +32,15 @@ export function useAuth() {
   return useContext(AuthContext)
 }
 
+function mapUser(supabaseUser: SupabaseUser): User {
+  const metadata = supabaseUser.app_metadata || {}
+  return {
+    name: supabaseUser.user_metadata?.name || supabaseUser.email?.split("@")[0] || "Usuário",
+    email: supabaseUser.email || "",
+    role: metadata.role || "operacional",
+  }
+}
+
 export function useAuthProvider() {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
@@ -46,44 +48,44 @@ export function useAuthProvider() {
   const [isLoggingIn, setIsLoggingIn] = useState(false)
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        const parsed: StoredAuth = JSON.parse(stored)
-        const elapsed = Date.now() - parsed.timestamp
-        if (elapsed < SESSION_DURATION) {
-          setUser(parsed.user)
-          setToken(parsed.token)
-        } else {
-          localStorage.removeItem(STORAGE_KEY)
-        }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(mapUser(session.user))
+        setToken(session.access_token)
       }
-    } catch {
-      localStorage.removeItem(STORAGE_KEY)
-    } finally {
       setIsLoading(false)
-    }
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(mapUser(session.user))
+        setToken(session.access_token)
+      } else {
+        setUser(null)
+        setToken(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
     setIsLoggingIn(true)
     try {
-      const result = await api.login(email, password)
-      setUser(result.user)
-      setToken(result.token)
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ user: result.user, token: result.token, timestamp: Date.now() })
-      )
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      if (!data.session?.user) throw new Error("Erro ao obter sessão")
+      setUser(mapUser(data.session.user))
+      setToken(data.session.access_token)
     } finally {
       setIsLoggingIn(false)
     }
   }, [])
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut()
     setUser(null)
     setToken(null)
-    localStorage.removeItem(STORAGE_KEY)
   }, [])
 
   return { user, token, login, logout, isLoading, isLoggingIn }

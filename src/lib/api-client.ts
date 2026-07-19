@@ -271,11 +271,5 @@ export const api = {
     return dbCall("deleteSchedule", { id })
   },
 
-  async login(email: string, password: string) {
-    await delay(800)
-    if (email === "admin@dooh.com" && password === "admin") {
-      return { token: "mock-token", user: { name: "Admin", email } }
-    }
-    throw new Error("Credenciais inválidas")
-  },
+
 }

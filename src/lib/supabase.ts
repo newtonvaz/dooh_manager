@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js"
+import { createBrowserClient } from "@supabase/ssr"
+import type { SupabaseClient } from "@supabase/supabase-js"
 
 let client: SupabaseClient | null = null
 
@@ -12,7 +13,7 @@ function getClient(): SupabaseClient {
         "Copy .env.local.example to .env.local and fill in your Supabase project credentials."
       )
     }
-    client = createClient(url, key)
+    client = createBrowserClient(url, key)
   }
   return client
 }
