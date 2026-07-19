@@ -246,7 +246,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Playlist" : "Nova Playlist"}</DialogTitle>
           <DialogDescription>
@@ -369,40 +369,19 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className={`group relative flex flex-col items-center gap-1 rounded-xl border p-3 transition-colors cursor-grab active:cursor-grabbing ${
+                                title={name}
+                                className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-colors cursor-grab active:cursor-grabbing ${
                                   snapshot.isDragging
                                     ? "shadow-lg border-primary bg-accent"
                                     : "bg-card hover:bg-muted/50"
                                 }`}
                               >
-                                <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
-                                  <Icon className="size-5 text-muted-foreground" />
+                                <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
+                                  <Icon className="size-4 text-muted-foreground" />
                                 </div>
-                                <span className="text-[10px] font-medium text-center leading-tight line-clamp-2">
+                                <span className="text-[10px] font-medium text-center w-full truncate">
                                   {name}
                                 </span>
-                                <div className="flex items-center gap-1">
-                                  <Clock className="size-2.5 text-muted-foreground" />
-                                  <Input
-                                    type="number"
-                                    min={1}
-                                    value={item.duration}
-                                    onChange={(e) =>
-                                      handleDurationChange(idx, Number(e.target.value))
-                                    }
-                                    className="w-12 h-6 text-[10px]"
-                                  />
-                                  <span className="text-[10px] text-muted-foreground">s</span>
-                                </div>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="absolute -top-1.5 -right-1.5 size-5 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => handleRemoveItem(idx)}
-                                >
-                                  <Trash2 className="size-2.5" />
-                                </Button>
                               </div>
                             )}
                           </Draggable>

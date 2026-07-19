@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { ArrowLeft, Clock, Film, ListMusic, Play, LayoutList, Grid3X3, FileImage, Video, Globe } from "lucide-react"
+import { ArrowLeft, Clock, Film, ListMusic, LayoutList, Grid3X3, FileImage, Video, Globe, ListVideo } from "lucide-react"
 import { api } from "@/lib/api-client"
 import type { Playlist, PlaylistItem } from "@/types/content"
 import { cn } from "@/lib/utils"
@@ -144,39 +144,25 @@ export default function PlaylistDetailPage() {
             <p className="text-sm">Nenhum conteúdo nesta playlist</p>
           </div>
         ) : view === "grid" ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
             {playlist.items.map((item, index) => {
               const name = getItemName(item)
               const type = getItemType(item)
-              if (type === "playlist") {
-                return (
-                  <div
-                    key={index}
-                    className="group relative flex flex-col items-center gap-2 rounded-xl border bg-card p-4 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex size-16 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
-                      <ListMusic className="size-7" />
-                    </div>
-                    <span className="text-xs font-medium text-center leading-tight line-clamp-2">
-                      {name}
-                    </span>
-                  </div>
-                )
-              }
-              const Icon = typeIcons[type as keyof typeof typeIcons] || FileImage
+              const Icon = type === "playlist" ? ListVideo : typeIcons[type as keyof typeof typeIcons] || FileImage
+              const color = type === "playlist"
+                ? "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400"
+                : getRandomColor(name)
               return (
                 <div
                   key={index}
-                  className="group relative flex flex-col items-center gap-2 rounded-xl border bg-card p-4 hover:bg-muted/50 transition-colors"
+                  title={name}
+                  className="flex flex-col items-center gap-1.5 rounded-xl border bg-card p-3 hover:bg-muted/50 transition-colors"
                 >
-                  <div className={cn("flex size-16 items-center justify-center rounded-xl", getRandomColor(name))}>
-                    <Icon className="size-7" />
+                  <div className={cn("flex size-10 items-center justify-center rounded-lg", color)}>
+                    <Icon className="size-5" />
                   </div>
-                  <span className="text-xs font-medium text-center leading-tight line-clamp-2">
-                    {index + 1}. {name}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {formatDuration(item.duration)}
+                  <span className="text-[10px] font-medium text-center w-full truncate">
+                    {name}
                   </span>
                 </div>
               )
