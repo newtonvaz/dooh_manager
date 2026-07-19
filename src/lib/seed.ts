@@ -2,6 +2,7 @@ import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import "dotenv/config"
+import { mapKeys } from "./seed-helpers"
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -13,19 +14,6 @@ function readJSON<T>(filename: string): T[] {
   const filePath = path.join(DATA_DIR, filename)
   if (!fs.existsSync(filePath)) return []
   return JSON.parse(fs.readFileSync(filePath, "utf-8"))
-}
-
-function camelToSnake(str: string): string {
-  return str.replace(/^[A-Z]/, c => c.toLowerCase())
-            .replace(/(?<![A-Z])[A-Z]/g, c => `_${c.toLowerCase()}`)
-}
-
-export function mapKeys(obj: Record<string, unknown>): Record<string, unknown> {
-  const result: Record<string, unknown> = {}
-  for (const key of Object.keys(obj)) {
-    result[camelToSnake(key)] = obj[key]
-  }
-  return result
 }
 
 async function seedTable(filename: string, table: string) {
@@ -45,7 +33,6 @@ async function seed() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // Skip seeding if no valid Supabase config
   if (!url || !key || url.includes("your-project-ref") || key.includes("your-anon-key")) {
     console.log("Skipping seed: Supabase credentials not configured")
     return

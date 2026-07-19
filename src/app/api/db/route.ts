@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin"
 import { createClient } from "@supabase/supabase-js"
 import fs from "fs"
 import path from "path"
-import { mapKeys } from "@/lib/seed"
+import { mapKeys } from "@/lib/seed-helpers"
 
 export const dynamic = "force-dynamic"
 
