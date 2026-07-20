@@ -537,6 +537,7 @@ function createDb(client?: SupabaseClient) {
               name: content.name,
               duration: item.duration || content.duration || 10,
               contentId: content.id,
+              timeSlots: item.timeSlots ?? null,
             })
           }
         } else if (item.type === "playlist" && item.playlistId) {
@@ -552,6 +553,7 @@ function createDb(client?: SupabaseClient) {
                     name: content.name,
                     duration: subItem.duration || content.duration || 10,
                     contentId: content.id,
+                    timeSlots: subItem.timeSlots ?? null,
                   })
                 }
               }

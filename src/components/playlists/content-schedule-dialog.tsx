@@ -15,6 +15,17 @@ import {
 import { Plus, Trash2, Calendar, FileImage, Video, Globe } from "lucide-react"
 import type { MediaContent, ContentTimeSlot } from "@/types/content"
 
+function toLocalDatetimeString(iso: string): string {
+  if (!iso) return ""
+  const d = new Date(iso)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  const hours = String(d.getHours()).padStart(2, "0")
+  const minutes = String(d.getMinutes()).padStart(2, "0")
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
 const typeIcons = { image: FileImage, video: Video, web: Globe }
 const typeLabels = { image: "Imagem", video: "Vídeo", web: "URL" }
 
@@ -42,8 +53,8 @@ export function ContentScheduleDialog({
       setTimeSlots(
         initialTimeSlots && initialTimeSlots.length > 0
           ? initialTimeSlots.map((s) => ({
-              startDate: s.startDate ? new Date(s.startDate).toISOString().slice(0, 16) : "",
-              endDate: s.endDate ? new Date(s.endDate).toISOString().slice(0, 16) : "",
+              startDate: toLocalDatetimeString(s.startDate),
+              endDate: toLocalDatetimeString(s.endDate),
             }))
           : [{ startDate: "", endDate: "" }]
       )

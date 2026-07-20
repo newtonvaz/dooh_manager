@@ -109,7 +109,7 @@ export async function POST(request: Request) {
         result = dbAdmin.updatePlaylist(params.id, data)
         break
       case "addContentToPlaylist":
-        result = dbAdmin.addContentToPlaylist(params.playlistId, params.contentId, params.duration)
+        result = dbAdmin.addContentToPlaylist(params.playlistId, params.contentId, params.duration, params.timeSlots)
         break
       case "removeContentFromPlaylist":
         result = dbAdmin.removeContentFromPlaylist(params.playlistId, params.contentId)
