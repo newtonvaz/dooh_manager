@@ -46,6 +46,12 @@ import type { Playlist, PlaylistItem, MediaContent, ContentTimeSlot } from "@/ty
 
 const typeIcons = { image: FileImage, video: Video, web: Globe }
 
+function isExpired(item: PlaylistItem): boolean {
+  if (!item.timeSlots || item.timeSlots.length === 0) return false
+  const now = new Date()
+  return item.timeSlots.every((s) => new Date(s.endDate) < now)
+}
+
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
@@ -442,7 +448,9 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                   className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing transition-transform duration-150 ${
                                     snapshot.isDragging
                                       ? "shadow-xl border-primary bg-accent opacity-75 scale-[1.02] z-50"
-                                      : "bg-card hover:bg-muted/50"
+                                      : isExpired(item)
+                                        ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800"
+                                        : "bg-card hover:bg-muted/50"
                                   }`}
                                 >
                                   <div className="flex size-7 items-center justify-center rounded-md bg-muted">
@@ -508,7 +516,9 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                   className={`flex items-center justify-between rounded-lg border p-2 gap-2 transition-transform duration-150 ${
                                     snapshot.isDragging
                                       ? "shadow-xl border-primary bg-accent opacity-75 scale-[1.02] z-50"
-                                      : ""
+                                      : isExpired(item)
+                                        ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800"
+                                        : ""
                                   }`}
                                 >
                                   <div
