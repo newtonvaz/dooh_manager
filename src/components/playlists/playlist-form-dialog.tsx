@@ -392,7 +392,14 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                         return (
                           <Fragment key={`${idx}-${isContent ? item.contentId : item.playlistId}`}>
                             {isTarget && (
-                              <div className="w-[5px] self-stretch bg-primary/10 shrink-0 border-l-2 border-dashed border-primary/50" />
+                              <div className="w-24 flex flex-col items-center gap-1 rounded-lg border-2 border-dashed border-primary/50 bg-primary/5 p-2 shrink-0">
+                                <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
+                                  <Plus className="size-3.5 text-primary/60" />
+                                </div>
+                                <span className="text-[9px] font-medium text-primary/60 text-center w-full truncate leading-tight">
+                                  Inserir aqui
+                                </span>
+                              </div>
                             )}
                             <Draggable
                               draggableId={`item-${idx}`}
@@ -531,7 +538,18 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                       })
                     )}
                     {dragState && dragState.destination != null && dragState.destination === items.length - 1 && (
-                      <div className="h-2 bg-primary/10 rounded shrink-0 w-full border-2 border-dashed border-primary/50" />
+                      view === "grid" ? (
+                        <div className="w-24 flex flex-col items-center gap-1 rounded-lg border-2 border-dashed border-primary/50 bg-primary/5 p-2 shrink-0">
+                          <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
+                            <Plus className="size-3.5 text-primary/60" />
+                          </div>
+                          <span className="text-[9px] font-medium text-primary/60 text-center w-full truncate leading-tight">
+                            Inserir aqui
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="h-2 bg-primary/10 rounded shrink-0 w-full border-2 border-dashed border-primary/50" />
+                      )
                     )}
                     {provided.placeholder}
                   </div>
