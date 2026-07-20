@@ -392,7 +392,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                         return (
                           <Fragment key={`${idx}-${isContent ? item.contentId : item.playlistId}`}>
                             {isTarget && (
-                              <div className="h-[5px] w-full bg-primary/70 rounded shrink-0" />
+                              <div className="w-[5px] self-stretch bg-primary/10 shrink-0 border-l-2 border-dashed border-primary/50" />
                             )}
                             <Draggable
                               draggableId={`item-${idx}`}
@@ -452,7 +452,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                         return (
                           <Fragment key={`${idx}-${isContent ? item.contentId : item.playlistId}`}>
                             {isTarget && (
-                              <div className="h-[5px] w-full bg-primary/70 rounded shrink-0" />
+                              <div className="h-2 w-full bg-primary/10 rounded shrink-0 border-2 border-dashed border-primary/50" />
                             )}
                             <Draggable
                               draggableId={`item-${idx}`}
@@ -531,7 +531,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                       })
                     )}
                     {dragState && dragState.destination != null && dragState.destination === items.length - 1 && (
-                      <div className="h-[5px] bg-primary/70 rounded shrink-0 w-full" />
+                      <div className="h-2 bg-primary/10 rounded shrink-0 w-full border-2 border-dashed border-primary/50" />
                     )}
                     {provided.placeholder}
                   </div>
