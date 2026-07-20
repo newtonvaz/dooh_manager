@@ -74,6 +74,10 @@ export const api = {
     return dbCall("recordHeartbeatByCode", { code })
   },
 
+  async recordDeviceInfo(code: string, deviceInfo: Record<string, unknown>): Promise<Player | undefined> {
+    return dbCall("recordDeviceInfo", { code }, deviceInfo)
+  },
+
   async getPlaylists(): Promise<Playlist[]> {
     await delay(150)
     return dbCall("getPlaylists")

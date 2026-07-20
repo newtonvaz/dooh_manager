@@ -83,7 +83,10 @@ export async function POST(request: Request) {
         result = dbAdmin.recordHeartbeat(params.id)
         break
       case "recordHeartbeatByCode":
-        result = dbAdmin.recordHeartbeatByCode(params.code)
+        result = dbAdmin.recordHeartbeatByCode(params.code, data)
+        break
+      case "recordDeviceInfo":
+        result = dbAdmin.recordHeartbeatByCode(params.code, data)
         break
       case "getPlayerByCode":
         result = dbAdmin.getPlayerByCode(params.code)

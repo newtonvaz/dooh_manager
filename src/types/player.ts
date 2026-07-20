@@ -14,4 +14,7 @@ export interface Player {
   ip: string
   createdAt: string
   playlistId?: string
+  electronVersion?: string
+  publicIp?: string
+  storageFree?: number
 }

@@ -81,16 +81,33 @@ function createDb(client?: SupabaseClient) {
       return mapPlayer(data)
     },
 
-    async recordHeartbeat(id: string): Promise<Player | undefined> {
+    async recordHeartbeat(id: string, deviceInfo?: {
+      version?: string
+      ip?: string
+      storageUsed?: number
+      totalStorage?: number
+      storageFree?: number
+      electronVersion?: string
+      publicIp?: string
+    }): Promise<Player | undefined> {
       const { data: player } = await c.from("players").select("*").eq("id", id).single()
       if (!player) return undefined
 
       const wasOffline = player.status === "offline" || player.status === "never"
       const now = new Date().toISOString()
 
+      const update: Record<string, any> = { status: "online", last_seen: now }
+      if (deviceInfo?.version) update.version = deviceInfo.version
+      if (deviceInfo?.ip) update.ip = deviceInfo.ip
+      if (deviceInfo?.storageUsed !== undefined) update.storage_used = deviceInfo.storageUsed
+      if (deviceInfo?.totalStorage !== undefined) update.total_storage = deviceInfo.totalStorage
+      if (deviceInfo?.storageFree !== undefined) update.storage_free = deviceInfo.storageFree
+      if (deviceInfo?.electronVersion) update.electron_version = deviceInfo.electronVersion
+      if (deviceInfo?.publicIp) update.public_ip = deviceInfo.publicIp
+
       const { data, error } = await c
         .from("players")
-        .update({ status: "online", last_seen: now })
+        .update(update)
         .eq("id", id)
         .select()
         .single()
@@ -462,10 +479,18 @@ function createDb(client?: SupabaseClient) {
       return mapPlayer(data)
     },
 
-    async recordHeartbeatByCode(code: string): Promise<Player | undefined> {
+    async recordHeartbeatByCode(code: string, deviceInfo?: {
+      version?: string
+      ip?: string
+      storageUsed?: number
+      totalStorage?: number
+      storageFree?: number
+      electronVersion?: string
+      publicIp?: string
+    }): Promise<Player | undefined> {
       const player = await this.getPlayerByCode(code)
       if (!player) return undefined
-      return this.recordHeartbeat(player.id)
+      return this.recordHeartbeat(player.id, deviceInfo)
     },
 
     async resolvePlayerPlaylist(code: string) {
@@ -772,6 +797,9 @@ function mapPlayer(data: any): Player {
     totalStorage: data.total_storage || 32,
     version: data.version || "2.1.0",
     ip: data.ip || "0.0.0.0",
+    electronVersion: data.electron_version || undefined,
+    publicIp: data.public_ip || undefined,
+    storageFree: data.storage_free || undefined,
     playlistId: data.playlist_id || undefined,
     createdAt: data.created_at,
   }

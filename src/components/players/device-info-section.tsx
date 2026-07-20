@@ -38,14 +38,16 @@ export function DeviceInfoSection({ player }: Props) {
   const na = "Não disponível"
 
   const playerVersion = electronInfo?.playerVersion || player.version || na
-  const electronVersion = electronInfo?.electronVersion || na
+  const electronVersion = electronInfo?.electronVersion || player.electronVersion || na
   const localIp = electronInfo?.localIp || player.ip || na
-  const publicIp = electronInfo?.publicIp || na
+  const publicIp = electronInfo?.publicIp || player.publicIp || na
   const storageTotal = electronInfo?.storageTotal || player.totalStorage || 0
   const storageUsed = electronInfo?.storageUsed || player.storageUsed || 0
-  const storageFree = electronInfo?.storageFree || (player.totalStorage - player.storageUsed > 0
-    ? player.totalStorage - player.storageUsed
-    : 0)
+  const storageFree = electronInfo?.storageFree || player.storageFree || (
+    player.totalStorage && player.storageUsed
+      ? player.totalStorage - player.storageUsed
+      : 0
+  )
 
   return (
     <Card>

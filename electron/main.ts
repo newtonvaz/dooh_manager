@@ -72,6 +72,41 @@ function getDeviceInfo() {
   }
 }
 
+function getPlayerCode(): string | null {
+  const codeIdx = process.argv.indexOf('--code')
+  if (codeIdx !== -1 && codeIdx + 1 < process.argv.length) {
+    return process.argv[codeIdx + 1]
+  }
+  return process.env.PLAYER_CODE || null
+}
+
+async function sendDeviceInfoToCms(baseUrl: string, code: string): Promise<void> {
+  try {
+    const info = getDeviceInfo()
+    const publicIp = await getPublicIp()
+
+    await fetch(`${baseUrl}/api/heartbeat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code,
+        version: info.playerVersion,
+        ip: info.localIp,
+        storageUsed: info.storageUsed,
+        totalStorage: info.storageTotal,
+        storageFree: info.storageFree,
+        electronVersion: info.electronVersion,
+        publicIp,
+      }),
+      signal: AbortSignal.timeout(10000),
+    })
+  } catch {
+    // silent fail — next heartbeat will retry
+  }
+}
+
+let deviceInfoInterval: ReturnType<typeof setInterval> | null = null
+
 async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -83,11 +118,23 @@ async function createWindow() {
     },
   })
 
-  if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
-    await mainWindow.loadURL('http://localhost:3000')
+  const baseUrl = process.env.NODE_ENV === 'development' || process.argv.includes('--dev')
+    ? 'http://localhost:3000'
+    : `file://${path.join(__dirname, '../out')}`
+
+  const isHttp = baseUrl.startsWith('http')
+
+  if (isHttp) {
+    await mainWindow.loadURL(baseUrl)
     mainWindow.webContents.openDevTools()
+
+    const code = getPlayerCode()
+    if (code) {
+      sendDeviceInfoToCms(baseUrl, code)
+      deviceInfoInterval = setInterval(() => sendDeviceInfoToCms(baseUrl, code), 5 * 60 * 1000)
+    }
   } else {
-    await mainWindow.loadURL(`file://${path.join(__dirname, '../out/index.html')}`)
+    await mainWindow.loadURL(`${baseUrl}/index.html`)
   }
 }
 
@@ -106,5 +153,6 @@ app.whenReady().then(async () => {
 })
 
 app.on('window-all-closed', () => {
+  if (deviceInfoInterval) clearInterval(deviceInfoInterval)
   if (process.platform !== 'darwin') app.quit()
 })
