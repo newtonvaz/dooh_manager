@@ -23,6 +23,7 @@ interface ContentScheduleDialogProps {
   onOpenChange: (open: boolean) => void
   selectedContent: MediaContent[]
   initialTimeSlots?: ContentTimeSlot[]
+  isEditing?: boolean
   onConfirm: (timeSlots: ContentTimeSlot[]) => void
 }
 
@@ -31,6 +32,7 @@ export function ContentScheduleDialog({
   onOpenChange,
   selectedContent,
   initialTimeSlots,
+  isEditing = false,
   onConfirm,
 }: ContentScheduleDialogProps) {
   const [timeSlots, setTimeSlots] = useState<ContentTimeSlot[]>([])
@@ -67,8 +69,6 @@ export function ContentScheduleDialog({
       )
     )
   }
-
-  const isEditing = initialTimeSlots !== undefined
 
   function handleConfirm() {
     const filled = timeSlots.filter((s) => s.startDate && s.endDate)

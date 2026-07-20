@@ -631,6 +631,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                 ? items[editingScheduleIndex]?.timeSlots
                 : undefined
             }
+            isEditing={editingScheduleIndex != null}
             onConfirm={handleScheduleConfirm}
           />
 
