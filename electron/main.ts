@@ -2,8 +2,11 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import * as path from 'path'
 import * as os from 'os'
 import { execSync } from 'child_process'
+import * as fs from 'fs'
 
 let mainWindow: BrowserWindow | null = null
+
+const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev')
 
 function getLocalIp(): string {
   const interfaces = os.networkInterfaces()
@@ -80,12 +83,20 @@ function getPlayerCode(): string | null {
   return process.env.PLAYER_CODE || null
 }
 
-async function sendDeviceInfoToCms(baseUrl: string, code: string): Promise<void> {
+function getCmsBaseUrl(): string | null {
+  if (isDev) return 'http://localhost:3000'
+  return process.env.CMS_URL || null
+}
+
+async function sendDeviceInfoToCms(code: string): Promise<void> {
+  const cmsUrl = getCmsBaseUrl()
+  if (!cmsUrl) return
+
   try {
     const info = getDeviceInfo()
     const publicIp = await getPublicIp()
 
-    await fetch(`${baseUrl}/api/heartbeat`, {
+    const res = await fetch(`${cmsUrl}/api/heartbeat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -100,12 +111,27 @@ async function sendDeviceInfoToCms(baseUrl: string, code: string): Promise<void>
       }),
       signal: AbortSignal.timeout(10000),
     })
-  } catch {
-    // silent fail — next heartbeat will retry
+
+    if (!res.ok) {
+      const text = await res.text()
+      console.error(`Falha ao enviar device info ao CMS (${res.status}): ${text}`)
+    }
+  } catch (err) {
+    console.error('Falha ao enviar device info ao CMS:', err)
   }
 }
 
 let deviceInfoInterval: ReturnType<typeof setInterval> | null = null
+
+function getRendererUrl(): string {
+  if (isDev) return 'http://localhost:3000'
+  const outDir = path.join(__dirname, '../out')
+  const indexHtml = path.join(outDir, 'player-info.html')
+  if (fs.existsSync(indexHtml)) {
+    return `file://${indexHtml}`
+  }
+  return `file://${path.join(outDir, 'index.html')}`
+}
 
 async function createWindow() {
   mainWindow = new BrowserWindow({
@@ -118,23 +144,16 @@ async function createWindow() {
     },
   })
 
-  const baseUrl = process.env.NODE_ENV === 'development' || process.argv.includes('--dev')
-    ? 'http://localhost:3000'
-    : `file://${path.join(__dirname, '../out')}`
-
-  const isHttp = baseUrl.startsWith('http')
-
-  if (isHttp) {
-    await mainWindow.loadURL(baseUrl)
+  if (isDev) {
     mainWindow.webContents.openDevTools()
+  }
 
-    const code = getPlayerCode()
-    if (code) {
-      sendDeviceInfoToCms(baseUrl, code)
-      deviceInfoInterval = setInterval(() => sendDeviceInfoToCms(baseUrl, code), 5 * 60 * 1000)
-    }
-  } else {
-    await mainWindow.loadURL(`${baseUrl}/index.html`)
+  await mainWindow.loadURL(getRendererUrl())
+
+  const code = getPlayerCode()
+  if (code) {
+    sendDeviceInfoToCms(code)
+    deviceInfoInterval = setInterval(() => sendDeviceInfoToCms(code), 5 * 60 * 1000)
   }
 }
 
