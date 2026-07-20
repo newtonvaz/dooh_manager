@@ -16,7 +16,6 @@ create table if not exists players (
   ip text not null default '0.0.0.0',
   electron_version text not null default '',
   public_ip text not null default '',
-  storage_free real not null default 0,
   playlist_id text references playlists(id) on delete set null,
   created_at timestamptz not null default now()
 );

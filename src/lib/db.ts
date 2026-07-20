@@ -96,23 +96,37 @@ function createDb(client?: SupabaseClient) {
       const wasOffline = player.status === "offline" || player.status === "never"
       const now = new Date().toISOString()
 
-      const update: Record<string, any> = { status: "online", last_seen: now }
-      if (deviceInfo?.version) update.version = deviceInfo.version
-      if (deviceInfo?.ip) update.ip = deviceInfo.ip
-      if (deviceInfo?.storageUsed !== undefined) update.storage_used = deviceInfo.storageUsed
-      if (deviceInfo?.totalStorage !== undefined) update.total_storage = deviceInfo.totalStorage
-      if (deviceInfo?.storageFree !== undefined) update.storage_free = deviceInfo.storageFree
-      if (deviceInfo?.electronVersion) update.electron_version = deviceInfo.electronVersion
-      if (deviceInfo?.publicIp) update.public_ip = deviceInfo.publicIp
+      async function doUpdate(fields: Record<string, any>) {
+        const base: Record<string, any> = { status: "online", last_seen: now }
+        for (const [key, value] of Object.entries(fields)) {
+          if (value !== undefined) base[key] = value
+        }
+        const { data, error } = await c.from("players").update(base).eq("id", id).select().single()
+        if (error) throw error
+        return data
+      }
 
-      const { data, error } = await c
-        .from("players")
-        .update(update)
-        .eq("id", id)
-        .select()
-        .single()
+      let data: any
+      try {
+        data = await doUpdate({
+          version: deviceInfo?.version,
+          ip: deviceInfo?.ip,
+          storage_used: deviceInfo?.storageUsed,
+          total_storage: deviceInfo?.totalStorage,
+          storage_free: deviceInfo?.storageFree,
+          electron_version: deviceInfo?.electronVersion || undefined,
+          public_ip: deviceInfo?.publicIp || undefined,
+        })
+      } catch {
+        // columns may not exist yet — retry without the new fields
+        data = await doUpdate({
+          version: deviceInfo?.version,
+          ip: deviceInfo?.ip,
+          storage_used: deviceInfo?.storageUsed,
+          total_storage: deviceInfo?.totalStorage,
+        })
+      }
 
-      if (error) throw error
       if (wasOffline && data) {
         recordActivity(c, {
           type: "online",
