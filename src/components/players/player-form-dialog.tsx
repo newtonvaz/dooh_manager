@@ -20,13 +20,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Loader2 } from "lucide-react"
+import { Loader2, HardDrive } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
 import type { Player } from "@/types/player"
 import type { Playlist } from "@/types/content"
 import type { OperatingSchedule } from "@/types/schedule"
 import { useQueryClient } from "@tanstack/react-query"
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return "Não disponível"
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`
+}
 
 interface Group {
   id: string
@@ -150,6 +157,36 @@ export function PlayerFormDialog({ open, onOpenChange, player }: PlayerFormDialo
             {isEditing ? "Altere as informações do player" : "Preencha os dados para criar um novo player"}
           </DialogDescription>
         </DialogHeader>
+
+        {isEditing && (
+          <div className="rounded-lg border bg-muted/40 p-3">
+            <div className="flex items-center gap-2 mb-2 text-sm font-medium text-muted-foreground">
+              <HardDrive className="size-4" />
+              Armazenamento
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Total</span>
+                <p className="font-mono font-medium">
+                  {player.totalStorage ? formatBytes(player.totalStorage) : "Indefinido"}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Utilizado</span>
+                <p className="font-mono font-medium">
+                  {player.storageUsed ? formatBytes(player.storageUsed) : "Indefinido"}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Livre</span>
+                <p className="font-mono font-medium">
+                  {player.storageFree != null ? formatBytes(player.storageFree) : "Indefinido"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">
