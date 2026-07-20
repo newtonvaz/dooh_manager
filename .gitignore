@@ -5,6 +5,7 @@ ds_store
 
 # build
 /dist
+/dist-electron
 .next
 *.log
 

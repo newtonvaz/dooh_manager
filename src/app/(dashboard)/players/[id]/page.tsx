@@ -10,6 +10,7 @@ import dynamic from "next/dynamic"
 
 const PlayerPlaylistEditor = dynamic(() => import("@/components/players/player-playlist-editor").then((m) => ({ default: m.PlayerPlaylistEditor })), { ssr: false })
 const PlayerScheduleSection = dynamic(() => import("@/components/players/player-schedule-section").then((m) => ({ default: m.PlayerScheduleSection })), { ssr: false })
+const DeviceInfoSection = dynamic(() => import("@/components/players/device-info-section").then((m) => ({ default: m.DeviceInfoSection })), { ssr: false })
 import { ArrowLeft, Monitor, HardDrive, Wifi, Calendar } from "lucide-react"
 
 import { format } from "date-fns"
@@ -116,6 +117,8 @@ export default function PlayerDetailPage() {
           currentPlaylistId={player.playlistId}
         />
       </div>
+
+      <DeviceInfoSection />
 
       <PlayerScheduleSection player={player} />
     </div>
