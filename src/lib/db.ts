@@ -797,6 +797,12 @@ export const db = createDb()
 // Server-side export (uses service role key)
 export const dbAdmin = createDb(supabaseAdmin)
 
+// Converts GB to bytes if the value appears to be in GB (≤ 65536)
+function toBytes(v: number | null | undefined, fallback: number): number {
+  if (v == null || v === 0) return fallback
+  return v <= 65536 ? v * 1024 * 1024 * 1024 : v
+}
+
 // Mappers convert snake_case DB columns to camelCase TypeScript types
 function mapPlayer(data: any): Player {
   return {
@@ -807,13 +813,13 @@ function mapPlayer(data: any): Player {
     group: data.group || "",
     location: data.location || "",
     lastSeen: data.last_seen,
-    storageUsed: data.storage_used || 0,
-    totalStorage: data.total_storage || 34359738368,
+    storageUsed: toBytes(data.storage_used, 0),
+    totalStorage: toBytes(data.total_storage, 34359738368),
     version: data.version || "2.1.0",
     ip: data.ip || "0.0.0.0",
     electronVersion: data.electron_version || undefined,
     publicIp: data.public_ip || undefined,
-    storageFree: data.storage_free || undefined,
+    storageFree: data.storage_free != null ? toBytes(data.storage_free, 0) : undefined,
     playlistId: data.playlist_id || undefined,
     createdAt: data.created_at,
   }
