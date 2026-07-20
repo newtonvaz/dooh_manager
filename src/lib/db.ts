@@ -284,13 +284,15 @@ function createDb(client?: SupabaseClient) {
       return mapPlaylist(updated)
     },
 
-    async addContentToPlaylist(playlistId: string, contentId: string, duration: number): Promise<Playlist | undefined> {
+    async addContentToPlaylist(playlistId: string, contentId: string, duration: number, timeSlots?: any[]): Promise<Playlist | undefined> {
       const { data: playlist } = await c.from("playlists").select("*").eq("id", playlistId).single()
       if (!playlist) return undefined
 
       const items = typeof playlist.items === "string" ? JSON.parse(playlist.items) : playlist.items
       if (!items.find((i: any) => i.type === "content" && i.contentId === contentId)) {
-        items.push({ type: "content", contentId, duration })
+        const entry: any = { type: "content", contentId, duration }
+        if (timeSlots && timeSlots.length > 0) entry.timeSlots = timeSlots
+        items.push(entry)
         const totalDuration = items.reduce((s: number, i: any) => s + i.duration, 0)
         const { data: updated, error } = await c
           .from("playlists")

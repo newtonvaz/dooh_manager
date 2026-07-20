@@ -29,7 +29,7 @@ import type { OperatingSchedule } from "@/types/schedule"
 import { useQueryClient } from "@tanstack/react-query"
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return "Não disponível"
+  if (bytes <= 0) return "0 B"
   const units = ["B", "KB", "MB", "GB", "TB"]
   const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`
@@ -168,19 +168,27 @@ export function PlayerFormDialog({ open, onOpenChange, player }: PlayerFormDialo
               <div>
                 <span className="text-muted-foreground">Total</span>
                 <p className="font-mono font-medium">
-                  {player.totalStorage ? formatBytes(player.totalStorage) : "Indefinido"}
+                  {player.totalStorage != null && player.totalStorage > 0
+                    ? formatBytes(player.totalStorage)
+                    : "Indefinido"}
                 </p>
               </div>
               <div>
                 <span className="text-muted-foreground">Utilizado</span>
                 <p className="font-mono font-medium">
-                  {player.storageUsed ? formatBytes(player.storageUsed) : "Indefinido"}
+                  {player.storageUsed != null
+                    ? formatBytes(player.storageUsed)
+                    : "Indefinido"}
                 </p>
               </div>
               <div>
                 <span className="text-muted-foreground">Livre</span>
                 <p className="font-mono font-medium">
-                  {player.storageFree != null ? formatBytes(player.storageFree) : "Indefinido"}
+                  {player.storageFree != null
+                    ? formatBytes(player.storageFree)
+                    : player.totalStorage != null && player.storageUsed != null
+                      ? formatBytes(Math.max(0, player.totalStorage - player.storageUsed))
+                      : "Indefinido"}
                 </p>
               </div>
             </div>

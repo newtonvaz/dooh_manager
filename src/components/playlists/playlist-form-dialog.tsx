@@ -29,6 +29,7 @@ import {
   Globe,
   AppWindow,
   Clock,
+  Calendar,
   Layers,
   ListVideo,
   GripVertical,
@@ -39,8 +40,9 @@ import { toast } from "sonner"
 import { api } from "@/lib/api-client"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ContentPickerDialog } from "./content-picker-dialog"
+import { ContentScheduleDialog } from "./content-schedule-dialog"
 import { SubplaylistPickerDialog } from "./subplaylist-picker-dialog"
-import type { Playlist, PlaylistItem, MediaContent } from "@/types/content"
+import type { Playlist, PlaylistItem, MediaContent, ContentTimeSlot } from "@/types/content"
 
 const typeIcons = { image: FileImage, video: Video, web: Globe }
 
@@ -73,6 +75,8 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
   const [loading, setLoading] = useState(false)
   const [contentPickerOpen, setContentPickerOpen] = useState(false)
   const [contentPickerFilter, setContentPickerFilter] = useState<"image" | "video" | "web" | undefined>(undefined)
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
+  const [pendingContentIds, setPendingContentIds] = useState<string[]>([])
   const [subplaylistPickerOpen, setSubplaylistPickerOpen] = useState(false)
   const [isSubplaylist, setIsSubplaylist] = useState(false)
   const [view, setView] = useState<"list" | "grid">("list")
@@ -130,15 +134,16 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
     [items]
   )
 
-  function handleAddContent(contentIds: string[]) {
+  function handleAddContent(contentIds: string[], timeSlots?: ContentTimeSlot[]) {
     if (!allContent) return
+    const slots = timeSlots && timeSlots.length > 0 ? timeSlots : undefined
     setItems((prev) => [
       ...prev,
       ...contentIds.flatMap((id) => {
         const content = allContent.find((c) => c.id === id)
         if (!content) return []
         const dur = defaultDuration(content)
-        return { type: "content" as const, contentId: id, duration: dur }
+        return { type: "content" as const, contentId: id, duration: dur, timeSlots: slots }
       }),
     ])
   }
@@ -246,6 +251,17 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
     }
     setContentPickerFilter("web")
     setContentPickerOpen(true)
+  }
+
+  function handleContentPickerSelect(contentIds: string[]) {
+    setPendingContentIds(contentIds)
+    setContentPickerOpen(false)
+    setScheduleDialogOpen(true)
+  }
+
+  function handleScheduleConfirm(timeSlots: ContentTimeSlot[]) {
+    handleAddContent(pendingContentIds, timeSlots)
+    setPendingContentIds([])
   }
 
   function handleInsertSubplaylist() {
@@ -417,6 +433,12 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                   <span className="text-[9px] font-medium text-center w-full truncate leading-tight">
                                     {name}
                                   </span>
+                                  {item.timeSlots && item.timeSlots.length > 0 && (
+                                    <span className="text-[8px] text-muted-foreground flex items-center gap-0.5">
+                                      <Calendar className="size-2.5" />
+                                      {item.timeSlots.length}
+                                    </span>
+                                  )}
                                 </div>
                               )}
                             </Draggable>
@@ -478,9 +500,17 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                     </div>
                                     <div className="min-w-0">
                                       <span className="text-sm truncate block">{name}</span>
-                                      {!isContent && (
-                                        <span className="text-[10px] text-muted-foreground">Subplaylist</span>
-                                      )}
+                                      <span className="flex items-center gap-1">
+                                        {!isContent && (
+                                          <span className="text-[10px] text-muted-foreground">Subplaylist</span>
+                                        )}
+                                        {item.timeSlots && item.timeSlots.length > 0 && (
+                                          <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                            <Calendar className="size-2.5" />
+                                            {item.timeSlots.length} período{item.timeSlots.length > 1 ? "s" : ""}
+                                          </span>
+                                        )}
+                                      </span>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2 shrink-0">
@@ -535,8 +565,17 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
               if (!v) setContentPickerFilter(undefined)
             }}
             availableContent={availableContent}
-            onSelect={handleAddContent}
+            onSelect={handleContentPickerSelect}
             filterType={contentPickerFilter}
+          />
+
+          <ContentScheduleDialog
+            open={scheduleDialogOpen}
+            onOpenChange={setScheduleDialogOpen}
+            selectedContent={pendingContentIds
+              .map((id) => allContent?.find((c) => c.id === id))
+              .filter((c): c is MediaContent => !!c)}
+            onConfirm={handleScheduleConfirm}
           />
 
           <SubplaylistPickerDialog

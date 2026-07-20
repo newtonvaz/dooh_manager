@@ -13,11 +13,17 @@ export interface MediaContent {
   createdAt: string
 }
 
+export interface ContentTimeSlot {
+  startDate: string
+  endDate: string
+}
+
 export interface PlaylistItem {
   type: "content" | "playlist"
   contentId?: string
   playlistId?: string
   duration: number
+  timeSlots?: ContentTimeSlot[]
 }
 
 export interface Playlist {

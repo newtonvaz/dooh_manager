@@ -100,9 +100,9 @@ export const api = {
     return dbCall("updatePlaylist", { id }, data)
   },
 
-  async addContentToPlaylist(playlistId: string, contentId: string, duration: number): Promise<Playlist | undefined> {
+  async addContentToPlaylist(playlistId: string, contentId: string, duration: number, timeSlots?: { startDate: string; endDate: string }[]): Promise<Playlist | undefined> {
     await delay(100)
-    return dbCall("addContentToPlaylist", { playlistId, contentId, duration })
+    return dbCall("addContentToPlaylist", { playlistId, contentId, duration, timeSlots })
   },
 
   async removeContentFromPlaylist(playlistId: string, contentId: string): Promise<Playlist | undefined> {
