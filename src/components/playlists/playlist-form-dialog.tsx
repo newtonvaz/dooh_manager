@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect, useCallback } from "react"
+import { useState, useMemo, useEffect, useCallback, Fragment } from "react"
 import {
   DragDropContext,
   Droppable,
@@ -390,41 +390,45 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                           visualIdx >= 0
 
                         return (
-                          <Draggable
-                            key={`${idx}-${isContent ? item.contentId : item.playlistId}`}
-                            draggableId={`item-${idx}`}
-                            index={idx}
-                          >
-                            {(provided, snapshot) => {
-                              const keepTransform = snapshot.isDragging || snapshot.isDropAnimating
-                              return (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  title={name}
-                                  style={{
-                                    ...provided.draggableProps.style,
-                                    transform: keepTransform
-                                      ? provided.draggableProps.style?.transform
-                                      : undefined,
-                                  }}
-                                  className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing ${
-                                    snapshot.isDragging
-                                      ? "shadow-lg border-primary bg-accent"
-                                      : "bg-card hover:bg-muted/50"
-                                  } ${isTarget ? "border-t-[5px] border-primary/60 pt-0" : ""}`}
-                                >
-                                  <div className="flex size-7 items-center justify-center rounded-md bg-muted">
-                                    <Icon className="size-3.5 text-muted-foreground" />
+                          <Fragment key={`${idx}-${isContent ? item.contentId : item.playlistId}`}>
+                            {isTarget && (
+                              <div className="h-[5px] w-full bg-primary/70 rounded shrink-0" />
+                            )}
+                            <Draggable
+                              draggableId={`item-${idx}`}
+                              index={idx}
+                            >
+                              {(provided, snapshot) => {
+                                const keepTransform = snapshot.isDragging || snapshot.isDropAnimating
+                                return (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    title={name}
+                                    style={{
+                                      ...provided.draggableProps.style,
+                                      transform: keepTransform
+                                        ? provided.draggableProps.style?.transform
+                                        : undefined,
+                                    }}
+                                    className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing ${
+                                      snapshot.isDragging
+                                        ? "shadow-lg border-primary bg-accent"
+                                        : "bg-card hover:bg-muted/50"
+                                    }`}
+                                  >
+                                    <div className="flex size-7 items-center justify-center rounded-md bg-muted">
+                                      <Icon className="size-3.5 text-muted-foreground" />
+                                    </div>
+                                    <span className="text-[9px] font-medium text-center w-full truncate leading-tight">
+                                      {name}
+                                    </span>
                                   </div>
-                                  <span className="text-[9px] font-medium text-center w-full truncate leading-tight">
-                                    {name}
-                                  </span>
-                                </div>
-                              )
-                            }}
-                          </Draggable>
+                                )
+                              }}
+                            </Draggable>
+                          </Fragment>
                         )
                       })
                     ) : (
@@ -446,84 +450,88 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                           visualIdx >= 0
 
                         return (
-                          <Draggable
-                            key={`${idx}-${isContent ? item.contentId : item.playlistId}`}
-                            draggableId={`item-${idx}`}
-                            index={idx}
-                          >
-                            {(provided, snapshot) => {
-                              const keepTransform = snapshot.isDragging || snapshot.isDropAnimating
-                              return (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  style={{
-                                    ...provided.draggableProps.style,
-                                    transform: keepTransform
-                                      ? provided.draggableProps.style?.transform
-                                      : undefined,
-                                  }}
-                                  className={`flex items-center justify-between rounded-lg border p-2 gap-2 transition-shadow ${
-                                    snapshot.isDragging
-                                      ? "shadow-lg border-primary bg-accent"
-                                      : ""
-                                  } ${isTarget ? "border-t-[5px] border-primary/60 pt-0" : ""}`}
-                                >
+                          <Fragment key={`${idx}-${isContent ? item.contentId : item.playlistId}`}>
+                            {isTarget && (
+                              <div className="h-[5px] w-full bg-primary/70 rounded shrink-0" />
+                            )}
+                            <Draggable
+                              draggableId={`item-${idx}`}
+                              index={idx}
+                            >
+                              {(provided, snapshot) => {
+                                const keepTransform = snapshot.isDragging || snapshot.isDropAnimating
+                                return (
                                   <div
-                                    {...provided.dragHandleProps}
-                                    className="flex items-center gap-1 min-w-0 flex-1 cursor-grab active:cursor-grabbing"
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    style={{
+                                      ...provided.draggableProps.style,
+                                      transform: keepTransform
+                                        ? provided.draggableProps.style?.transform
+                                        : undefined,
+                                    }}
+                                    className={`flex items-center justify-between rounded-lg border p-2 gap-2 transition-shadow ${
+                                      snapshot.isDragging
+                                        ? "shadow-lg border-primary bg-accent"
+                                        : ""
+                                    }`}
                                   >
-                                    <GripVertical className="size-3.5 text-muted-foreground/50 shrink-0" />
-                                    <div className="rounded-lg bg-muted p-1.5 shrink-0">
-                                      {isContent ? (
-                                        (() => {
-                                          const Icon = typeIcons[content?.type ?? "image"]
-                                          return <Icon className="size-4 text-muted-foreground" />
-                                        })()
-                                      ) : (
-                                        <ListVideo className="size-4 text-muted-foreground" />
-                                      )}
-                                    </div>
-                                    <div className="min-w-0">
-                                      <span className="text-sm truncate block">{name}</span>
-                                      {!isContent && (
-                                        <span className="text-[10px] text-muted-foreground">Subplaylist</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <div className="flex items-center gap-1">
-                                      <Clock className="size-3 text-muted-foreground" />
-                                      <Input
-                                        type="number"
-                                        min={1}
-                                        value={item.duration}
-                                        onChange={(e) =>
-                                          handleDurationChange(idx, Number(e.target.value))
-                                        }
-                                        className="w-16 h-7 text-xs"
-                                      />
-                                      <span className="text-xs text-muted-foreground">s</span>
-                                    </div>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="size-7 text-destructive shrink-0"
-                                      onClick={() => handleRemoveItem(idx)}
+                                    <div
+                                      {...provided.dragHandleProps}
+                                      className="flex items-center gap-1 min-w-0 flex-1 cursor-grab active:cursor-grabbing"
                                     >
-                                      <Trash2 className="size-3" />
-                                    </Button>
+                                      <GripVertical className="size-3.5 text-muted-foreground/50 shrink-0" />
+                                      <div className="rounded-lg bg-muted p-1.5 shrink-0">
+                                        {isContent ? (
+                                          (() => {
+                                            const Icon = typeIcons[content?.type ?? "image"]
+                                            return <Icon className="size-4 text-muted-foreground" />
+                                          })()
+                                        ) : (
+                                          <ListVideo className="size-4 text-muted-foreground" />
+                                        )}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <span className="text-sm truncate block">{name}</span>
+                                        {!isContent && (
+                                          <span className="text-[10px] text-muted-foreground">Subplaylist</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="size-3 text-muted-foreground" />
+                                        <Input
+                                          type="number"
+                                          min={1}
+                                          value={item.duration}
+                                          onChange={(e) =>
+                                            handleDurationChange(idx, Number(e.target.value))
+                                          }
+                                          className="w-16 h-7 text-xs"
+                                        />
+                                        <span className="text-xs text-muted-foreground">s</span>
+                                      </div>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="size-7 text-destructive shrink-0"
+                                        onClick={() => handleRemoveItem(idx)}
+                                      >
+                                        <Trash2 className="size-3" />
+                                      </Button>
+                                    </div>
                                   </div>
-                                </div>
-                              )
-                            }}
-                          </Draggable>
+                                )
+                              }}
+                            </Draggable>
+                          </Fragment>
                         )
                       })
                     )}
                     {dragState && dragState.destination != null && dragState.destination === items.length - 1 && (
-                      <div className={`h-[5px] bg-primary/60 rounded shrink-0 ${view === "grid" ? "w-full" : ""}`} />
+                      <div className="h-[5px] bg-primary/70 rounded shrink-0 w-full" />
                     )}
                     {provided.placeholder}
                   </div>
