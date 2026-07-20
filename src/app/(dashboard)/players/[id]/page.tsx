@@ -67,7 +67,16 @@ export default function PlayerDetailPage() {
             <HardDrive className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">Indefinido</p>
+            <p className="text-sm font-medium">
+              {player.totalStorage > 0
+                ? `${(player.totalStorage / 1024 / 1024 / 1024).toFixed(1)} GB`
+                : "Indefinido"}
+            </p>
+            {player.storageUsed != null && player.totalStorage > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {((player.storageUsed / player.totalStorage) * 100).toFixed(0)}% utilizado
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card>
