@@ -353,7 +353,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
             </div>
 
             <DragDropContext onDragStart={handleDragStart} onDragUpdate={handleDragUpdate} onDragEnd={handleDragEnd}>
-              <Droppable droppableId="items">
+              <Droppable droppableId="items" direction={view === "grid" ? "horizontal" : "vertical"}>
                 {(provided, snapshot) => (
                   <div
                     ref={provided.innerRef}
