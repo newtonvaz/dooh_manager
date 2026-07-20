@@ -21,11 +21,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Loader2, Play, Plus, Trash2, FileImage, Video, Globe, Clock } from "lucide-react"
+import { Loader2, Play, Plus, Trash2, FileImage, Video, Globe, Clock, Calendar } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import type { Playlist, MediaContent, PlaylistItem } from "@/types/content"
+import type { Playlist, MediaContent, PlaylistItem, ContentTimeSlot } from "@/types/content"
+import { ContentScheduleDialog } from "@/components/playlists/content-schedule-dialog"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
@@ -36,6 +37,12 @@ function formatDuration(seconds: number): string {
   const s = seconds % 60
   if (m > 0) return `${m}m ${s}s`
   return `${s}s`
+}
+
+function isExpired(item: PlaylistItem): boolean {
+  if (!item.timeSlots || item.timeSlots.length === 0) return false
+  const now = new Date()
+  return item.timeSlots.every((s) => new Date(s.endDate) < now)
 }
 
 function defaultDuration(content: MediaContent): number {
@@ -58,6 +65,8 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
   const [addContentOpen, setAddContentOpen] = useState(false)
   const [newItemDuration, setNewItemDuration] = useState(10)
   const [selectedContentId, setSelectedContentId] = useState<string | null>(null)
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
+  const [pendingTimeSlots, setPendingTimeSlots] = useState<ContentTimeSlot[] | undefined>(undefined)
 
   const { data: playlists } = useQuery({
     queryKey: ["playlists"],
@@ -118,16 +127,27 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
   async function handleAddContent() {
     if (!currentPlaylistId || !selectedContentId) return
     try {
-      await api.addContentToPlaylist(currentPlaylistId, selectedContentId, newItemDuration)
+      await api.addContentToPlaylist(currentPlaylistId, selectedContentId, newItemDuration, pendingTimeSlots)
       queryClient.invalidateQueries({ queryKey: ["playlist", currentPlaylistId] })
       queryClient.invalidateQueries({ queryKey: ["playlists"] })
       setSelectedContentId(null)
       setNewItemDuration(10)
+      setPendingTimeSlots(undefined)
       setAddContentOpen(false)
       toast.success("Conteúdo adicionado à playlist")
     } catch {
       toast.error("Erro ao adicionar conteúdo")
     }
+  }
+
+  function handleScheduleClick() {
+    setScheduleDialogOpen(true)
+  }
+
+  function handleScheduleConfirm(timeSlots: ContentTimeSlot[]) {
+    setPendingTimeSlots(timeSlots.length > 0 ? timeSlots : undefined)
+    setScheduleDialogOpen(false)
+    handleAddContent()
   }
 
   const contentItemIds = currentPlaylist?.items.filter((i) => i.type === "content").map((i) => i.contentId!) ?? []
@@ -241,15 +261,24 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
                   return (
                     <div
                       key={item.contentId}
-                      className="flex items-center justify-between rounded-lg border p-3"
+                      className={`flex items-center justify-between rounded-lg border p-3 ${
+                        isExpired(item) ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800" : ""
+                      }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="rounded-lg bg-muted p-2">
-                          <Icon className="size-4 text-muted-foreground" />
+                        <div className={`rounded-lg p-2 ${
+                          isExpired(item) ? "bg-red-100 dark:bg-red-900/30" : "bg-muted"
+                        }`}>
+                          <Icon className={`size-4 ${
+                            isExpired(item) ? "text-red-500" : "text-muted-foreground"
+                          }`} />
                         </div>
                         <div>
                           <p className="text-sm font-medium">{content.name}</p>
                           <p className="text-xs text-muted-foreground">
+                            {isExpired(item) && (
+                              <span className="text-red-500 font-medium mr-1">Vencido • </span>
+                            )}
                             {content.type === "image" ? "Imagem" : content.type === "video" ? "Vídeo" : "Web"} • {content.category}
                           </p>
                         </div>
@@ -353,20 +382,46 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
                     <p className="text-xs text-muted-foreground">Mínimo de 10 segundos para imagens</p>
                   )}
                 </div>
+
+                {pendingTimeSlots && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Calendar className="size-3" />
+                    Com agendamento definido
+                  </p>
+                )}
               </>
             )}
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddContentOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setPendingTimeSlots(undefined)
+              setAddContentOpen(false)
+            }}>
               Cancelar
             </Button>
-            <Button onClick={handleAddContent} disabled={!selectedContentId}>
-              Adicionar
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={handleScheduleClick} disabled={!selectedContentId}>
+                <Calendar className="mr-1 size-4" />
+                Agendar
+              </Button>
+              <Button onClick={handleAddContent} disabled={!selectedContentId}>
+                Adicionar
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ContentScheduleDialog
+        open={scheduleDialogOpen}
+        onOpenChange={(v) => {
+          if (!v) setScheduleDialogOpen(v)
+        }}
+        selectedContent={selectedContent ? [selectedContent] : []}
+        initialTimeSlots={pendingTimeSlots}
+        onConfirm={handleScheduleConfirm}
+      />
     </div>
   )
 }

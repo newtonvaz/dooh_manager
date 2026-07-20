@@ -15,6 +15,11 @@ const typeConfig: Record<string, { label: string; color: string; icon: typeof Im
   web: { label: "Web", color: "oklch(0.577 0.245 27.325)", icon: Globe },
 }
 
+function formatStorage(megabytes: number): string {
+  if (megabytes >= 1024) return `${(megabytes / 1024).toFixed(1)}GB`
+  return `${Math.round(megabytes)}MB`
+}
+
 export function ContentOverviewChart({ contents }: ContentOverviewChartProps) {
   const counts: Record<string, number> = {}
   contents.forEach((c) => {
@@ -22,7 +27,7 @@ export function ContentOverviewChart({ contents }: ContentOverviewChartProps) {
   })
 
   const total = contents.length
-  const totalSize = contents.reduce((sum, c) => sum + c.size, 0)
+  const totalSize = contents.reduce((sum, c) => sum + (c.size || 0), 0)
 
   const chartData = Object.entries(typeConfig).map(([type, config]) => ({
     name: config.label,
@@ -49,7 +54,7 @@ export function ContentOverviewChart({ contents }: ContentOverviewChartProps) {
           </div>
           <div className="h-8 w-px bg-border" />
           <div>
-            <p className="text-lg font-semibold">{totalSize.toFixed(1)}GB</p>
+            <p className="text-lg font-semibold">{formatStorage(totalSize)}</p>
             <p className="text-[11px] text-muted-foreground/70 leading-none">Armazenamento</p>
           </div>
         </div>

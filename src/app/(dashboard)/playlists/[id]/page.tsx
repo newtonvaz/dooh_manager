@@ -30,6 +30,12 @@ function formatTotal(seconds: number): string {
   return `${m}min`
 }
 
+function isExpired(item: PlaylistItem): boolean {
+  if (!item.timeSlots || item.timeSlots.length === 0) return false
+  const now = new Date()
+  return item.timeSlots.every((s) => new Date(s.endDate) < now)
+}
+
 function getRandomColor(name: string): string {
   const colors = [
     "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
@@ -156,13 +162,17 @@ export default function PlaylistDetailPage() {
                 <div
                   key={index}
                   title={name}
-                  className="flex flex-col items-center gap-1.5 rounded-xl border bg-card p-3 hover:bg-muted/50 transition-colors"
+                  className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-colors ${
+                    isExpired(item)
+                      ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800"
+                      : "bg-card hover:bg-muted/50"
+                  }`}
                 >
                   <div className={cn("flex size-10 items-center justify-center rounded-lg", color)}>
                     <Icon className="size-5" />
                   </div>
                   <span className="text-[10px] font-medium text-center w-full truncate">
-                    {name}
+                    {isExpired(item) && "⚠️ "}{name}
                   </span>
                 </div>
               )
