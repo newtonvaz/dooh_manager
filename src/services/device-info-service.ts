@@ -10,23 +10,13 @@ declare global {
   }
 }
 
-const UNAVAILABLE: DeviceInfo = {
-  playerVersion: 'Não disponível',
-  electronVersion: 'Não disponível',
-  localIp: 'Não disponível',
-  publicIp: 'Não disponível',
-  storageTotal: 0,
-  storageUsed: 0,
-  storageFree: 0,
-}
-
-export async function getDeviceInfo(): Promise<DeviceInfo> {
+export async function getDeviceInfo(): Promise<DeviceInfo | null> {
   if (typeof window !== 'undefined' && window.electronAPI) {
     try {
       return await window.electronAPI.getDeviceInfo()
     } catch {
-      return UNAVAILABLE
+      return null
     }
   }
-  return UNAVAILABLE
+  return null
 }
