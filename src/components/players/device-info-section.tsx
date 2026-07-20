@@ -4,8 +4,13 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getDeviceInfo } from "@/services/device-info-service"
 import type { DeviceInfo } from "@/types/device-info"
+import type { Player } from "@/types/player"
 import { Monitor } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+
+interface Props {
+  player: Player
+}
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -23,33 +28,43 @@ function formatBytes(bytes: number): string {
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`
 }
 
-export function DeviceInfoSection() {
-  const [info, setInfo] = useState<DeviceInfo | null>(null)
+export function DeviceInfoSection({ player }: Props) {
+  const [electronInfo, setElectronInfo] = useState<DeviceInfo | null>(null)
 
   useEffect(() => {
-    getDeviceInfo().then(setInfo)
+    getDeviceInfo().then(setElectronInfo)
   }, [])
 
   const na = "Não disponível"
+
+  const playerVersion = electronInfo?.playerVersion || player.version || na
+  const electronVersion = electronInfo?.electronVersion || na
+  const localIp = electronInfo?.localIp || player.ip || na
+  const publicIp = electronInfo?.publicIp || na
+  const storageTotal = electronInfo?.storageTotal || player.totalStorage || 0
+  const storageUsed = electronInfo?.storageUsed || player.storageUsed || 0
+  const storageFree = electronInfo?.storageFree || (player.totalStorage - player.storageUsed > 0
+    ? player.totalStorage - player.storageUsed
+    : 0)
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Monitor className="size-4" />
-          Informações do Player
+          Dispositivo
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1">
-        <InfoRow label="Versão do Player" value={info?.playerVersion || na} />
-        <InfoRow label="Versão do Electron" value={info?.electronVersion || na} />
+        <InfoRow label="Versão do Player" value={playerVersion} />
+        <InfoRow label="Versão do Electron" value={electronVersion} />
         <Separator className="my-2" />
-        <InfoRow label="IP Local" value={info?.localIp || na} />
-        <InfoRow label="IP Público" value={info?.publicIp || na} />
+        <InfoRow label="IP Local" value={localIp} />
+        <InfoRow label="IP Público" value={publicIp} />
         <Separator className="my-2" />
-        <InfoRow label="Armazenamento Total" value={info ? formatBytes(info.storageTotal) : na} />
-        <InfoRow label="Armazenamento Utilizado" value={info ? formatBytes(info.storageUsed) : na} />
-        <InfoRow label="Armazenamento Livre" value={info ? formatBytes(info.storageFree) : na} />
+        <InfoRow label="Armazenamento Total" value={formatBytes(storageTotal)} />
+        <InfoRow label="Armazenamento Utilizado" value={formatBytes(storageUsed)} />
+        <InfoRow label="Armazenamento Livre" value={formatBytes(storageFree)} />
       </CardContent>
     </Card>
   )

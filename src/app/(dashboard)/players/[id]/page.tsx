@@ -118,7 +118,7 @@ export default function PlayerDetailPage() {
         />
       </div>
 
-      <DeviceInfoSection />
+      <DeviceInfoSection player={player} />
 
       <PlayerScheduleSection player={player} />
     </div>
