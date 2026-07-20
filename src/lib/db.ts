@@ -526,9 +526,21 @@ function createDb(client?: SupabaseClient) {
 
       const schedule = playerSchedules[0] || groupSchedules[0] || null
 
+      const now = new Date()
+
+      function isTimeSlotActive(timeSlots?: { startDate: string; endDate: string }[] | null): boolean {
+        if (!timeSlots || timeSlots.length === 0) return true
+        return timeSlots.some((s) => {
+          const start = new Date(s.startDate)
+          const end = new Date(s.endDate)
+          return now >= start && now <= end
+        })
+      }
+
       const items: any[] = []
       for (const item of playlist.items) {
         if (item.type === "content" && item.contentId) {
+          if (!isTimeSlotActive(item.timeSlots)) continue
           const content = await this.getContentById(item.contentId)
           if (content) {
             items.push({
@@ -545,6 +557,7 @@ function createDb(client?: SupabaseClient) {
           if (subPlaylist) {
             for (const subItem of subPlaylist.items) {
               if (subItem.type === "content" && subItem.contentId) {
+                if (!isTimeSlotActive(subItem.timeSlots)) continue
                 const content = await this.getContentById(subItem.contentId)
                 if (content) {
                   items.push({
