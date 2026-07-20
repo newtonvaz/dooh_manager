@@ -77,6 +77,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
   const [contentPickerFilter, setContentPickerFilter] = useState<"image" | "video" | "web" | undefined>(undefined)
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
   const [pendingContentIds, setPendingContentIds] = useState<string[]>([])
+  const [editingScheduleIndex, setEditingScheduleIndex] = useState<number | null>(null)
   const [subplaylistPickerOpen, setSubplaylistPickerOpen] = useState(false)
   const [isSubplaylist, setIsSubplaylist] = useState(false)
   const [view, setView] = useState<"list" | "grid">("list")
@@ -255,13 +256,30 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
 
   function handleContentPickerSelect(contentIds: string[]) {
     setPendingContentIds(contentIds)
+    setEditingScheduleIndex(null)
     setContentPickerOpen(false)
     setScheduleDialogOpen(true)
   }
 
   function handleScheduleConfirm(timeSlots: ContentTimeSlot[]) {
-    handleAddContent(pendingContentIds, timeSlots)
-    setPendingContentIds([])
+    if (editingScheduleIndex != null) {
+      setItems((prev) =>
+        prev.map((item, i) =>
+          i === editingScheduleIndex
+            ? { ...item, timeSlots: timeSlots.length > 0 ? timeSlots : undefined }
+            : item
+        )
+      )
+      setEditingScheduleIndex(null)
+    } else {
+      handleAddContent(pendingContentIds, timeSlots)
+      setPendingContentIds([])
+    }
+  }
+
+  function handleEditSchedule(index: number) {
+    setEditingScheduleIndex(index)
+    setScheduleDialogOpen(true)
   }
 
   function handleInsertSubplaylist() {
@@ -433,11 +451,21 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                   <span className="text-[9px] font-medium text-center w-full truncate leading-tight">
                                     {name}
                                   </span>
-                                  {item.timeSlots && item.timeSlots.length > 0 && (
-                                    <span className="text-[8px] text-muted-foreground flex items-center gap-0.5">
+                                  {isContent && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleEditSchedule(idx)
+                                      }}
+                                      className={`flex items-center gap-0.5 ${item.timeSlots && item.timeSlots.length > 0 ? "text-primary" : "text-muted-foreground"}`}
+                                      title="Agendar exibição"
+                                    >
                                       <Calendar className="size-2.5" />
-                                      {item.timeSlots.length}
-                                    </span>
+                                      {item.timeSlots && item.timeSlots.length > 0 && (
+                                        <span className="text-[8px]">{item.timeSlots.length}</span>
+                                      )}
+                                    </button>
                                   )}
                                 </div>
                               )}
@@ -513,30 +541,42 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                       </span>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <div className="flex items-center gap-1">
-                                      <Clock className="size-3 text-muted-foreground" />
-                                      <Input
-                                        type="number"
-                                        min={1}
-                                        value={item.duration}
-                                        onChange={(e) =>
-                                          handleDurationChange(idx, Number(e.target.value))
-                                        }
-                                        className="w-16 h-7 text-xs"
-                                      />
-                                      <span className="text-xs text-muted-foreground">s</span>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="size-3 text-muted-foreground" />
+                                        <Input
+                                          type="number"
+                                          min={1}
+                                          value={item.duration}
+                                          onChange={(e) =>
+                                            handleDurationChange(idx, Number(e.target.value))
+                                          }
+                                          className="w-16 h-7 text-xs"
+                                        />
+                                        <span className="text-xs text-muted-foreground">s</span>
+                                      </div>
+                                      {isContent && (
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className={`size-7 shrink-0 ${item.timeSlots && item.timeSlots.length > 0 ? "text-primary" : "text-muted-foreground"}`}
+                                          onClick={() => handleEditSchedule(idx)}
+                                          title="Agendar exibição"
+                                        >
+                                          <Calendar className="size-3" />
+                                        </Button>
+                                      )}
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="size-7 text-destructive shrink-0"
+                                        onClick={() => handleRemoveItem(idx)}
+                                      >
+                                        <Trash2 className="size-3" />
+                                      </Button>
                                     </div>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="size-7 text-destructive shrink-0"
-                                      onClick={() => handleRemoveItem(idx)}
-                                    >
-                                      <Trash2 className="size-3" />
-                                    </Button>
-                                  </div>
                                 </div>
                               )}
                             </Draggable>
@@ -571,10 +611,26 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
 
           <ContentScheduleDialog
             open={scheduleDialogOpen}
-            onOpenChange={setScheduleDialogOpen}
-            selectedContent={pendingContentIds
-              .map((id) => allContent?.find((c) => c.id === id))
-              .filter((c): c is MediaContent => !!c)}
+            onOpenChange={(v) => {
+              if (!v) setEditingScheduleIndex(null)
+              setScheduleDialogOpen(v)
+            }}
+            selectedContent={
+              editingScheduleIndex != null
+                ? (() => {
+                    const item = items[editingScheduleIndex]
+                    const c = item?.contentId ? allContent?.find((c) => c.id === item.contentId) : null
+                    return c ? [c] : []
+                  })()
+                : pendingContentIds
+                    .map((id) => allContent?.find((c) => c.id === id))
+                    .filter((c): c is MediaContent => !!c)
+            }
+            initialTimeSlots={
+              editingScheduleIndex != null
+                ? items[editingScheduleIndex]?.timeSlots
+                : undefined
+            }
             onConfirm={handleScheduleConfirm}
           />
 

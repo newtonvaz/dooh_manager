@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,6 +22,7 @@ interface ContentScheduleDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   selectedContent: MediaContent[]
+  initialTimeSlots?: ContentTimeSlot[]
   onConfirm: (timeSlots: ContentTimeSlot[]) => void
 }
 
@@ -29,11 +30,23 @@ export function ContentScheduleDialog({
   open,
   onOpenChange,
   selectedContent,
+  initialTimeSlots,
   onConfirm,
 }: ContentScheduleDialogProps) {
-  const [timeSlots, setTimeSlots] = useState<ContentTimeSlot[]>([
-    { startDate: "", endDate: "" },
-  ])
+  const [timeSlots, setTimeSlots] = useState<ContentTimeSlot[]>([])
+
+  useEffect(() => {
+    if (open) {
+      setTimeSlots(
+        initialTimeSlots && initialTimeSlots.length > 0
+          ? initialTimeSlots.map((s) => ({
+              startDate: s.startDate ? new Date(s.startDate).toISOString().slice(0, 16) : "",
+              endDate: s.endDate ? new Date(s.endDate).toISOString().slice(0, 16) : "",
+            }))
+          : [{ startDate: "", endDate: "" }]
+      )
+    }
+  }, [open, initialTimeSlots])
 
   function handleAddSlot() {
     setTimeSlots((prev) => [...prev, { startDate: "", endDate: "" }])
@@ -55,26 +68,20 @@ export function ContentScheduleDialog({
     )
   }
 
+  const isEditing = initialTimeSlots !== undefined
+
   function handleConfirm() {
     const filled = timeSlots.filter((s) => s.startDate && s.endDate)
-    if (filled.length === 0) {
-      onConfirm([])
-    } else {
-      onConfirm(
-        filled.map((s) => ({
-          startDate: new Date(s.startDate).toISOString(),
-          endDate: new Date(s.endDate).toISOString(),
-        }))
-      )
-    }
+    onConfirm(filled.length > 0 ? filled.map((s) => ({
+      startDate: new Date(s.startDate).toISOString(),
+      endDate: new Date(s.endDate).toISOString(),
+    })) : [])
     onOpenChange(false)
-    setTimeSlots([{ startDate: "", endDate: "" }])
   }
 
   function handleSkip() {
-    onConfirm([])
+    onConfirm(isEditing ? initialTimeSlots ?? [] : [])
     onOpenChange(false)
-    setTimeSlots([{ startDate: "", endDate: "" }])
   }
 
   return (
@@ -89,9 +96,9 @@ export function ContentScheduleDialog({
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Agendar Conteúdo</DialogTitle>
+          <DialogTitle>{isEditing ? "Editar Agendamento" : "Agendar Conteúdo"}</DialogTitle>
           <DialogDescription>
-            Defina as datas e horários em que este conteúdo será exibido
+            {isEditing ? "Altere as datas e horários de exibição deste conteúdo" : "Defina as datas e horários em que este conteúdo será exibido"}
           </DialogDescription>
         </DialogHeader>
 
@@ -180,10 +187,10 @@ export function ContentScheduleDialog({
 
         <DialogFooter className="gap-2">
           <Button type="button" variant="outline" onClick={handleSkip}>
-            Sem agendamento
+            {isEditing ? "Cancelar" : "Sem agendamento"}
           </Button>
           <Button type="button" onClick={handleConfirm}>
-            Adicionar com Agendamento
+            {isEditing ? "Salvar Agendamento" : "Adicionar com Agendamento"}
           </Button>
         </DialogFooter>
       </DialogContent>
