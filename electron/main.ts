@@ -90,34 +90,43 @@ function getCmsBaseUrl(): string {
 
 async function sendDeviceInfoToCms(code: string): Promise<void> {
   const cmsUrl = getCmsBaseUrl()
-  if (!cmsUrl) return
+  if (!cmsUrl) {
+    console.warn('[DeviceInfo] CMS_URL não configurada — dados não enviados')
+    return
+  }
 
   try {
     const info = getDeviceInfo()
     const publicIp = await getPublicIp()
 
+    const payload = {
+      code,
+      version: info.playerVersion,
+      ip: info.localIp,
+      storageUsed: info.storageUsed,
+      totalStorage: info.storageTotal,
+      storageFree: info.storageFree,
+      electronVersion: info.electronVersion,
+      publicIp,
+    }
+
+    console.log('[DeviceInfo] Enviando para', `${cmsUrl}/api/heartbeat`, JSON.stringify(payload, null, 2))
+
     const res = await fetch(`${cmsUrl}/api/heartbeat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        code,
-        version: info.playerVersion,
-        ip: info.localIp,
-        storageUsed: info.storageUsed,
-        totalStorage: info.storageTotal,
-        storageFree: info.storageFree,
-        electronVersion: info.electronVersion,
-        publicIp,
-      }),
+      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(10000),
     })
 
-    if (!res.ok) {
+    if (res.ok) {
+      console.log('[DeviceInfo] Dados enviados com sucesso')
+    } else {
       const text = await res.text()
-      console.error(`Falha ao enviar device info ao CMS (${res.status}): ${text}`)
+      console.error(`[DeviceInfo] Falha (${res.status}): ${text}`)
     }
   } catch (err) {
-    console.error('Falha ao enviar device info ao CMS:', err)
+    console.error('[DeviceInfo] Erro ao enviar:', err)
   }
 }
 
