@@ -6,6 +6,8 @@ import {
   Droppable,
   Draggable,
   type DropResult,
+  type DragStart,
+  type DragUpdate,
 } from "@hello-pangea/dnd"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -74,6 +76,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
   const [subplaylistPickerOpen, setSubplaylistPickerOpen] = useState(false)
   const [isSubplaylist, setIsSubplaylist] = useState(false)
   const [view, setView] = useState<"list" | "grid">("list")
+  const [dragState, setDragState] = useState<{ source: number; destination: number | null } | null>(null)
 
   const isEditing = !!playlist
 
@@ -154,7 +157,20 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
     ])
   }
 
+  const handleDragStart = useCallback((start: DragStart) => {
+    setDragState({ source: start.source.index, destination: null })
+  }, [])
+
+  const handleDragUpdate = useCallback((update: DragUpdate) => {
+    if (update.destination) {
+      setDragState((prev) =>
+        prev ? { ...prev, destination: update.destination!.index } : null
+      )
+    }
+  }, [])
+
   const handleDragEnd = useCallback((result: DropResult) => {
+    setDragState(null)
     if (!result.destination) return
     if (result.destination.index === result.source.index) return
     setItems((prev) => {
@@ -336,7 +352,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
               </div>
             </div>
 
-            <DragDropContext onDragEnd={handleDragEnd}>
+            <DragDropContext onDragStart={handleDragStart} onDragUpdate={handleDragUpdate} onDragEnd={handleDragEnd}>
               <Droppable droppableId="items">
                 {(provided, snapshot) => (
                   <div
@@ -362,32 +378,52 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                         const name = isContent ? content?.name : subPlaylist?.name
                         if (!name) return null
                         const Icon = isContent ? typeIcons[content?.type ?? "image"] : ListVideo
+                        const visualIdx =
+                          dragState && idx < dragState.source
+                            ? idx
+                            : dragState && idx > dragState.source
+                              ? idx - 1
+                              : -1
+                        const isTarget =
+                          dragState?.destination != null &&
+                          dragState.destination === visualIdx &&
+                          visualIdx >= 0
+
                         return (
                           <Draggable
                             key={`${idx}-${isContent ? item.contentId : item.playlistId}`}
                             draggableId={`item-${idx}`}
                             index={idx}
                           >
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                title={name}
-                                className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing ${
-                                  snapshot.isDragging
-                                    ? "shadow-lg border-primary bg-accent"
-                                    : "bg-card hover:bg-muted/50"
-                                }`}
-                              >
-                                <div className="flex size-7 items-center justify-center rounded-md bg-muted">
-                                  <Icon className="size-3.5 text-muted-foreground" />
+                            {(provided, snapshot) => {
+                              const keepTransform = snapshot.isDragging || snapshot.isDropAnimating
+                              return (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  title={name}
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                    transform: keepTransform
+                                      ? provided.draggableProps.style?.transform
+                                      : undefined,
+                                  }}
+                                  className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing ${
+                                    snapshot.isDragging
+                                      ? "shadow-lg border-primary bg-accent"
+                                      : "bg-card hover:bg-muted/50"
+                                  } ${isTarget ? "border-t-[5px] border-primary/60 pt-0" : ""}`}
+                                >
+                                  <div className="flex size-7 items-center justify-center rounded-md bg-muted">
+                                    <Icon className="size-3.5 text-muted-foreground" />
+                                  </div>
+                                  <span className="text-[9px] font-medium text-center w-full truncate leading-tight">
+                                    {name}
+                                  </span>
                                 </div>
-                                <span className="text-[9px] font-medium text-center w-full truncate leading-tight">
-                                  {name}
-                                </span>
-                              </div>
-                            )}
+                              )
+                            }}
                           </Draggable>
                         )
                       })
@@ -398,6 +434,16 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                         const subPlaylist = !isContent ? playlistMap.get(item.playlistId!) : undefined
                         const name = isContent ? content?.name : subPlaylist?.name
                         if (!name) return null
+                        const visualIdx =
+                          dragState && idx < dragState.source
+                            ? idx
+                            : dragState && idx > dragState.source
+                              ? idx - 1
+                              : -1
+                        const isTarget =
+                          dragState?.destination != null &&
+                          dragState.destination === visualIdx &&
+                          visualIdx >= 0
 
                         return (
                           <Draggable
@@ -405,67 +451,79 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                             draggableId={`item-${idx}`}
                             index={idx}
                           >
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className={`flex items-center justify-between rounded-lg border p-2 gap-2 transition-shadow ${
-                                  snapshot.isDragging
-                                    ? "shadow-lg border-primary bg-accent"
-                                    : ""
-                                }`}
-                              >
+                            {(provided, snapshot) => {
+                              const keepTransform = snapshot.isDragging || snapshot.isDropAnimating
+                              return (
                                 <div
-                                  {...provided.dragHandleProps}
-                                  className="flex items-center gap-1 min-w-0 flex-1 cursor-grab active:cursor-grabbing"
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                    transform: keepTransform
+                                      ? provided.draggableProps.style?.transform
+                                      : undefined,
+                                  }}
+                                  className={`flex items-center justify-between rounded-lg border p-2 gap-2 transition-shadow ${
+                                    snapshot.isDragging
+                                      ? "shadow-lg border-primary bg-accent"
+                                      : ""
+                                  } ${isTarget ? "border-t-[5px] border-primary/60 pt-0" : ""}`}
                                 >
-                                  <GripVertical className="size-3.5 text-muted-foreground/50 shrink-0" />
-                                  <div className="rounded-lg bg-muted p-1.5 shrink-0">
-                                    {isContent ? (
-                                      (() => {
-                                        const Icon = typeIcons[content?.type ?? "image"]
-                                        return <Icon className="size-4 text-muted-foreground" />
-                                      })()
-                                    ) : (
-                                      <ListVideo className="size-4 text-muted-foreground" />
-                                    )}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <span className="text-sm truncate block">{name}</span>
-                                    {!isContent && (
-                                      <span className="text-[10px] text-muted-foreground">Subplaylist</span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="size-3 text-muted-foreground" />
-                                    <Input
-                                      type="number"
-                                      min={1}
-                                      value={item.duration}
-                                      onChange={(e) =>
-                                        handleDurationChange(idx, Number(e.target.value))
-                                      }
-                                      className="w-16 h-7 text-xs"
-                                    />
-                                    <span className="text-xs text-muted-foreground">s</span>
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="size-7 text-destructive shrink-0"
-                                    onClick={() => handleRemoveItem(idx)}
+                                  <div
+                                    {...provided.dragHandleProps}
+                                    className="flex items-center gap-1 min-w-0 flex-1 cursor-grab active:cursor-grabbing"
                                   >
-                                    <Trash2 className="size-3" />
-                                  </Button>
+                                    <GripVertical className="size-3.5 text-muted-foreground/50 shrink-0" />
+                                    <div className="rounded-lg bg-muted p-1.5 shrink-0">
+                                      {isContent ? (
+                                        (() => {
+                                          const Icon = typeIcons[content?.type ?? "image"]
+                                          return <Icon className="size-4 text-muted-foreground" />
+                                        })()
+                                      ) : (
+                                        <ListVideo className="size-4 text-muted-foreground" />
+                                      )}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <span className="text-sm truncate block">{name}</span>
+                                      {!isContent && (
+                                        <span className="text-[10px] text-muted-foreground">Subplaylist</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="size-3 text-muted-foreground" />
+                                      <Input
+                                        type="number"
+                                        min={1}
+                                        value={item.duration}
+                                        onChange={(e) =>
+                                          handleDurationChange(idx, Number(e.target.value))
+                                        }
+                                        className="w-16 h-7 text-xs"
+                                      />
+                                      <span className="text-xs text-muted-foreground">s</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="size-7 text-destructive shrink-0"
+                                      onClick={() => handleRemoveItem(idx)}
+                                    >
+                                      <Trash2 className="size-3" />
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )
+                            }}
                           </Draggable>
                         )
                       })
+                    )}
+                    {dragState && dragState.destination != null && dragState.destination === items.length - 1 && (
+                      <div className={`h-[5px] bg-primary/60 rounded shrink-0 ${view === "grid" ? "w-full" : ""}`} />
                     )}
                     {provided.placeholder}
                   </div>
