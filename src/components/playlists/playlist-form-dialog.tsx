@@ -93,7 +93,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
   const [dragState, setDragState] = useState<{ source: number; destination: number | null } | null>(null)
   const [urlDialogOpen, setUrlDialogOpen] = useState(false)
   const [urlValue, setUrlValue] = useState("")
-  const [urlDuration, setUrlDuration] = useState(10)
+  const [urlDuration, setUrlDuration] = useState(30)
   const [urlEditIndex, setUrlEditIndex] = useState<number | null>(null)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; index: number } | null>(null)
 
@@ -320,7 +320,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
 
   function handleInsertUrl() {
     setUrlValue("")
-    setUrlDuration(10)
+    setUrlDuration(30)
     setUrlEditIndex(null)
     setUrlDialogOpen(true)
   }
@@ -354,7 +354,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
     }
     setUrlDialogOpen(false)
     setUrlValue("")
-    setUrlDuration(10)
+    setUrlDuration(30)
     setUrlEditIndex(null)
   }
 

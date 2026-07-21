@@ -69,7 +69,7 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
   const [pendingTimeSlots, setPendingTimeSlots] = useState<ContentTimeSlot[] | undefined>(undefined)
   const [addUrlOpen, setAddUrlOpen] = useState(false)
   const [urlValue, setUrlValue] = useState("")
-  const [urlDuration, setUrlDuration] = useState(10)
+  const [urlDuration, setUrlDuration] = useState(30)
 
   const { data: playlists } = useQuery({
     queryKey: ["playlists"],
@@ -158,7 +158,7 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
       queryClient.invalidateQueries({ queryKey: ["playlist", currentPlaylistId] })
       queryClient.invalidateQueries({ queryKey: ["playlists"] })
       setUrlValue("")
-      setUrlDuration(10)
+      setUrlDuration(30)
       setAddUrlOpen(false)
       toast.success("URL adicionada à playlist")
     } catch {
@@ -278,7 +278,7 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="outline" onClick={() => {
                   setUrlValue("")
-                  setUrlDuration(10)
+                  setUrlDuration(30)
                   setAddUrlOpen(true)
                 }}>
                   <Link2 className="mr-1 size-3" />
