@@ -818,7 +818,7 @@ function createDb(client?: SupabaseClient) {
                   url: subItem.url,
                   name: subItem.name || subItem.url,
                   duration: subItem.duration || 10,
-                  contentId: `url_${subItem.url}`,
+                  contentId: `url_${subItem.url.replace(/[\\/:*?"<>|]/g, "_").replace(/_+/g, "_")}`,
                   timeSlots: null,
                 })
               }
@@ -830,7 +830,7 @@ function createDb(client?: SupabaseClient) {
             url: item.url,
             name: item.name || item.url,
             duration: item.duration || 10,
-            contentId: `url_${item.url}`,
+            contentId: `url_${item.url.replace(/[\\/:*?"<>|]/g, "_").replace(/_+/g, "_")}`,
             timeSlots: item.timeSlots ?? null,
           })
         }
