@@ -520,11 +520,14 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                     e.preventDefault()
                                     const rect = e.currentTarget.getBoundingClientRect()
                                     const menuW = 176
+                                    const menuH = 120
                                     let left = rect.left
+                                    let top = rect.top - menuH
                                     if (left + menuW > window.innerWidth) {
                                       left = window.innerWidth - menuW - 8
                                     }
-                                    setContextMenu({ x: left, y: rect.bottom + 4, index: idx })
+                                    if (top < 0) top = rect.bottom + 4
+                                    setContextMenu({ x: left, y: top, index: idx })
                                   }}
                                   className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing transition-transform duration-150 ${
                                     snapshot.isDragging
