@@ -10,6 +10,9 @@ import {
   Settings,
   Tags,
   AppWindow,
+  Activity,
+  Camera,
+  FileText,
   type LucideIcon,
 } from "lucide-react"
 
@@ -37,7 +40,16 @@ export const navItems: NavItem[] = [
   { title: "Playlists", href: "/playlists", icon: ListVideo },
   { title: "Programação", href: "/scheduling", icon: Calendar },
   { title: "Layouts", href: "/layouts", icon: Grid3x3 },
-  { title: "Relatórios", href: "/reports", icon: BarChart3 },
+  {
+    title: "Relatórios",
+    href: "/reports",
+    icon: BarChart3,
+    children: [
+      { title: "Relatório de Ativação", href: "/reports/activation", icon: Activity },
+      { title: "Relatório de Veiculação", href: "/reports/playback", icon: FileText },
+      { title: "Captura de Tela", href: "/reports/screenshot", icon: Camera },
+    ],
+  },
   { title: "Apps", href: "/apps", icon: AppWindow },
   { title: "Configurações", href: "/settings", icon: Settings },
 ]
