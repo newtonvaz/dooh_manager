@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useCallback, Fragment } from "react"
+import { createPortal } from "react-dom"
 import {
   DragDropContext,
   Droppable,
@@ -96,8 +97,11 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
   const [urlDuration, setUrlDuration] = useState(30)
   const [urlEditIndex, setUrlEditIndex] = useState<number | null>(null)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; index: number } | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   const isEditing = !!playlist
+
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     const close = () => setContextMenu(null)
@@ -699,9 +703,9 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
             </DragDropContext>
           </div>
 
-          {contextMenu && (
+          {mounted && contextMenu && createPortal(
             <div
-              className="fixed z-50 w-44 rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10"
+              className="fixed z-[100] w-44 rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10"
               style={{ left: contextMenu.x, top: contextMenu.y }}
             >
               {(() => {
@@ -751,7 +755,8 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                   </div>
                 )
               })()}
-            </div>
+            </div>,
+            document.body
           )}
 
           <Dialog open={urlDialogOpen} onOpenChange={setUrlDialogOpen}>
