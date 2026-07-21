@@ -95,7 +95,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
   const [urlValue, setUrlValue] = useState("")
   const [urlDuration, setUrlDuration] = useState(10)
   const [urlEditIndex, setUrlEditIndex] = useState<number | null>(null)
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; index: number; align: "start" | "end" } | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; index: number } | null>(null)
 
   const isEditing = !!playlist
 
@@ -524,7 +524,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                     if (left + menuW > window.innerWidth) {
                                       left = window.innerWidth - menuW - 8
                                     }
-                                    setContextMenu({ x: left, y: rect.bottom + 4, index: idx, align: "start" })
+                                    setContextMenu({ x: left, y: rect.bottom + 4, index: idx })
                                   }}
                                   className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing transition-transform duration-150 ${
                                     snapshot.isDragging
