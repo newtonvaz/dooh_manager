@@ -817,7 +817,7 @@ function createDb(client?: SupabaseClient) {
                   url: subItem.url,
                   name: subItem.name || subItem.url,
                   duration: subItem.duration || 10,
-                  contentId: null,
+                  contentId: `url_${subItem.url}`,
                   timeSlots: null,
                 })
               }
@@ -829,7 +829,7 @@ function createDb(client?: SupabaseClient) {
             url: item.url,
             name: item.name || item.url,
             duration: item.duration || 10,
-            contentId: null,
+            contentId: `url_${item.url}`,
             timeSlots: item.timeSlots ?? null,
           })
         }
