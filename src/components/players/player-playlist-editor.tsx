@@ -143,10 +143,18 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
     }
   }
 
+  function normalizeUrl(url: string): string {
+    const trimmed = url.trim()
+    if (!trimmed) return trimmed
+    if (!/^https?:\/\//i.test(trimmed)) return `https://${trimmed}`
+    return trimmed
+  }
+
   async function handleAddUrl() {
-    if (!currentPlaylistId || !urlValue.trim()) return
+    const normalized = normalizeUrl(urlValue)
+    if (!currentPlaylistId || !normalized) return
     try {
-      await api.addUrlToPlaylist(currentPlaylistId, urlValue.trim(), urlDuration)
+      await api.addUrlToPlaylist(currentPlaylistId, normalized, urlDuration)
       queryClient.invalidateQueries({ queryKey: ["playlist", currentPlaylistId] })
       queryClient.invalidateQueries({ queryKey: ["playlists"] })
       setUrlValue("")

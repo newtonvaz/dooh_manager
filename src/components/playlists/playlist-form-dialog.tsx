@@ -95,7 +95,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
   const [urlValue, setUrlValue] = useState("")
   const [urlDuration, setUrlDuration] = useState(10)
   const [urlEditIndex, setUrlEditIndex] = useState<number | null>(null)
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; index: number } | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; index: number; align: "start" | "end" } | null>(null)
 
   const isEditing = !!playlist
 
@@ -325,8 +325,16 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
     setUrlDialogOpen(true)
   }
 
+  function normalizeUrl(url: string): string {
+    const trimmed = url.trim()
+    if (!trimmed) return trimmed
+    if (!/^https?:\/\//i.test(trimmed)) return `https://${trimmed}`
+    return trimmed
+  }
+
   function handleUrlSave() {
-    if (!urlValue.trim()) {
+    const normalized = normalizeUrl(urlValue)
+    if (!normalized) {
       toast.error("Informe a URL")
       return
     }
@@ -334,14 +342,14 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
       setItems((prev) =>
         prev.map((item, i) =>
           i === urlEditIndex
-            ? { ...item, url: urlValue.trim(), duration: urlDuration, name: urlValue.trim() }
+            ? { ...item, url: normalized, duration: urlDuration, name: normalized }
             : item
         )
       )
     } else {
       setItems((prev) => [
         ...prev,
-        { type: "url" as const, url: urlValue.trim(), duration: urlDuration, name: urlValue.trim() },
+        { type: "url" as const, url: normalized, duration: urlDuration, name: normalized },
       ])
     }
     setUrlDialogOpen(false)
@@ -510,7 +518,13 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                   style={provided.draggableProps.style}
                                   onContextMenu={(e) => {
                                     e.preventDefault()
-                                    setContextMenu({ x: e.clientX, y: e.clientY, index: idx })
+                                    const rect = e.currentTarget.getBoundingClientRect()
+                                    const menuW = 176
+                                    let left = rect.left
+                                    if (left + menuW > window.innerWidth) {
+                                      left = window.innerWidth - menuW - 8
+                                    }
+                                    setContextMenu({ x: left, y: rect.bottom + 4, index: idx, align: "start" })
                                   }}
                                   className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing transition-transform duration-150 ${
                                     snapshot.isDragging

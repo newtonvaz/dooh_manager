@@ -329,8 +329,9 @@ function createDb(client?: SupabaseClient) {
       const { data: playlist } = await c.from("playlists").select("*").eq("id", playlistId).single()
       if (!playlist) throw new Error("Playlist não encontrada")
 
+      const normalized = url.match(/^https?:\/\//i) ? url : `https://${url}`
       const items = typeof playlist.items === "string" ? JSON.parse(playlist.items) : playlist.items
-      items.push({ type: "url", url, duration, name: url })
+      items.push({ type: "url", url: normalized, duration, name: normalized })
       const totalDuration = items.reduce((s: number, i: any) => s + i.duration, 0)
 
       const { data: updated, error } = await c
