@@ -1,6 +1,8 @@
 import type { Player } from "@/types/player"
 import type { MediaContent, Playlist } from "@/types/content"
 import type { OperatingSchedule } from "@/types/schedule"
+import type { ProgrammingGroup } from "@/types/programming-group"
+import type { TimeSlot } from "@/types/schedule"
 import type { ContentReportQuery, ContentReportRow, PlaybackLogRow } from "@/types/playback"
 
 interface Group {
@@ -297,5 +299,42 @@ export const api = {
     return dbCall("deleteSchedule", { id })
   },
 
+  // Programming Groups
+  async getProgrammingGroups(): Promise<ProgrammingGroup[]> {
+    await delay(150)
+    return dbCall("getProgrammingGroups")
+  },
 
+  async getProgrammingGroup(id: string): Promise<ProgrammingGroup | undefined> {
+    await delay(100)
+    return dbCall("getProgrammingGroup", { id })
+  },
+
+  async createProgrammingGroup(data: {
+    name: string
+    enabled: boolean
+    timeSlots: TimeSlot[]
+    playerIds: string[]
+  }): Promise<ProgrammingGroup> {
+    await delay(200)
+    return dbCall("createProgrammingGroup", {}, data)
+  },
+
+  async updateProgrammingGroup(
+    id: string,
+    data: {
+      name?: string
+      enabled?: boolean
+      timeSlots?: TimeSlot[]
+      playerIds?: string[]
+    }
+  ): Promise<ProgrammingGroup | undefined> {
+    await delay(150)
+    return dbCall("updateProgrammingGroup", { id }, data)
+  },
+
+  async deleteProgrammingGroup(id: string): Promise<boolean> {
+    await delay(150)
+    return dbCall("deleteProgrammingGroup", { id })
+  },
 }

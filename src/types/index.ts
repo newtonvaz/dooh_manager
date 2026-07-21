@@ -3,3 +3,4 @@ export type { MediaContent, MediaType, Playlist, ContentTimeSlot } from "./conte
 export type { TimeSlot, OperatingSchedule } from "./schedule"
 export { DAY_LABELS, DAY_LABELS_SHORT } from "./schedule"
 export type { DeviceInfo } from "./device-info"
+export type { ProgrammingGroup } from "./programming-group"

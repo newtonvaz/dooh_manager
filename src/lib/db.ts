@@ -3,6 +3,7 @@ import { supabaseAdmin } from "./supabase-admin"
 import type { Player } from "@/types/player"
 import type { MediaContent, Playlist } from "@/types/content"
 import type { OperatingSchedule, TimeSlot } from "@/types/schedule"
+import type { ProgrammingGroup } from "@/types/programming-group"
 import type { ContentReportQuery, ContentReportRow, PlaybackLog, PlaybackLogRow } from "@/types/playback"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
@@ -428,6 +429,154 @@ function createDb(client?: SupabaseClient) {
       return !error
     },
 
+    // Programming Groups
+    async getProgrammingGroups(): Promise<ProgrammingGroup[]> {
+      const { data, error } = await c.from("programming_groups").select("*").order("name")
+      if (error) throw error
+      const groups = (data || []).map(mapProgrammingGroup)
+
+      for (const group of groups) {
+        const { count } = await c
+          .from("programming_group_players")
+          .select("*", { count: "exact", head: true })
+          .eq("group_id", group.id)
+        group.playerCount = count ?? 0
+      }
+      return groups
+    },
+
+    async getProgrammingGroup(id: string): Promise<ProgrammingGroup | undefined> {
+      const { data, error } = await c.from("programming_groups").select("*").eq("id", id).single()
+      if (error) return undefined
+      const group = mapProgrammingGroup(data)
+
+      const { data: players } = await c
+        .from("programming_group_players")
+        .select("player_id")
+        .eq("group_id", id)
+      const playerIds = (players || []).map((p: any) => p.player_id)
+
+      if (playerIds.length > 0) {
+        const { data: playerData } = await c
+          .from("players")
+          .select("*")
+          .in("id", playerIds)
+          .order("name")
+        group.players = (playerData || []).map(mapPlayer)
+        group.playerCount = group.players.length
+      } else {
+        group.players = []
+        group.playerCount = 0
+      }
+      return group
+    },
+
+    async createProgrammingGroup(data: {
+      name: string
+      enabled: boolean
+      timeSlots: TimeSlot[]
+      playerIds: string[]
+    }): Promise<ProgrammingGroup> {
+      const now = new Date().toISOString()
+      const id = `pg_${Date.now()}`
+      const group = {
+        id,
+        name: data.name,
+        enabled: data.enabled,
+        time_slots: JSON.stringify(data.timeSlots),
+        created_at: now,
+        updated_at: now,
+      }
+      const { error: insertError } = await c.from("programming_groups").insert(group)
+      if (insertError) throw insertError
+
+      if (data.playerIds.length > 0) {
+        const rels = data.playerIds.map((playerId) => ({
+          group_id: id,
+          player_id: playerId,
+          created_at: now,
+        }))
+        const { error: relError } = await c.from("programming_group_players").insert(rels)
+        if (relError) throw relError
+      }
+
+      recordActivity(c, {
+        type: "programming",
+        description: `Grupo de programação "${data.name}" criado com ${data.playerIds.length} player(s)`,
+      })
+
+      return { ...mapProgrammingGroup(group), playerCount: data.playerIds.length }
+    },
+
+    async updateProgrammingGroup(
+      id: string,
+      data: {
+        name?: string
+        enabled?: boolean
+        timeSlots?: TimeSlot[]
+        playerIds?: string[]
+      }
+    ): Promise<ProgrammingGroup | undefined> {
+      const update: Record<string, any> = {}
+      if (data.name !== undefined) update.name = data.name
+      if (data.enabled !== undefined) update.enabled = data.enabled
+      if (data.timeSlots !== undefined) update.time_slots = JSON.stringify(data.timeSlots)
+      update.updated_at = new Date().toISOString()
+
+      const { error: updateError } = await c.from("programming_groups").update(update).eq("id", id)
+      if (updateError) return undefined
+
+      if (data.playerIds !== undefined) {
+        await c.from("programming_group_players").delete().eq("group_id", id)
+        if (data.playerIds.length > 0) {
+          const now = new Date().toISOString()
+          const rels = data.playerIds.map((playerId) => ({
+            group_id: id,
+            player_id: playerId,
+            created_at: now,
+          }))
+          await c.from("programming_group_players").insert(rels)
+        }
+      }
+
+      recordActivity(c, {
+        type: "programming",
+        description: `Grupo de programação "${data.name || id}" atualizado`,
+      })
+
+      return this.getProgrammingGroup(id)
+    },
+
+    async deleteProgrammingGroup(id: string): Promise<boolean> {
+      const { data: group } = await c.from("programming_groups").select("name").eq("id", id).single()
+      const { error } = await c.from("programming_groups").delete().eq("id", id)
+      if (error) return false
+      if (group) {
+        recordActivity(c, {
+          type: "programming",
+          description: `Grupo de programação "${group.name}" excluído`,
+        })
+      }
+      return true
+    },
+
+    async getProgrammingGroupsByPlayer(playerId: string): Promise<ProgrammingGroup[]> {
+      const { data: rels } = await c
+        .from("programming_group_players")
+        .select("group_id")
+        .eq("player_id", playerId)
+      if (!rels || rels.length === 0) return []
+
+      const groupIds = rels.map((r: any) => r.group_id)
+      const { data, error } = await c
+        .from("programming_groups")
+        .select("*")
+        .in("id", groupIds)
+        .order("updated_at", { ascending: false })
+      if (error) throw error
+      return (data || []).map(mapProgrammingGroup)
+    },
+
     // Categories
     async getCategories(): Promise<Group[]> {
       const { data, error } = await c.from("categories").select("*").order("name")
@@ -519,12 +668,29 @@ function createDb(client?: SupabaseClient) {
       const playlist = await this.getPlaylist(playlistId)
       if (!playlist) return { player, playlist: null, items: [], schedule: null }
 
-      const [playerSchedules, groupSchedules] = await Promise.all([
+      const [programmingGroups, playerSchedules, groupSchedules] = await Promise.all([
+        this.getProgrammingGroupsByPlayer(player.id),
         this.getSchedulesByTarget("player", player.id),
         this.getSchedulesByTarget("group", player.group),
       ])
 
-      const schedule = playerSchedules[0] || groupSchedules[0] || null
+      const activeProgramming = programmingGroups.find(
+        (g) => g.enabled && g.timeSlots.length > 0
+      )
+
+      const schedule = activeProgramming
+        ? {
+            id: activeProgramming.id,
+            name: activeProgramming.name,
+            type: "group" as const,
+            targetId: activeProgramming.id,
+            targetName: activeProgramming.name,
+            timeSlots: activeProgramming.timeSlots,
+            enabled: activeProgramming.enabled,
+            createdAt: activeProgramming.createdAt,
+            updatedAt: activeProgramming.updatedAt,
+          }
+        : playerSchedules[0] || groupSchedules[0] || null
 
       const now = new Date()
 
@@ -894,5 +1060,18 @@ function mapGroup(data: any): Group {
     id: data.id,
     name: data.name,
     createdAt: data.created_at,
+  }
+}
+
+function mapProgrammingGroup(data: any): ProgrammingGroup {
+  const timeSlots = typeof data.time_slots === "string" ? JSON.parse(data.time_slots) : data.time_slots || []
+  return {
+    id: data.id,
+    name: data.name,
+    enabled: data.enabled,
+    timeSlots,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    playerCount: 0,
   }
 }

@@ -248,6 +248,23 @@ export async function POST(request: Request) {
         result = dbAdmin.deleteSchedule(params.id)
         break
 
+      // Programming Groups
+      case "getProgrammingGroups":
+        result = dbAdmin.getProgrammingGroups()
+        break
+      case "getProgrammingGroup":
+        result = dbAdmin.getProgrammingGroup(params.id)
+        break
+      case "createProgrammingGroup":
+        result = dbAdmin.createProgrammingGroup(data)
+        break
+      case "updateProgrammingGroup":
+        result = dbAdmin.updateProgrammingGroup(params.id, data)
+        break
+      case "deleteProgrammingGroup":
+        result = dbAdmin.deleteProgrammingGroup(params.id)
+        break
+
       // Seed
       case "seed":
         result = await runSeed()
