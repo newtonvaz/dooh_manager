@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+
 import {
   Loader2,
   Plus,
@@ -94,8 +95,19 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
   const [urlValue, setUrlValue] = useState("")
   const [urlDuration, setUrlDuration] = useState(10)
   const [urlEditIndex, setUrlEditIndex] = useState<number | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; index: number } | null>(null)
 
   const isEditing = !!playlist
+
+  useEffect(() => {
+    const close = () => setContextMenu(null)
+    document.addEventListener("scroll", close, true)
+    document.addEventListener("click", close)
+    return () => {
+      document.removeEventListener("scroll", close, true)
+      document.removeEventListener("click", close)
+    }
+  }, [])
 
   useEffect(() => {
     if (open) {
@@ -496,6 +508,10 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                   {...provided.dragHandleProps}
                                   title={name}
                                   style={provided.draggableProps.style}
+                                  onContextMenu={(e) => {
+                                    e.preventDefault()
+                                    setContextMenu({ x: e.clientX, y: e.clientY, index: idx })
+                                  }}
                                   className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing transition-transform duration-150 ${
                                     snapshot.isDragging
                                       ? "shadow-xl border-primary bg-accent opacity-75 scale-[1.02] z-50"
@@ -510,48 +526,12 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                   <span className="text-[9px] font-medium text-center w-full truncate leading-tight">
                                     {name}
                                   </span>
-                                  <div className="flex items-center gap-1">
-                                    {isContent && (
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          handleEditSchedule(idx)
-                                        }}
-                                        className={`flex items-center gap-0.5 ${item.timeSlots && item.timeSlots.length > 0 ? "text-primary" : "text-muted-foreground"}`}
-                                        title="Agendar exibição"
-                                      >
-                                        <Calendar className="size-2.5" />
-                                        {item.timeSlots && item.timeSlots.length > 0 && (
-                                          <span className="text-[8px]">{item.timeSlots.length}</span>
-                                        )}
-                                      </button>
-                                    )}
-                                    {isUrl && (
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          handleEditUrl(idx)
-                                        }}
-                                        className="flex items-center text-muted-foreground hover:text-foreground"
-                                        title="Editar URL"
-                                      >
-                                        <Pencil className="size-2.5" />
-                                      </button>
-                                    )}
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleRemoveItem(idx)
-                                      }}
-                                      className="flex items-center text-destructive/70 hover:text-destructive"
-                                      title="Remover item"
-                                    >
-                                      <Trash2 className="size-2.5" />
-                                    </button>
-                                  </div>
+                                  {item.timeSlots && item.timeSlots.length > 0 && (
+                                    <span className="text-[8px] text-primary flex items-center gap-0.5">
+                                      <Calendar className="size-2.5" />
+                                      {item.timeSlots.length}
+                                    </span>
+                                  )}
                                 </div>
                               )}
                             </Draggable>
@@ -702,6 +682,61 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
               </Droppable>
             </DragDropContext>
           </div>
+
+          {contextMenu && (
+            <div
+              className="fixed z-50 w-44 rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10"
+              style={{ left: contextMenu.x, top: contextMenu.y }}
+            >
+              {(() => {
+                const item = items[contextMenu.index]
+                if (!item) return null
+                const isContent = item.type === "content"
+                const isUrl = item.type === "url"
+                return (
+                  <div className="space-y-0.5">
+                    {isContent && (
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                        onClick={() => {
+                          handleEditSchedule(contextMenu.index)
+                          setContextMenu(null)
+                        }}
+                      >
+                        <Calendar className="size-4" />
+                        Editar Período
+                      </button>
+                    )}
+                    {isUrl && (
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                        onClick={() => {
+                          handleEditUrl(contextMenu.index)
+                          setContextMenu(null)
+                        }}
+                      >
+                        <Pencil className="size-4" />
+                        Editar URL
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => {
+                        handleRemoveItem(contextMenu.index)
+                        setContextMenu(null)
+                      }}
+                    >
+                      <Trash2 className="size-4" />
+                      Excluir
+                    </button>
+                  </div>
+                )
+              })()}
+            </div>
+          )}
 
           <Dialog open={urlDialogOpen} onOpenChange={setUrlDialogOpen}>
             <DialogContent className="sm:max-w-md">
