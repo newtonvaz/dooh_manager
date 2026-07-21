@@ -114,6 +114,12 @@ export async function POST(request: Request) {
       case "removeContentFromPlaylist":
         result = dbAdmin.removeContentFromPlaylist(params.playlistId, params.contentId)
         break
+      case "addUrlToPlaylist":
+        result = dbAdmin.addUrlToPlaylist(params.playlistId, params.url, params.duration)
+        break
+      case "removeUrlFromPlaylist":
+        result = dbAdmin.removeUrlFromPlaylist(params.playlistId, params.url)
+        break
       case "deletePlaylist":
         result = dbAdmin.deletePlaylist(params.id)
         break

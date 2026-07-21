@@ -35,6 +35,8 @@ import {
   GripVertical,
   LayoutList,
   Grid3X3,
+  Link2,
+  Pencil,
 } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
@@ -88,6 +90,10 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
   const [isSubplaylist, setIsSubplaylist] = useState(false)
   const [view, setView] = useState<"list" | "grid">("list")
   const [dragState, setDragState] = useState<{ source: number; destination: number | null } | null>(null)
+  const [urlDialogOpen, setUrlDialogOpen] = useState(false)
+  const [urlValue, setUrlValue] = useState("")
+  const [urlDuration, setUrlDuration] = useState(10)
+  const [urlEditIndex, setUrlEditIndex] = useState<number | null>(null)
 
   const isEditing = !!playlist
 
@@ -300,6 +306,46 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
     setSubplaylistPickerOpen(true)
   }
 
+  function handleInsertUrl() {
+    setUrlValue("")
+    setUrlDuration(10)
+    setUrlEditIndex(null)
+    setUrlDialogOpen(true)
+  }
+
+  function handleUrlSave() {
+    if (!urlValue.trim()) {
+      toast.error("Informe a URL")
+      return
+    }
+    if (urlEditIndex != null) {
+      setItems((prev) =>
+        prev.map((item, i) =>
+          i === urlEditIndex
+            ? { ...item, url: urlValue.trim(), duration: urlDuration, name: urlValue.trim() }
+            : item
+        )
+      )
+    } else {
+      setItems((prev) => [
+        ...prev,
+        { type: "url" as const, url: urlValue.trim(), duration: urlDuration, name: urlValue.trim() },
+      ])
+    }
+    setUrlDialogOpen(false)
+    setUrlValue("")
+    setUrlDuration(10)
+    setUrlEditIndex(null)
+  }
+
+  function handleEditUrl(index: number) {
+    const item = items[index]
+    setUrlValue(item.url ?? "")
+    setUrlDuration(item.duration)
+    setUrlEditIndex(index)
+    setUrlDialogOpen(true)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
@@ -358,6 +404,10 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
               <Layers className="mr-1.5 size-4" />
               Inserir Subplaylist
             </Button>
+            <Button type="button" variant="outline" size="sm" onClick={handleInsertUrl}>
+              <Link2 className="mr-1.5 size-4" />
+              Inserir URL
+            </Button>
           </div>
 
           <div className="flex-1 min-h-0 space-y-2">
@@ -413,11 +463,12 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                     ) : view === "grid" ? (
                       items.map((item, idx) => {
                         const isContent = item.type === "content"
+                        const isUrl = item.type === "url"
                         const content = isContent ? itemContentMap.get(item.contentId!) : undefined
-                        const subPlaylist = !isContent ? playlistMap.get(item.playlistId!) : undefined
-                        const name = isContent ? content?.name : subPlaylist?.name
+                        const subPlaylist = !isContent && !isUrl ? playlistMap.get(item.playlistId!) : undefined
+                        const name = isContent ? content?.name : isUrl ? (item.name || item.url) : subPlaylist?.name
                         if (!name) return null
-                        const Icon = isContent ? typeIcons[content?.type ?? "image"] : ListVideo
+                        const Icon = isContent ? typeIcons[content?.type ?? "image"] : isUrl ? Globe : ListVideo
                         const visualIdx =
                           dragState && idx < dragState.source
                             ? idx
@@ -459,22 +510,37 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                   <span className="text-[9px] font-medium text-center w-full truncate leading-tight">
                                     {name}
                                   </span>
-                                  {isContent && (
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleEditSchedule(idx)
-                                      }}
-                                      className={`flex items-center gap-0.5 ${item.timeSlots && item.timeSlots.length > 0 ? "text-primary" : "text-muted-foreground"}`}
-                                      title="Agendar exibição"
-                                    >
-                                      <Calendar className="size-2.5" />
-                                      {item.timeSlots && item.timeSlots.length > 0 && (
-                                        <span className="text-[8px]">{item.timeSlots.length}</span>
-                                      )}
-                                    </button>
-                                  )}
+                                  <div className="flex items-center gap-1">
+                                    {isContent && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleEditSchedule(idx)
+                                        }}
+                                        className={`flex items-center gap-0.5 ${item.timeSlots && item.timeSlots.length > 0 ? "text-primary" : "text-muted-foreground"}`}
+                                        title="Agendar exibição"
+                                      >
+                                        <Calendar className="size-2.5" />
+                                        {item.timeSlots && item.timeSlots.length > 0 && (
+                                          <span className="text-[8px]">{item.timeSlots.length}</span>
+                                        )}
+                                      </button>
+                                    )}
+                                    {isUrl && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleEditUrl(idx)
+                                        }}
+                                        className="flex items-center text-muted-foreground hover:text-foreground"
+                                        title="Editar URL"
+                                      >
+                                        <Pencil className="size-2.5" />
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </Draggable>
@@ -484,9 +550,10 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                     ) : (
                       items.map((item, idx) => {
                         const isContent = item.type === "content"
+                        const isUrl = item.type === "url"
                         const content = isContent ? itemContentMap.get(item.contentId!) : undefined
-                        const subPlaylist = !isContent ? playlistMap.get(item.playlistId!) : undefined
-                        const name = isContent ? content?.name : subPlaylist?.name
+                        const subPlaylist = !isContent && !isUrl ? playlistMap.get(item.playlistId!) : undefined
+                        const name = isContent ? content?.name : isUrl ? (item.name || item.url) : subPlaylist?.name
                         if (!name) return null
                         const visualIdx =
                           dragState && idx < dragState.source
@@ -532,6 +599,8 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                           const Icon = typeIcons[content?.type ?? "image"]
                                           return <Icon className="size-4 text-muted-foreground" />
                                         })()
+                                      ) : isUrl ? (
+                                        <Globe className="size-4 text-muted-foreground" />
                                       ) : (
                                         <ListVideo className="size-4 text-muted-foreground" />
                                       )}
@@ -539,7 +608,10 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                     <div className="min-w-0">
                                       <span className="text-sm truncate block">{name}</span>
                                       <span className="flex items-center gap-1">
-                                        {!isContent && (
+                                        {isUrl && (
+                                          <span className="text-[10px] text-muted-foreground">URL</span>
+                                        )}
+                                        {!isContent && !isUrl && (
                                           <span className="text-[10px] text-muted-foreground">Subplaylist</span>
                                         )}
                                         {item.timeSlots && item.timeSlots.length > 0 && (
@@ -577,6 +649,18 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                           <Calendar className="size-3" />
                                         </Button>
                                       )}
+                                      {isUrl && (
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className="size-7 shrink-0 text-muted-foreground"
+                                          onClick={() => handleEditUrl(idx)}
+                                          title="Editar URL"
+                                        >
+                                          <Pencil className="size-3" />
+                                        </Button>
+                                      )}
                                       <Button
                                         type="button"
                                         variant="ghost"
@@ -607,6 +691,46 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
               </Droppable>
             </DragDropContext>
           </div>
+
+          <Dialog open={urlDialogOpen} onOpenChange={setUrlDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>{urlEditIndex != null ? "Editar URL" : "Inserir URL"}</DialogTitle>
+                <DialogDescription>
+                  {urlEditIndex != null ? "Altere a URL e a duração de exibição" : "Adicione uma URL para ser exibida na playlist"}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="url">URL</Label>
+                  <Input
+                    id="url"
+                    value={urlValue}
+                    onChange={(e) => setUrlValue(e.target.value)}
+                    placeholder="https://exemplo.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="urlDuration">Duração (segundos)</Label>
+                  <Input
+                    id="urlDuration"
+                    type="number"
+                    min={1}
+                    value={urlDuration}
+                    onChange={(e) => setUrlDuration(Math.max(1, Number(e.target.value)))}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setUrlDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleUrlSave}>
+                  {urlEditIndex != null ? "Salvar" : "Adicionar"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <ContentPickerDialog
             open={contentPickerOpen}

@@ -76,12 +76,14 @@ export default function PlaylistDetailPage() {
       const sub = playlists.find((p: Playlist) => p.id === item.playlistId)
       return sub?.name ?? "Subplaylist"
     }
+    if (item.type === "url") return item.name || item.url || "URL"
     const c = contentItems.find((c: { id: string }) => c.id === item.contentId)
     return c?.name ?? item.contentId ?? "Conteúdo"
   }
 
   function getItemType(item: PlaylistItem): string {
     if (item.type === "playlist") return "playlist"
+    if (item.type === "url") return "web"
     const c = contentItems.find((c: { id: string }) => c.id === item.contentId)
     return c?.type ?? "image"
   }

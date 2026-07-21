@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Loader2, Play, Plus, Trash2, FileImage, Video, Globe, Clock, Calendar } from "lucide-react"
+import { Loader2, Play, Plus, Trash2, FileImage, Video, Globe, Clock, Calendar, Link2 } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -67,6 +67,9 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
   const [selectedContentId, setSelectedContentId] = useState<string | null>(null)
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false)
   const [pendingTimeSlots, setPendingTimeSlots] = useState<ContentTimeSlot[] | undefined>(undefined)
+  const [addUrlOpen, setAddUrlOpen] = useState(false)
+  const [urlValue, setUrlValue] = useState("")
+  const [urlDuration, setUrlDuration] = useState(10)
 
   const { data: playlists } = useQuery({
     queryKey: ["playlists"],
@@ -137,6 +140,33 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
       toast.success("Conteúdo adicionado à playlist")
     } catch {
       toast.error("Erro ao adicionar conteúdo")
+    }
+  }
+
+  async function handleAddUrl() {
+    if (!currentPlaylistId || !urlValue.trim()) return
+    try {
+      await api.addUrlToPlaylist(currentPlaylistId, urlValue.trim(), urlDuration)
+      queryClient.invalidateQueries({ queryKey: ["playlist", currentPlaylistId] })
+      queryClient.invalidateQueries({ queryKey: ["playlists"] })
+      setUrlValue("")
+      setUrlDuration(10)
+      setAddUrlOpen(false)
+      toast.success("URL adicionada à playlist")
+    } catch {
+      toast.error("Erro ao adicionar URL")
+    }
+  }
+
+  async function handleRemoveFromPlaylistByUrl(url: string) {
+    if (!currentPlaylistId) return
+    try {
+      await api.removeUrlFromPlaylist(currentPlaylistId, url)
+      queryClient.invalidateQueries({ queryKey: ["playlist", currentPlaylistId] })
+      queryClient.invalidateQueries({ queryKey: ["playlists"] })
+      toast.success("URL removida da playlist")
+    } catch {
+      toast.error("Erro ao remover URL")
     }
   }
 
@@ -236,15 +266,25 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium">Conteúdos na Playlist</h4>
-              <Button size="sm" onClick={() => {
-                setNewItemDuration(10)
-                setSelectedContentId(null)
-                setAddContentOpen(true)
-              }}>
-                <Plus className="mr-1 size-3" />
-                Adicionar
-              </Button>
+              <h4 className="text-sm font-medium">Itens da Playlist</h4>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => {
+                  setUrlValue("")
+                  setUrlDuration(10)
+                  setAddUrlOpen(true)
+                }}>
+                  <Link2 className="mr-1 size-3" />
+                  Inserir URL
+                </Button>
+                <Button size="sm" onClick={() => {
+                  setNewItemDuration(10)
+                  setSelectedContentId(null)
+                  setAddContentOpen(true)
+                }}>
+                  <Plus className="mr-1 size-3" />
+                  Adicionar
+                </Button>
+              </div>
             </div>
 
             {currentPlaylist && currentPlaylist.items.length === 0 ? (
@@ -253,52 +293,87 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
               </p>
             ) : (
               <div className="space-y-2">
-                {currentPlaylist?.items.map((item) => {
-                  if (item.type !== "content") return null
-                  const content = itemContentMap.get(item.contentId!)
-                  if (!content) return null
-                  const Icon = typeIcons[content.type]
-                  return (
-                    <div
-                      key={item.contentId}
-                      className={`flex items-center justify-between rounded-lg border p-3 ${
-                        isExpired(item) ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`rounded-lg p-2 ${
-                          isExpired(item) ? "bg-red-100 dark:bg-red-900/30" : "bg-muted"
-                        }`}>
-                          <Icon className={`size-4 ${
-                            isExpired(item) ? "text-red-500" : "text-muted-foreground"
-                          }`} />
+                {currentPlaylist?.items.map((item, idx) => {
+                  if (item.type === "content") {
+                    const content = itemContentMap.get(item.contentId!)
+                    if (!content) return null
+                    const Icon = typeIcons[content.type]
+                    return (
+                      <div
+                        key={item.contentId}
+                        className={`flex items-center justify-between rounded-lg border p-3 ${
+                          isExpired(item) ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`rounded-lg p-2 ${
+                            isExpired(item) ? "bg-red-100 dark:bg-red-900/30" : "bg-muted"
+                          }`}>
+                            <Icon className={`size-4 ${
+                              isExpired(item) ? "text-red-500" : "text-muted-foreground"
+                            }`} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{content.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {isExpired(item) && (
+                                <span className="text-red-500 font-medium mr-1">Vencido • </span>
+                              )}
+                              {content.type === "image" ? "Imagem" : content.type === "video" ? "Vídeo" : "Web"} • {content.category}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium">{content.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {isExpired(item) && (
-                              <span className="text-red-500 font-medium mr-1">Vencido • </span>
-                            )}
-                            {content.type === "image" ? "Imagem" : content.type === "video" ? "Vídeo" : "Web"} • {content.category}
-                          </p>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="size-3" />
+                            {formatDuration(item.duration)}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-destructive"
+                            onClick={() => handleRemoveFromPlaylist(item.contentId!)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="size-3" />
-                          {formatDuration(item.duration)}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8 text-destructive"
-                          onClick={() => handleRemoveFromPlaylist(item.contentId!)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
+                    )
+                  }
+                  if (item.type === "url") {
+                    const displayName = item.name || item.url || "URL"
+                    return (
+                      <div
+                        key={`url-${idx}`}
+                        className="flex items-center justify-between rounded-lg border p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-lg bg-muted p-2">
+                            <Globe className="size-4 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium truncate max-w-[300px]">{displayName}</p>
+                            <p className="text-xs text-muted-foreground">URL</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="size-3" />
+                            {formatDuration(item.duration)}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-destructive"
+                            onClick={() => handleRemoveFromPlaylistByUrl(item.url!)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  )
+                    )
+                  }
+                  return null
                 })}
               </div>
             )}
@@ -409,6 +484,46 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
                 Adicionar
               </Button>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addUrlOpen} onOpenChange={setAddUrlOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Inserir URL</DialogTitle>
+            <DialogDescription>
+              Adicione uma URL para ser exibida na playlist
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="playerUrl">URL</Label>
+              <Input
+                id="playerUrl"
+                value={urlValue}
+                onChange={(e) => setUrlValue(e.target.value)}
+                placeholder="https://exemplo.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="playerUrlDuration">Duração (segundos)</Label>
+              <Input
+                id="playerUrlDuration"
+                type="number"
+                min={1}
+                value={urlDuration}
+                onChange={(e) => setUrlDuration(Math.max(1, Number(e.target.value)))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddUrlOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddUrl} disabled={!urlValue.trim()}>
+              Adicionar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

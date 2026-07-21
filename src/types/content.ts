@@ -19,9 +19,11 @@ export interface ContentTimeSlot {
 }
 
 export interface PlaylistItem {
-  type: "content" | "playlist"
+  type: "content" | "playlist" | "url"
   contentId?: string
   playlistId?: string
+  url?: string
+  name?: string
   duration: number
   timeSlots?: ContentTimeSlot[]
 }

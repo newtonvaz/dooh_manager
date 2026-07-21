@@ -112,6 +112,16 @@ export const api = {
     return dbCall("removeContentFromPlaylist", { playlistId, contentId })
   },
 
+  async addUrlToPlaylist(playlistId: string, url: string, duration: number): Promise<Playlist> {
+    await delay(100)
+    return dbCall("addUrlToPlaylist", { playlistId, url, duration })
+  },
+
+  async removeUrlFromPlaylist(playlistId: string, url: string): Promise<Playlist> {
+    await delay(100)
+    return dbCall("removeUrlFromPlaylist", { playlistId, url })
+  },
+
   async deletePlaylist(id: string): Promise<boolean> {
     await delay(150)
     return dbCall("deletePlaylist", { id })

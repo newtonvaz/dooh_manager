@@ -428,6 +428,13 @@ function PlaylistCard({ pl, showCheckboxes, selectedIds, toggleSelect, handleEdi
         </div>
       )
     }
+    if (item.type === "url") {
+      return (
+        <div className="rounded bg-muted p-1" title={item.url}>
+          <Globe className="size-3 text-muted-foreground" />
+        </div>
+      )
+    }
     const sub = playlistMap.get(item.playlistId!)
     return (
       <div className="rounded bg-muted p-1" title={sub?.name ?? "Subplaylist"}>
@@ -501,7 +508,7 @@ function PlaylistCard({ pl, showCheckboxes, selectedIds, toggleSelect, handleEdi
 
         <div className="flex flex-wrap gap-1">
           {pl.items.slice(0, 5).map((item) => (
-            <div key={item.type === "content" ? `c:${item.contentId}` : `p:${item.playlistId}`}>
+            <div key={item.type === "content" ? `c:${item.contentId}` : item.type === "url" ? `u:${item.url}` : `p:${item.playlistId}`}>
               {renderItemIcon(item)}
             </div>
           ))}

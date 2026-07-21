@@ -312,7 +312,6 @@ function createDb(client?: SupabaseClient) {
       if (!playlist) return undefined
 
       const items = typeof playlist.items === "string" ? JSON.parse(playlist.items) : playlist.items
-      const removed = items.find((i: any) => i.type === "content" && i.contentId === contentId)
       const filtered = items.filter((i: any) => !(i.type === "content" && i.contentId === contentId))
       const totalDuration = filtered.reduce((s: number, i: any) => s + i.duration, 0)
 
@@ -323,6 +322,49 @@ function createDb(client?: SupabaseClient) {
         .select()
         .single()
       if (error) return undefined
+      return mapPlaylist(updated)
+    },
+
+    async addUrlToPlaylist(playlistId: string, url: string, duration: number): Promise<Playlist> {
+      const { data: playlist } = await c.from("playlists").select("*").eq("id", playlistId).single()
+      if (!playlist) throw new Error("Playlist não encontrada")
+
+      const items = typeof playlist.items === "string" ? JSON.parse(playlist.items) : playlist.items
+      items.push({ type: "url", url, duration, name: url })
+      const totalDuration = items.reduce((s: number, i: any) => s + i.duration, 0)
+
+      const { data: updated, error } = await c
+        .from("playlists")
+        .update({ items: JSON.stringify(items), total_duration: totalDuration, updated_at: new Date().toISOString() })
+        .eq("id", playlistId)
+        .select()
+        .single()
+      if (error) throw error
+      return mapPlaylist(updated)
+    },
+
+    async removeUrlFromPlaylist(playlistId: string, url: string): Promise<Playlist> {
+      const { data: playlist } = await c.from("playlists").select("*").eq("id", playlistId).single()
+      if (!playlist) throw new Error("Playlist não encontrada")
+
+      const items = typeof playlist.items === "string" ? JSON.parse(playlist.items) : playlist.items
+      let removed = false
+      const filtered = items.filter((i: any) => {
+        if (i.type === "url" && i.url === url && !removed) {
+          removed = true
+          return false
+        }
+        return true
+      })
+      const totalDuration = filtered.reduce((s: number, i: any) => s + i.duration, 0)
+
+      const { data: updated, error } = await c
+        .from("playlists")
+        .update({ items: JSON.stringify(filtered), total_duration: totalDuration, updated_at: new Date().toISOString() })
+        .eq("id", playlistId)
+        .select()
+        .single()
+      if (error) throw error
       return mapPlaylist(updated)
     },
 
@@ -769,9 +811,27 @@ function createDb(client?: SupabaseClient) {
                     timeSlots: subItem.timeSlots ?? null,
                   })
                 }
+              } else if (subItem.type === "url" && subItem.url) {
+                items.push({
+                  type: "html5",
+                  url: subItem.url,
+                  name: subItem.name || subItem.url,
+                  duration: subItem.duration || 10,
+                  contentId: null,
+                  timeSlots: null,
+                })
               }
             }
           }
+        } else if (item.type === "url" && item.url) {
+          items.push({
+            type: "html5",
+            url: item.url,
+            name: item.name || item.url,
+            duration: item.duration || 10,
+            contentId: null,
+            timeSlots: item.timeSlots ?? null,
+          })
         }
       }
 
