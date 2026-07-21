@@ -518,15 +518,14 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                   style={provided.draggableProps.style}
                                   onContextMenu={(e) => {
                                     e.preventDefault()
-                                    const rect = e.currentTarget.getBoundingClientRect()
                                     const menuW = 176
                                     const menuH = 120
-                                    let left = rect.left
-                                    let top = rect.top - menuH
+                                    let left = e.clientX
+                                    let top = e.clientY - menuH
                                     if (left + menuW > window.innerWidth) {
                                       left = window.innerWidth - menuW - 8
                                     }
-                                    if (top < 0) top = rect.bottom + 4
+                                    if (top < 0) top = e.clientY + 4
                                     setContextMenu({ x: left, y: top, index: idx })
                                   }}
                                   className={`w-24 flex flex-col items-center gap-1 rounded-lg border p-2 cursor-grab active:cursor-grabbing transition-transform duration-150 ${
