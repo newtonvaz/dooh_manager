@@ -2,9 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { usePlayers } from "@/hooks/use-players"
-import type { Player } from "@/types/player"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -32,8 +30,6 @@ import {
   Loader2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { usePlayers } from "@/hooks/use-players"
 import { PlayerStatusBadge } from "@/components/players/player-status-badge"
 
 type ViewMode = "list" | "grid"
@@ -291,7 +287,3 @@ export default function ActivationReportPage() {
     </div>
   )
 }</think>
-
-<｜DSML｜tool_calls>
-<｜DSML｜invoke name="write">
-<｜DSML｜parameter name="filePath" string="true">/Users/newton/documento/dooh_managerapp/src/app/(dashboard)/reports/activation/page.tsx
