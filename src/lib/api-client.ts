@@ -328,13 +328,13 @@ export const api = {
       timeSlots?: TimeSlot[]
       playerIds?: string[]
     }
-  ): Promise<ProgrammingGroup | undefined> {
+  ): Promise<ProgrammingGroup> {
     await delay(150)
     return dbCall("updateProgrammingGroup", { id }, data)
   },
 
-  async deleteProgrammingGroup(id: string): Promise<boolean> {
+  async deleteProgrammingGroup(id: string): Promise<void> {
     await delay(150)
-    return dbCall("deleteProgrammingGroup", { id })
+    await dbCall("deleteProgrammingGroup", { id })
   },
 }

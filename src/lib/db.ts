@@ -516,7 +516,7 @@ function createDb(client?: SupabaseClient) {
         timeSlots?: TimeSlot[]
         playerIds?: string[]
       }
-    ): Promise<ProgrammingGroup | undefined> {
+    ): Promise<ProgrammingGroup> {
       const update: Record<string, any> = {}
       if (data.name !== undefined) update.name = data.name
       if (data.enabled !== undefined) update.enabled = data.enabled
@@ -524,7 +524,7 @@ function createDb(client?: SupabaseClient) {
       update.updated_at = new Date().toISOString()
 
       const { error: updateError } = await c.from("programming_groups").update(update).eq("id", id)
-      if (updateError) return undefined
+      if (updateError) throw updateError
 
       if (data.playerIds !== undefined) {
         const { error: deleteError } = await c.from("programming_group_players").delete().eq("group_id", id)
@@ -547,20 +547,21 @@ function createDb(client?: SupabaseClient) {
         description: `Grupo de programação "${data.name || id}" atualizado`,
       })
 
-      return this.getProgrammingGroup(id)
+      const updated = await this.getProgrammingGroup(id)
+      if (!updated) throw new Error("Grupo não encontrado após atualização")
+      return updated
     },
 
-    async deleteProgrammingGroup(id: string): Promise<boolean> {
+    async deleteProgrammingGroup(id: string): Promise<void> {
       const { data: group } = await c.from("programming_groups").select("name").eq("id", id).single()
       const { error } = await c.from("programming_groups").delete().eq("id", id)
-      if (error) return false
+      if (error) throw error
       if (group) {
         recordActivity(c, {
           type: "programming",
           description: `Grupo de programação "${group.name}" excluído`,
         })
       }
-      return true
     },
 
     async getProgrammingGroupsByPlayer(playerId: string): Promise<ProgrammingGroup[]> {

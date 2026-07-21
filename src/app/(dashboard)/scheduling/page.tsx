@@ -204,10 +204,10 @@ export default function SchedulingPage() {
   }
 
   async function handleView(group: ProgrammingGroup) {
-    setViewingGroup(group)
-    setViewOpen(true)
     const detail = await api.getProgrammingGroup(group.id)
     setViewGroupDetail(detail)
+    setViewingGroup(group)
+    setViewOpen(true)
   }
 
   function confirmDelete(group: ProgrammingGroup) {
