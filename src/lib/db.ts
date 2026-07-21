@@ -527,7 +527,9 @@ function createDb(client?: SupabaseClient) {
       if (updateError) return undefined
 
       if (data.playerIds !== undefined) {
-        await c.from("programming_group_players").delete().eq("group_id", id)
+        const { error: deleteError } = await c.from("programming_group_players").delete().eq("group_id", id)
+        if (deleteError) throw deleteError
+
         if (data.playerIds.length > 0) {
           const now = new Date().toISOString()
           const rels = data.playerIds.map((playerId) => ({
@@ -535,7 +537,8 @@ function createDb(client?: SupabaseClient) {
             player_id: playerId,
             created_at: now,
           }))
-          await c.from("programming_group_players").insert(rels)
+          const { error: insertError } = await c.from("programming_group_players").insert(rels)
+          if (insertError) throw insertError
         }
       }
 

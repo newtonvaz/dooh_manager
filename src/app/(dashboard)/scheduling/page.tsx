@@ -177,8 +177,10 @@ function ViewProgrammingGroupDialog({
 export default function SchedulingPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingGroup, setEditingGroup] = useState<ProgrammingGroup | undefined>()
+  const [editingGroupDetail, setEditingGroupDetail] = useState<ProgrammingGroup | undefined>()
   const [viewingGroup, setViewingGroup] = useState<ProgrammingGroup | undefined>()
   const [viewOpen, setViewOpen] = useState(false)
+  const [viewGroupDetail, setViewGroupDetail] = useState<ProgrammingGroup | undefined>()
   const [deletingGroup, setDeletingGroup] = useState<ProgrammingGroup | undefined>()
   const [deleteOpen, setDeleteOpen] = useState(false)
 
@@ -194,14 +196,18 @@ export default function SchedulingPage() {
     setFormOpen(true)
   }
 
-  function handleEdit(group: ProgrammingGroup) {
+  async function handleEdit(group: ProgrammingGroup) {
+    const detail = await api.getProgrammingGroup(group.id)
     setEditingGroup(group)
+    setEditingGroupDetail(detail)
     setFormOpen(true)
   }
 
-  function handleView(group: ProgrammingGroup) {
+  async function handleView(group: ProgrammingGroup) {
     setViewingGroup(group)
     setViewOpen(true)
+    const detail = await api.getProgrammingGroup(group.id)
+    setViewGroupDetail(detail)
   }
 
   function confirmDelete(group: ProgrammingGroup) {
@@ -337,8 +343,14 @@ export default function SchedulingPage() {
 
       <ProgrammingGroupFormDialog
         open={formOpen}
-        onOpenChange={setFormOpen}
-        group={editingGroup}
+        onOpenChange={(open) => {
+          setFormOpen(open)
+          if (!open) {
+            setEditingGroup(undefined)
+            setEditingGroupDetail(undefined)
+          }
+        }}
+        group={editingGroupDetail}
       />
 
       {deletingGroup && (
@@ -357,9 +369,12 @@ export default function SchedulingPage() {
         open={viewOpen}
         onOpenChange={(open) => {
           setViewOpen(open)
-          if (!open) setViewingGroup(undefined)
+          if (!open) {
+            setViewingGroup(undefined)
+            setViewGroupDetail(undefined)
+          }
         }}
-        group={viewingGroup}
+        group={viewGroupDetail}
       />
     </div>
   )
