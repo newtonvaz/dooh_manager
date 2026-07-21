@@ -498,6 +498,8 @@ function createDb(client?: SupabaseClient) {
         }))
         const { error: relError } = await c.from("programming_group_players").insert(rels)
         if (relError) throw relError
+
+        await this.syncProgrammingGroupSchedules(id, data.name, data.enabled, data.timeSlots, data.playerIds)
       }
 
       recordActivity(c, {
@@ -526,6 +528,10 @@ function createDb(client?: SupabaseClient) {
       const { error: updateError } = await c.from("programming_groups").update(update).eq("id", id)
       if (updateError) throw updateError
 
+      const timeSlots = data.timeSlots
+      const enabled = data.enabled
+      const name = data.name
+
       if (data.playerIds !== undefined) {
         const { error: deleteError } = await c.from("programming_group_players").delete().eq("group_id", id)
         if (deleteError) throw deleteError
@@ -539,6 +545,29 @@ function createDb(client?: SupabaseClient) {
           }))
           const { error: insertError } = await c.from("programming_group_players").insert(rels)
           if (insertError) throw insertError
+        }
+
+        await this.deleteSchedulesByGroup(id)
+        if (data.playerIds.length > 0) {
+          const resolvedName = name || (await this.getProgrammingGroup(id))?.name || "Programação"
+          const resolvedEnabled = enabled !== undefined ? enabled : true
+          const resolvedTimeSlots = timeSlots || (await this.getProgrammingGroup(id))?.timeSlots || []
+          await this.syncProgrammingGroupSchedules(id, resolvedName, resolvedEnabled, resolvedTimeSlots, data.playerIds)
+        }
+      } else if (timeSlots !== undefined || enabled !== undefined || name !== undefined) {
+        const { data: schedules } = await c
+          .from("schedules")
+          .select("*")
+          .eq("replicated_from_group", id)
+        if (schedules) {
+          const scheduleUpdate: Record<string, any> = {}
+          if (timeSlots !== undefined) scheduleUpdate.time_slots = JSON.stringify(timeSlots)
+          if (enabled !== undefined) scheduleUpdate.enabled = enabled
+          if (name !== undefined) scheduleUpdate.name = name
+          scheduleUpdate.updated_at = new Date().toISOString()
+          for (const s of schedules) {
+            await c.from("schedules").update(scheduleUpdate).eq("id", s.id)
+          }
         }
       }
 
@@ -554,6 +583,7 @@ function createDb(client?: SupabaseClient) {
 
     async deleteProgrammingGroup(id: string): Promise<void> {
       const { data: group } = await c.from("programming_groups").select("name").eq("id", id).single()
+      await this.deleteSchedulesByGroup(id)
       const { error } = await c.from("programming_groups").delete().eq("id", id)
       if (error) throw error
       if (group) {
@@ -974,6 +1004,36 @@ function createDb(client?: SupabaseClient) {
     async deleteSchedule(id: string): Promise<boolean> {
       const { error } = await c.from("schedules").delete().eq("id", id)
       return !error
+    },
+
+    async syncProgrammingGroupSchedules(
+      groupId: string,
+      name: string,
+      enabled: boolean,
+      timeSlots: TimeSlot[],
+      playerIds: string[]
+    ): Promise<void> {
+      const now = new Date().toISOString()
+      for (const playerId of playerIds) {
+        const { data: player } = await c.from("players").select("name").eq("id", playerId).single()
+        const scheduleId = `sch${Date.now()}${Math.random().toString(36).slice(2, 6)}`
+        await c.from("schedules").insert({
+          id: scheduleId,
+          name,
+          type: "player",
+          target_id: playerId,
+          target_name: player?.name || "",
+          time_slots: JSON.stringify(timeSlots),
+          enabled,
+          replicated_from_group: groupId,
+          created_at: now,
+          updated_at: now,
+        })
+      }
+    },
+
+    async deleteSchedulesByGroup(groupId: string): Promise<void> {
+      await c.from("schedules").delete().eq("replicated_from_group", groupId)
     },
   }
 }
