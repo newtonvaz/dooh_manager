@@ -239,7 +239,7 @@ export default function ActivationReportPage() {
                               <PlayerStatusBadge status={player.status} />
                             </TableCell>
                             <TableCell className="text-xs whitespace-nowrap">
-                              {new Date(player.createdAt + "T12:00:00").toLocaleDateString("pt-BR")}
+                              {new Date(player.createdAt).toLocaleDateString("pt-BR")}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -270,7 +270,7 @@ export default function ActivationReportPage() {
                             <p className="flex items-center justify-between">
                               <span>Criado em</span>
                               <span className="font-medium text-foreground">
-                                {new Date(player.createdAt + "T12:00:00").toLocaleDateString("pt-BR")}
+                                {new Date(player.createdAt).toLocaleDateString("pt-BR")}
                               </span>
                             </p>
                           </div>
