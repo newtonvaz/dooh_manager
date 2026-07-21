@@ -35,7 +35,7 @@ import {
   Trash2,
   Eye,
   Calendar,
-  Users,
+  Monitor,
   Clock,
 } from "lucide-react"
 import type { ProgrammingGroup } from "@/types/programming-group"
@@ -287,7 +287,7 @@ export default function SchedulingPage() {
                     <TableCell className="font-medium">{group.name}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
-                        <Users className="size-3.5 text-muted-foreground" />
+                        <Monitor className="size-3.5 text-muted-foreground" />
                         <span>{group.playerCount ?? 0}</span>
                       </div>
                     </TableCell>
