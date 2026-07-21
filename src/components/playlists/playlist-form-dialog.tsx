@@ -540,6 +540,17 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                         <Pencil className="size-2.5" />
                                       </button>
                                     )}
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleRemoveItem(idx)
+                                      }}
+                                      className="flex items-center text-destructive/70 hover:text-destructive"
+                                      title="Remover item"
+                                    >
+                                      <Trash2 className="size-2.5" />
+                                    </button>
                                   </div>
                                 </div>
                               )}
