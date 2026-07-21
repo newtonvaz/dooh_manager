@@ -420,13 +420,13 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
               <Plus className="mr-1.5 size-4" />
               Inserir Conteúdos
             </Button>
-            <Button type="button" variant="outline" size="sm" onClick={handleInsertApps}>
-              <AppWindow className="mr-1.5 size-4" />
-              Inserir Apps
-            </Button>
             <Button type="button" variant="outline" size="sm" onClick={handleInsertSubplaylist} disabled={isSubplaylist}>
               <Layers className="mr-1.5 size-4" />
               Inserir Subplaylist
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={handleInsertApps}>
+              <AppWindow className="mr-1.5 size-4" />
+              Inserir Apps
             </Button>
             <Button type="button" variant="outline" size="sm" onClick={handleInsertUrl}>
               <Link2 className="mr-1.5 size-4" />
