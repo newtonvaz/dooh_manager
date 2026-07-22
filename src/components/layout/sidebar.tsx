@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { navItems } from "./nav-items"
 import { useAuth } from "@/hooks/use-auth"
+import Image from "next/image"
 import { Monitor, LogOut, ChevronDown } from "lucide-react"
 import { WithTooltip } from "@/components/ui/tooltip"
 
@@ -140,9 +141,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {subItems!.map((child) => {
               const childActive = isActive(child.href)
               return (
-                <WithTooltip content={child.title}>
+                <WithTooltip key={child.href} content={child.title}>
                   <Link
-                    key={child.href}
                     href={child.href}
                     className={cn(
                       "sidebar-child-link group/child-link relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
@@ -182,17 +182,20 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         )}
       >
         {collapsed ? (
-          <div className="flex size-10 items-center justify-center overflow-hidden rounded-lg bg-sidebar-primary/10 ring-1 ring-sidebar-primary/20">
-            <img
+          <div className="relative flex size-10 items-center justify-center overflow-hidden rounded-lg bg-sidebar-primary/10 ring-1 ring-sidebar-primary/20">
+            <Image
               src="/doohos.png"
               alt="D"
-              className="h-full w-full object-cover object-left"
+              fill
+              className="object-cover object-left"
             />
           </div>
         ) : (
-          <img
+          <Image
             src="/doohos.png"
             alt="DOOHOS"
+            width={164}
+            height={40}
             className="h-10 w-auto object-contain"
           />
         )}

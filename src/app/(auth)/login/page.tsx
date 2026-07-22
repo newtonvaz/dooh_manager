@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { WithTooltip } from "@/components/ui/tooltip"
+import Image from "next/image"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
@@ -33,7 +34,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-2">
-            <img src="/doohos.png" alt="DOOHOS" className="h-12 w-auto" />
+            <Image src="/doohos.png" alt="DOOHOS" width={196} height={48} className="h-12 w-auto" />
           </div>
           <CardTitle className="sr-only">DOOHOS</CardTitle>
           <CardDescription>Entre com suas credenciais</CardDescription>
