@@ -1,15 +1,13 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { WithTooltip } from "@/components/ui/tooltip"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api-client"
-import { AreaFormDialog } from "./area-form-dialog"
 import { toast } from "sonner"
 import {
-  Plus,
   Trash2,
   Pencil,
   Monitor,
@@ -21,27 +19,10 @@ import type { LayoutArea } from "@/types/layout"
 const CANVAS_W = 1920
 const CANVAS_H = 1080
 
+const MIN_PCT = 3
+
 function pctToPxX(pct: number) { return Math.round((pct / 100) * CANVAS_W) }
 function pctToPxY(pct: number) { return Math.round((pct / 100) * CANVAS_H) }
-
-interface DragInfo {
-  areaId: string
-  startX: number
-  startY: number
-  startMouseX: number
-  startMouseY: number
-}
-
-interface ResizeInfo {
-  areaId: string
-  edge: string
-  startX: number
-  startY: number
-  startW: number
-  startH: number
-  startMouseX: number
-  startMouseY: number
-}
 
 const AREA_COLORS = {
   content: { bg: "bg-blue-500/10", border: "border-blue-400/40", badge: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
@@ -49,84 +30,29 @@ const AREA_COLORS = {
   inactive: { bg: "bg-gray-500/5", border: "border-gray-300/30", badge: "bg-gray-500/15 text-gray-500" },
 }
 
-export function LayoutEditor() {
+interface LayoutEditorProps {
+  layoutId: string
+}
+
+export function LayoutEditor({ layoutId }: LayoutEditorProps) {
   const queryClient = useQueryClient()
-  const [formOpen, setFormOpen] = useState(false)
-  const [editingArea, setEditingArea] = useState<LayoutArea | undefined>(undefined)
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null)
   const [canvasScale, setCanvasScale] = useState(1)
   const canvasRef = useRef<HTMLDivElement>(null)
-
-  const [dragInfo, setDragInfo] = useState<DragInfo | null>(null)
-  const [resizeInfo, setResizeInfo] = useState<ResizeInfo | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
 
   const { data: areas = [], isLoading } = useQuery({
-    queryKey: ["layout-areas"],
-    queryFn: () => api.getLayoutAreas("default"),
+    queryKey: ["layout-areas", layoutId],
+    queryFn: () => api.getLayoutAreas(layoutId),
   })
 
   const sortedAreas = [...areas].sort((a, b) => a.zIndex - b.zIndex)
 
-  useEffect(() => {
-    function handleMouseMove(e: MouseEvent) {
-      if (dragInfo) {
-        const dx = (e.clientX - dragInfo.startMouseX) / canvasScale
-        const dy = (e.clientY - dragInfo.startMouseY) / canvasScale
-        const newX = Math.max(0, Math.min(100 - 1, dragInfo.startX + dx))
-        const newY = Math.max(0, Math.min(100 - 1, dragInfo.startY + dy))
-        setAreasOptimistic(dragInfo.areaId, { x: Math.round(newX * 10) / 10, y: Math.round(newY * 10) / 10 })
-      }
-      if (resizeInfo) {
-        const dx = (e.clientX - resizeInfo.startMouseX) / canvasScale
-        const dy = (e.clientY - resizeInfo.startMouseY) / canvasScale
-        let newX = resizeInfo.startX
-        let newY = resizeInfo.startY
-        let newW = resizeInfo.startW
-        let newH = resizeInfo.startH
+  function clamp(v: number, min: number, max: number) {
+    return Math.round(Math.min(max, Math.max(min, v)) * 10) / 10
+  }
 
-        if (resizeInfo.edge.includes("e")) newW = Math.max(5, resizeInfo.startW + dx)
-        if (resizeInfo.edge.includes("w")) {
-          newW = Math.max(5, resizeInfo.startW - dx)
-          newX = resizeInfo.startX + (resizeInfo.startW - newW)
-        }
-        if (resizeInfo.edge.includes("s")) newH = Math.max(5, resizeInfo.startH + dy)
-        if (resizeInfo.edge.includes("n")) {
-          newH = Math.max(5, resizeInfo.startH - dy)
-          newY = resizeInfo.startY + (resizeInfo.startH - newH)
-        }
-
-        newX = Math.max(0, Math.min(100 - newW, newX))
-        newY = Math.max(0, Math.min(100 - newH, newY))
-
-        setAreasOptimistic(resizeInfo.areaId, {
-          x: Math.round(newX * 10) / 10,
-          y: Math.round(newY * 10) / 10,
-          width: Math.round(Math.min(100 - newX, newW) * 10) / 10,
-          height: Math.round(Math.min(100 - newY, newH) * 10) / 10,
-        })
-      }
-    }
-
-    function handleMouseUp() {
-      if (dragInfo) {
-        saveAreaPosition(dragInfo.areaId)
-        setDragInfo(null)
-      }
-      if (resizeInfo) {
-        saveAreaPosition(resizeInfo.areaId)
-        setResizeInfo(null)
-      }
-    }
-
-    if (dragInfo || resizeInfo) {
-      window.addEventListener("mousemove", handleMouseMove)
-      window.addEventListener("mouseup", handleMouseUp)
-      return () => {
-        window.removeEventListener("mousemove", handleMouseMove)
-        window.removeEventListener("mouseup", handleMouseUp)
-      }
-    }
-  }, [dragInfo, resizeInfo, canvasScale])
+  function round1(v: number) { return Math.round(v * 10) / 10 }
 
   function setAreasOptimistic(areaId: string, updates: Partial<LayoutArea>) {
     queryClient.setQueryData<LayoutArea[]>(["layout-areas"], (old) =>
@@ -151,17 +77,10 @@ export function LayoutEditor() {
   function handleAreaClick(e: React.MouseEvent, areaId: string) {
     e.stopPropagation()
     setSelectedAreaId(areaId)
-    setEditingArea(areas.find((a) => a.id === areaId))
-    setFormOpen(true)
   }
 
   function handleCanvasClick() {
     setSelectedAreaId(null)
-  }
-
-  function handleCreateArea() {
-    setEditingArea(undefined)
-    setFormOpen(true)
   }
 
   async function handleDeleteArea(areaId: string) {
@@ -175,33 +94,98 @@ export function LayoutEditor() {
     }
   }
 
-  function handleDragStart(e: React.MouseEvent, area: LayoutArea) {
+  function handlePointerDown(e: React.PointerEvent, area: LayoutArea) {
     e.stopPropagation()
     e.preventDefault()
     setSelectedAreaId(area.id)
-    setDragInfo({
-      areaId: area.id,
-      startX: area.x,
-      startY: area.y,
-      startMouseX: e.clientX,
-      startMouseY: e.clientY,
-    })
+    setDraggingId(area.id)
+    const el = canvasRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+
+    const startMouseX = e.clientX
+    const startMouseY = e.clientY
+    const startAreaX = area.x
+    const startAreaY = area.y
+    const areaId = area.id
+
+    function onMove(ev: PointerEvent) {
+      ev.preventDefault()
+      const dxPct = (ev.clientX - startMouseX) / rect.width * 100
+      const dyPct = (ev.clientY - startMouseY) / rect.height * 100
+      const newX = clamp(startAreaX + dxPct, 0, 100 - MIN_PCT)
+      const newY = clamp(startAreaY + dyPct, 0, 100 - MIN_PCT)
+      setAreasOptimistic(areaId, { x: newX, y: newY })
+    }
+
+    function onUp() {
+      setDraggingId(null)
+      document.removeEventListener("pointermove", onMove)
+      document.removeEventListener("pointerup", onUp)
+      saveAreaPosition(areaId)
+    }
+
+    document.addEventListener("pointermove", onMove)
+    document.addEventListener("pointerup", onUp)
   }
 
-  function handleResizeStart(e: React.MouseEvent, area: LayoutArea, edge: string) {
+  function handleResizePointerDown(e: React.PointerEvent, area: LayoutArea, edge: string) {
     e.stopPropagation()
     e.preventDefault()
     setSelectedAreaId(area.id)
-    setResizeInfo({
-      areaId: area.id,
-      edge,
-      startX: area.x,
-      startY: area.y,
-      startW: area.width,
-      startH: area.height,
-      startMouseX: e.clientX,
-      startMouseY: e.clientY,
-    })
+
+    const el = canvasRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+
+    const startX = e.clientX
+    const startY = e.clientY
+    const startAreaX = area.x
+    const startAreaY = area.y
+    const startAreaW = area.width
+    const startAreaH = area.height
+    const areaId = area.id
+
+    function onMove(ev: PointerEvent) {
+      ev.preventDefault()
+      const dxPct = (ev.clientX - startX) / rect.width * 100
+      const dyPct = (ev.clientY - startY) / rect.height * 100
+
+      let newX = startAreaX
+      let newY = startAreaY
+      let newW = startAreaW
+      let newH = startAreaH
+
+      if (edge.includes("e")) newW = Math.max(MIN_PCT, startAreaW + dxPct)
+      if (edge.includes("w")) {
+        newW = Math.max(MIN_PCT, startAreaW - dxPct)
+        newX = startAreaX + (startAreaW - newW)
+      }
+      if (edge.includes("s")) newH = Math.max(MIN_PCT, startAreaH + dyPct)
+      if (edge.includes("n")) {
+        newH = Math.max(MIN_PCT, startAreaH - dyPct)
+        newY = startAreaY + (startAreaH - newH)
+      }
+
+      newX = clamp(newX, 0, 100 - newW)
+      newY = clamp(newY, 0, 100 - newH)
+
+      setAreasOptimistic(areaId, {
+        x: newX,
+        y: newY,
+        width: round1(Math.min(100 - newX, newW)),
+        height: round1(Math.min(100 - newY, newH)),
+      })
+    }
+
+    function onUp() {
+      document.removeEventListener("pointermove", onMove)
+      document.removeEventListener("pointerup", onUp)
+      saveAreaPosition(areaId)
+    }
+
+    document.addEventListener("pointermove", onMove)
+    document.addEventListener("pointerup", onUp)
   }
 
   function getTypeLabel(type: string): string {
@@ -221,22 +205,11 @@ export function LayoutEditor() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <WithTooltip content="Criar nova área">
-            <Button onClick={handleCreateArea} size="sm">
-              <Plus className="mr-1.5 size-4" />
-              Criar Área
-            </Button>
-          </WithTooltip>
-          <span className="text-sm text-muted-foreground">
-            {areas.length} área{areas.length !== 1 ? "s" : ""}
-          </span>
-          <span className="text-xs text-muted-foreground ml-2">
-            Resolução de referência: {CANVAS_W}x{CANVAS_H}
-          </span>
-        </div>
+        <span className="text-xs text-muted-foreground">
+          {areas.length} área{areas.length !== 1 ? "s" : ""} · Resolução {CANVAS_W}x{CANVAS_H}
+        </span>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -260,7 +233,7 @@ export function LayoutEditor() {
 
       <div
         ref={canvasRef}
-        className="relative w-full overflow-hidden rounded-xl border bg-card shadow-sm"
+        className="relative w-full overflow-hidden rounded-xl border bg-card shadow-sm touch-none"
         style={{
           aspectRatio: "16/9",
           transform: `scale(${canvasScale})`,
@@ -277,6 +250,7 @@ export function LayoutEditor() {
         ) : (
           sortedAreas.map((area) => {
             const isSelected = selectedAreaId === area.id
+            const isDragging = draggingId === area.id
             const colors = area.enabled ? AREA_COLORS[area.type] : AREA_COLORS.inactive
             const TypeIcon = getTypeIcon(area.type)
 
@@ -288,8 +262,12 @@ export function LayoutEditor() {
             return (
               <div
                 key={area.id}
-                className={`absolute rounded-lg border-2 transition-shadow ${
-                  isSelected ? "ring-2 ring-primary/50 shadow-lg" : ""
+                className={`absolute rounded-lg border-2 ${
+                  isDragging
+                    ? "shadow-2xl ring-2 ring-primary z-50"
+                    : isSelected
+                      ? "ring-2 ring-primary/50 shadow-lg"
+                      : ""
                 } ${area.enabled ? colors.bg : AREA_COLORS.inactive.bg} ${
                   area.enabled ? colors.border : AREA_COLORS.inactive.border
                 } ${!area.enabled ? "opacity-60" : ""}`}
@@ -298,8 +276,9 @@ export function LayoutEditor() {
                   top: `${area.y}%`,
                   width: `${area.width}%`,
                   height: `${area.height}%`,
-                  zIndex: area.zIndex,
-                  cursor: dragInfo?.areaId === area.id ? "grabbing" : "grab",
+                  zIndex: isDragging ? 9999 : area.zIndex,
+                  cursor: isDragging ? "grabbing" : "grab",
+                  touchAction: "none",
                 }}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -308,7 +287,7 @@ export function LayoutEditor() {
               >
                 <div
                   className="absolute inset-0"
-                  onMouseDown={(e) => handleDragStart(e, area)}
+                  onPointerDown={(e) => handlePointerDown(e, area)}
                 />
 
                 <div className="absolute top-1 left-1 right-1 flex items-center gap-1 pointer-events-none">
@@ -326,8 +305,8 @@ export function LayoutEditor() {
                   )}
                 </div>
 
-                {isSelected && (
-                  <div className="absolute top-1 right-1 flex items-center gap-0.5 pointer-events-auto z-10">
+                {isSelected && !isDragging && (
+                  <div className="absolute top-1 right-1 flex items-center gap-0.5 z-10">
                     <WithTooltip content="Editar área">
                       <button
                         type="button"
@@ -370,39 +349,39 @@ export function LayoutEditor() {
                   </div>
                 )}
 
-                {isSelected && (
+                {isSelected && !isDragging && (
                   <>
                     <div
                       className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-primary bg-background cursor-n-resize z-20"
-                      onMouseDown={(e) => handleResizeStart(e, area, "n")}
+                      onPointerDown={(e) => handleResizePointerDown(e, area, "n")}
                     />
                     <div
                       className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-3 h-3 rounded-full border-2 border-primary bg-background cursor-s-resize z-20"
-                      onMouseDown={(e) => handleResizeStart(e, area, "s")}
+                      onPointerDown={(e) => handleResizePointerDown(e, area, "s")}
                     />
                     <div
                       className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-primary bg-background cursor-w-resize z-20"
-                      onMouseDown={(e) => handleResizeStart(e, area, "w")}
+                      onPointerDown={(e) => handleResizePointerDown(e, area, "w")}
                     />
                     <div
                       className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-primary bg-background cursor-e-resize z-20"
-                      onMouseDown={(e) => handleResizeStart(e, area, "e")}
+                      onPointerDown={(e) => handleResizePointerDown(e, area, "e")}
                     />
                     <div
                       className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border-2 border-primary bg-background cursor-nw-resize z-20"
-                      onMouseDown={(e) => handleResizeStart(e, area, "nw")}
+                      onPointerDown={(e) => handleResizePointerDown(e, area, "nw")}
                     />
                     <div
                       className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border-2 border-primary bg-background cursor-ne-resize z-20"
-                      onMouseDown={(e) => handleResizeStart(e, area, "ne")}
+                      onPointerDown={(e) => handleResizePointerDown(e, area, "ne")}
                     />
                     <div
                       className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-2 h-2 rounded-full border-2 border-primary bg-background cursor-sw-resize z-20"
-                      onMouseDown={(e) => handleResizeStart(e, area, "sw")}
+                      onPointerDown={(e) => handleResizePointerDown(e, area, "sw")}
                     />
                     <div
                       className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-2 h-2 rounded-full border-2 border-primary bg-background cursor-se-resize z-20"
-                      onMouseDown={(e) => handleResizeStart(e, area, "se")}
+                      onPointerDown={(e) => handleResizePointerDown(e, area, "se")}
                     />
                   </>
                 )}
@@ -411,15 +390,6 @@ export function LayoutEditor() {
           })
         )}
       </div>
-
-      <AreaFormDialog
-        open={formOpen}
-        onOpenChange={(v) => {
-          setFormOpen(v)
-          if (!v) setEditingArea(undefined)
-        }}
-        area={editingArea}
-      />
     </div>
   )
 }

@@ -3,7 +3,7 @@ import type { MediaContent, Playlist } from "@/types/content"
 import type { OperatingSchedule } from "@/types/schedule"
 import type { ProgrammingGroup } from "@/types/programming-group"
 import type { TimeSlot } from "@/types/schedule"
-import type { LayoutArea } from "@/types/layout"
+import type { Layout, LayoutArea } from "@/types/layout"
 import type { ContentReportQuery, ContentReportRow, PlaybackLogRow } from "@/types/playback"
 
 interface Group {
@@ -347,6 +347,34 @@ export const api = {
   async deleteProgrammingGroup(id: string): Promise<void> {
     await delay(150)
     await dbCall("deleteProgrammingGroup", { id })
+  },
+
+  // Layouts
+  async getLayouts(): Promise<Layout[]> {
+    await delay(100)
+    return dbCall("getLayouts")
+  },
+
+  async getLayout(id: string): Promise<Layout | undefined> {
+    await delay(100)
+    return dbCall("getLayout", { id })
+  },
+
+  async createLayout(
+    data: Omit<Layout, "id" | "createdAt" | "updatedAt">
+  ): Promise<Layout> {
+    await delay(200)
+    return dbCall("createLayout", {}, data)
+  },
+
+  async updateLayout(id: string, data: Partial<Layout>): Promise<Layout | undefined> {
+    await delay(150)
+    return dbCall("updateLayout", { id }, data)
+  },
+
+  async deleteLayout(id: string): Promise<boolean> {
+    await delay(150)
+    return dbCall("deleteLayout", { id })
   },
 
   // Layout Areas

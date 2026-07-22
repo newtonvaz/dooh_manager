@@ -25,7 +25,7 @@ import { toast } from "sonner"
 import { api } from "@/lib/api-client"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import type { LayoutArea, LayoutAreaType, LayoutAreaConfig } from "@/types/layout"
-import type { Playlist } from "@/types/content"
+import type { Player } from "@/types/player"
 
 const CANVAS_W = 1920
 const CANVAS_H = 1080
@@ -39,6 +39,7 @@ interface AreaFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   area?: LayoutArea
+  layoutId: string
 }
 
 const APPS_LIST = [
@@ -50,7 +51,7 @@ const APPS_LIST = [
   { id: "doohos-instance", name: "Instância do Sistema", description: "Outra instância do DOOHOS", icon: "monitor" },
 ]
 
-export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps) {
+export function AreaFormDialog({ open, onOpenChange, area, layoutId }: AreaFormDialogProps) {
   const queryClient = useQueryClient()
   const isEditing = !!area
 
@@ -72,9 +73,9 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
   const pctW = pxToPctX(pw)
   const pctH = pxToPctY(ph)
 
-  const { data: playlists } = useQuery({
-    queryKey: ["playlists"],
-    queryFn: api.getPlaylists,
+  const { data: players } = useQuery({
+    queryKey: ["players"],
+    queryFn: api.getPlayers,
     enabled: open,
   })
 
@@ -116,7 +117,7 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
       const payload = {
         name: name.trim(),
         type,
-        layoutId: "default",
+        layoutId,
         x: Math.max(0, Math.min(100, pxToPctX(px))),
         y: Math.max(0, Math.min(100, pxToPctY(py))),
         width: Math.max(1, Math.min(100, pxToPctX(pw))),
@@ -133,7 +134,7 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
         await api.createLayoutArea(payload)
         toast.success("Área criada com sucesso!")
       }
-      queryClient.invalidateQueries({ queryKey: ["layout-areas"] })
+      queryClient.invalidateQueries({ queryKey: ["layout-areas", layoutId] })
       onOpenChange(false)
     } catch {
       toast.error("Erro ao salvar área")
@@ -142,10 +143,10 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
     }
   }
 
-  function getPlaylistName(playlistId?: string): string {
-    if (!playlistId || !playlists) return "Nenhuma"
-    const pl = playlists.find((p) => p.id === playlistId)
-    return pl?.name || "Playlist removida"
+  function getPlayerName(playerId?: string): string {
+    if (!playerId || !players) return "Nenhum"
+    const pl = players.find((p: any) => p.id === playerId)
+    return pl?.name || "Player removido"
   }
 
   function getAppName(appId?: string): string {
@@ -288,19 +289,19 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
 
           {type === "content" && (
             <div className="space-y-2">
-              <Label>Playlist</Label>
+              <Label>Player</Label>
               <Select
-                value={config.playlistId || ""}
-                onValueChange={(v) => setConfig((prev) => ({ ...prev, playlistId: v || undefined }))}
+                value={config.playerId || ""}
+                onValueChange={(v) => setConfig((prev) => ({ ...prev, playerId: v || undefined }))}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue>
-                    {config.playlistId ? getPlaylistName(config.playlistId) : "Selecionar playlist..."}
+                    {config.playerId ? getPlayerName(config.playerId) : "Selecionar player..."}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhuma playlist</SelectItem>
-                  {playlists?.map((pl) => (
+                  <SelectItem value="">Nenhum player</SelectItem>
+                  {players?.map((pl: any) => (
                     <SelectItem key={pl.id} value={pl.id}>
                       {pl.name}
                     </SelectItem>

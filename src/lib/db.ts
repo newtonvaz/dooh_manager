@@ -5,7 +5,7 @@ import type { MediaContent, Playlist } from "@/types/content"
 import type { OperatingSchedule, TimeSlot } from "@/types/schedule"
 import type { ProgrammingGroup } from "@/types/programming-group"
 import type { ContentReportQuery, ContentReportRow, PlaybackLog, PlaybackLogRow } from "@/types/playback"
-import type { LayoutArea, LayoutAreaConfig } from "@/types/layout"
+import type { Layout, LayoutArea, LayoutAreaConfig } from "@/types/layout"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 interface Group {
@@ -1098,6 +1098,56 @@ function createDb(client?: SupabaseClient) {
       await c.from("schedules").delete().eq("replicated_from_group", groupId)
     },
 
+    // Layouts
+    async getLayouts(): Promise<Layout[]> {
+      const { data, error } = await c.from("layouts").select("*").order("name")
+      if (error) throw error
+      return (data || []).map(mapLayout)
+    },
+
+    async getLayout(id: string): Promise<Layout | undefined> {
+      const { data, error } = await c.from("layouts").select("*").eq("id", id).single()
+      if (error) return undefined
+      return mapLayout(data)
+    },
+
+    async createLayout(data: Omit<Layout, "id" | "createdAt" | "updatedAt">): Promise<Layout> {
+      const layout = {
+        id: `ly_${Date.now()}`,
+        name: data.name,
+        description: data.description || "",
+        canvas_width: data.canvasWidth || 1920,
+        canvas_height: data.canvasHeight || 1080,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      const { data: created, error } = await c.from("layouts").insert(layout).select().single()
+      if (error) throw error
+      recordActivity(c, { type: "layout", description: `Layout "${data.name}" criado` })
+      return mapLayout(created)
+    },
+
+    async updateLayout(id: string, data: Partial<Layout>): Promise<Layout | undefined> {
+      const update: Record<string, any> = {}
+      if (data.name !== undefined) update.name = data.name
+      if (data.description !== undefined) update.description = data.description
+      if (data.canvasWidth !== undefined) update.canvas_width = data.canvasWidth
+      if (data.canvasHeight !== undefined) update.canvas_height = data.canvasHeight
+      update.updated_at = new Date().toISOString()
+
+      const { data: updated, error } = await c.from("layouts").update(update).eq("id", id).select().single()
+      if (error) return undefined
+      return mapLayout(updated)
+    },
+
+    async deleteLayout(id: string): Promise<boolean> {
+      const { data: layout } = await c.from("layouts").select("name").eq("id", id).single()
+      const { error } = await c.from("layouts").delete().eq("id", id)
+      if (error) return false
+      if (layout) recordActivity(c, { type: "layout", description: `Layout "${layout.name}" excluído` })
+      return true
+    },
+
     // Layout Areas
     async getLayoutAreas(layoutId?: string): Promise<LayoutArea[]> {
       let query = c.from("layout_areas").select("*").order("z_index").order("created_at")
@@ -1266,6 +1316,18 @@ function mapGroup(data: any): Group {
     id: data.id,
     name: data.name,
     createdAt: data.created_at,
+  }
+}
+
+function mapLayout(data: any): Layout {
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description || "",
+    canvasWidth: data.canvas_width,
+    canvasHeight: data.canvas_height,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
   }
 }
 

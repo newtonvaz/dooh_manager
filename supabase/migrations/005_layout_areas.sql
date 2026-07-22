@@ -1,10 +1,20 @@
--- Layout Areas table for screen division and multi-area support
+-- Layouts and Layout Areas for screen division and multi-area support
+
+create table if not exists layouts (
+  id text primary key,
+  name text not null,
+  description text not null default '',
+  canvas_width int not null default 1920,
+  canvas_height int not null default 1080,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
 
 create table if not exists layout_areas (
   id text primary key,
   name text not null,
   type text not null check (type in ('content', 'app')),
-  layout_id text not null default 'default',
+  layout_id text not null references layouts(id) on delete cascade,
   x real not null default 0,
   y real not null default 0,
   width real not null default 100,

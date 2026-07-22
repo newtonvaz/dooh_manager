@@ -25,12 +25,22 @@ create table if not exists programming_group_players (
 create index if not exists idx_programming_group_players_group on programming_group_players(group_id);
 create index if not exists idx_programming_group_players_player on programming_group_players(player_id);
 
--- Layout Areas - Migration
+-- Layouts and Layout Areas - Migration
+create table if not exists layouts (
+  id text primary key,
+  name text not null,
+  description text not null default '',
+  canvas_width int not null default 1920,
+  canvas_height int not null default 1080,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists layout_areas (
   id text primary key,
   name text not null,
   type text not null check (type in ('content', 'app')),
-  layout_id text not null default 'default',
+  layout_id text not null references layouts(id) on delete cascade,
   x real not null default 0,
   y real not null default 0,
   width real not null default 100,
@@ -64,6 +74,15 @@ export async function GET() {
     if (laError) missingTables.push("layout_areas")
   } catch {
     missingTables.push("layout_areas")
+  }
+
+  try {
+    const { error: lError } = await supabaseAdmin
+      .from("layouts")
+      .select("id", { count: "exact", head: true })
+    if (lError) missingTables.push("layouts")
+  } catch {
+    missingTables.push("layouts")
   }
 
   if (missingTables.length === 0) {

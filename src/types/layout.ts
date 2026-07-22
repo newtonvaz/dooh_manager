@@ -1,7 +1,17 @@
 export type LayoutAreaType = "content" | "app"
 
+export interface Layout {
+  id: string
+  name: string
+  description: string
+  canvasWidth: number
+  canvasHeight: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface LayoutAreaConfig {
-  playlistId?: string
+  playerId?: string
   appId?: string
   appConfig?: Record<string, unknown>
 }

@@ -26,14 +26,15 @@ function pctToPxY(pct: number) { return Math.round((pct / 100) * CANVAS_H) }
 interface AreaListProps {
   onEdit: (area: LayoutArea) => void
   onCreate: () => void
+  layoutId: string
 }
 
-export function AreaList({ onEdit, onCreate }: AreaListProps) {
+export function AreaList({ onEdit, onCreate, layoutId }: AreaListProps) {
   const queryClient = useQueryClient()
 
   const { data: areas = [], isLoading } = useQuery({
-    queryKey: ["layout-areas"],
-    queryFn: () => api.getLayoutAreas("default"),
+    queryKey: ["layout-areas", layoutId],
+    queryFn: () => api.getLayoutAreas(layoutId),
   })
 
   const sortedAreas = [...areas].sort((a, b) => a.zIndex - b.zIndex)
@@ -41,7 +42,7 @@ export function AreaList({ onEdit, onCreate }: AreaListProps) {
   async function handleToggleEnabled(area: LayoutArea) {
     try {
       await api.updateLayoutArea(area.id, { enabled: !area.enabled })
-      queryClient.invalidateQueries({ queryKey: ["layout-areas"] })
+      queryClient.invalidateQueries({ queryKey: ["layout-areas", layoutId] })
       toast.success(`Área "${area.name}" ${area.enabled ? "desativada" : "ativada"}`)
     } catch {
       toast.error("Erro ao atualizar área")
@@ -52,7 +53,7 @@ export function AreaList({ onEdit, onCreate }: AreaListProps) {
     if (!confirm("Excluir esta área?")) return
     try {
       await api.deleteLayoutArea(areaId)
-      queryClient.invalidateQueries({ queryKey: ["layout-areas"] })
+      queryClient.invalidateQueries({ queryKey: ["layout-areas", layoutId] })
       toast.success("Área excluída")
     } catch {
       toast.error("Erro ao excluir área")
@@ -116,8 +117,8 @@ export function AreaList({ onEdit, onCreate }: AreaListProps) {
                   <div className="text-[10px] text-muted-foreground mt-0.5">
                     {pw}×{ph} px ({area.width}% × {area.height}%)
                     {' '}· ({px}, {py}) px [{area.x}%, {area.y}%]
-                    {area.type === "content" && area.config.playlistId && (
-                      <span className="ml-1">· Playlist vinculada</span>
+                    {area.type === "content" && area.config.playerId && (
+                      <span className="ml-1">· Player vinculado</span>
                     )}
                     {area.type === "app" && area.config.appId && (
                       <span className="ml-1">· App: {area.config.appId}</span>
