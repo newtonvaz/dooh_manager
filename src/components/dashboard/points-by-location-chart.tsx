@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState } from "react"
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MapPin, ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { MapPin } from "lucide-react"
 import type { Player } from "@/types/player"
 
 interface PointsByLocationChartProps {
@@ -84,6 +83,8 @@ export function PointsByLocationChart({ players }: PointsByLocationChartProps) {
   )
 }
 
+const PILLS_PER_PAGE = 5
+
 function PillsCarousel({
   items,
   colors,
@@ -91,75 +92,51 @@ function PillsCarousel({
   items: { name: string; value: number }[]
   colors: string[]
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(false)
+  const [page, setPage] = useState(0)
+  const totalPages = Math.max(1, Math.ceil(items.length / PILLS_PER_PAGE))
+  const safePage = Math.min(page, totalPages - 1)
 
-  const updateScrollState = useCallback(() => {
-    const el = scrollRef.current
-    if (!el) return
-    setCanScrollLeft(el.scrollLeft > 4)
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4)
-  }, [])
-
-  const scroll = useCallback((direction: "left" | "right") => {
-    const el = scrollRef.current
-    if (!el) return
-    el.scrollBy({ left: direction === "left" ? -200 : 200, behavior: "smooth" })
-    requestAnimationFrame(() => requestAnimationFrame(updateScrollState))
-  }, [updateScrollState])
-
-  const scrollRefCallback = useCallback((node: HTMLDivElement | null) => {
-    scrollRef.current = node
-    if (node) requestAnimationFrame(updateScrollState)
-  }, [updateScrollState])
-
-  if (items.length === 0) return null
+  const pages: typeof items[] = []
+  for (let i = 0; i < items.length; i += PILLS_PER_PAGE) {
+    pages.push(items.slice(i, i + PILLS_PER_PAGE))
+  }
 
   return (
-    <div className="relative mt-2">
-      {canScrollLeft && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute -left-1.5 top-1/2 z-10 size-6 -translate-y-1/2 rounded-full bg-background/80 shadow-xs backdrop-blur-sm hover:bg-background"
-          onClick={() => scroll("left")}
-          aria-label="Anterior"
-        >
-          <ChevronLeft className="size-3.5" />
-        </Button>
-      )}
-
-      <div
-        ref={scrollRefCallback}
-        className="flex gap-2 overflow-x-auto scroll-smooth"
-        onScroll={updateScrollState}
-      >
-        {items.map((item, i) => (
-          <div
-            key={item.name}
-            className="flex shrink-0 items-center gap-1.5 rounded-full bg-muted/50 px-2.5 py-1 text-xs"
-          >
-            <span
-              className="size-2 shrink-0 rounded-full"
-              style={{ backgroundColor: colors[i % colors.length] }}
-            />
-            <span className="max-w-[120px] truncate text-muted-foreground">{item.name}</span>
-            <span className="shrink-0 font-bold">{item.value}</span>
-          </div>
-        ))}
+    <div className="mt-2">
+      <div className="flex justify-center gap-2 overflow-hidden">
+        {pages[safePage]?.map((item, i) => {
+          const globalIndex = items.indexOf(item)
+          return (
+            <div
+              key={item.name}
+              className="flex shrink-0 items-center gap-1.5 rounded-full bg-muted/50 px-2.5 py-1 text-xs"
+            >
+              <span
+                className="size-2 shrink-0 rounded-full"
+                style={{ backgroundColor: colors[globalIndex % colors.length] }}
+              />
+              <span className="max-w-[120px] truncate text-muted-foreground">{item.name}</span>
+              <span className="shrink-0 font-bold">{item.value}</span>
+            </div>
+          )
+        })}
       </div>
 
-      {canScrollRight && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute -right-1.5 top-1/2 z-10 size-6 -translate-y-1/2 rounded-full bg-background/80 shadow-xs backdrop-blur-sm hover:bg-background"
-          onClick={() => scroll("right")}
-          aria-label="Próximo"
-        >
-          <ChevronRight className="size-3.5" />
-        </Button>
+      {totalPages > 1 && (
+        <div className="mt-3 flex items-center justify-center gap-1.5">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              className={`size-2 rounded-full transition-colors ${
+                i === safePage
+                  ? "bg-foreground"
+                  : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+              }`}
+              onClick={() => setPage(i)}
+              aria-label={`Página ${i + 1}`}
+            />
+          ))}
+        </div>
       )}
     </div>
   )
