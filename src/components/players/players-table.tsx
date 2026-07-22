@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -291,12 +292,14 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
                         </TableCell>
                       )}
                       <TableCell className="font-medium">
-                        <button
-                          onClick={() => router.push(`/players/${player.id}`)}
-                          className="text-left hover:underline cursor-pointer"
-                        >
-                          {player.name}
-                        </button>
+                        <WithTooltip content="Abrir detalhes do player">
+                          <button
+                            onClick={() => router.push(`/players/${player.id}`)}
+                            className="text-left hover:underline cursor-pointer"
+                          >
+                            {player.name}
+                          </button>
+                        </WithTooltip>
                       </TableCell>
                       <TableCell className="font-mono text-xs">{player.code}</TableCell>
                       <TableCell>
@@ -316,51 +319,59 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                            onClick={() => {
-                              if (player.playlistId) {
-                                router.push(`/playlists/${player.playlistId}`)
-                              } else {
-                                toast("Player sem playlist atribuída")
-                              }
-                            }}
-                          >
-                            <Eye className="size-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                            onClick={() => handleSchedulePlayer(player)}
-                            title="Horário de funcionamento"
-                          >
-                            <Clock className="size-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                            onClick={() => {
-                              setEditingPlayer(player)
-                              setEditOpen(true)
-                            }}
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-destructive"
-                            onClick={() => {
-                              setDeletingPlayer(player)
-                              setDeleteOpen(true)
-                            }}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
+                          <WithTooltip content="Visualizar playlist">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
+                              onClick={() => {
+                                if (player.playlistId) {
+                                  router.push(`/playlists/${player.playlistId}`)
+                                } else {
+                                  toast("Player sem playlist atribuída")
+                                }
+                              }}
+                            >
+                              <Eye className="size-4" />
+                            </Button>
+                          </WithTooltip>
+                          <WithTooltip content="Agendar horário">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
+                              onClick={() => handleSchedulePlayer(player)}
+                              title="Horário de funcionamento"
+                            >
+                              <Clock className="size-4" />
+                            </Button>
+                          </WithTooltip>
+                          <WithTooltip content="Editar player">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
+                              onClick={() => {
+                                setEditingPlayer(player)
+                                setEditOpen(true)
+                              }}
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                          </WithTooltip>
+                          <WithTooltip content="Excluir player">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-destructive"
+                              onClick={() => {
+                                setDeletingPlayer(player)
+                                setDeleteOpen(true)
+                              }}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </WithTooltip>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -416,51 +427,59 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
                     )}
 
                     <div className="absolute top-3 right-3 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="size-7"
-                        onClick={() => {
-                          if (player.playlistId) {
-                            router.push(`/playlists/${player.playlistId}`)
-                          } else {
-                            toast("Player sem playlist atribuída")
-                          }
-                        }}
-                      >
-                        <Eye className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="size-7"
-                        onClick={() => handleSchedulePlayer(player)}
-                        title="Horário de funcionamento"
-                      >
-                        <Clock className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="size-7"
-                        onClick={() => {
-                          setEditingPlayer(player)
-                          setEditOpen(true)
-                        }}
-                      >
-                        <Pencil className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="size-7 text-destructive"
-                        onClick={() => {
-                          setDeletingPlayer(player)
-                          setDeleteOpen(true)
-                        }}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
+                      <WithTooltip content="Visualizar playlist">
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="size-7"
+                          onClick={() => {
+                            if (player.playlistId) {
+                              router.push(`/playlists/${player.playlistId}`)
+                            } else {
+                              toast("Player sem playlist atribuída")
+                            }
+                          }}
+                        >
+                          <Eye className="size-3.5" />
+                        </Button>
+                      </WithTooltip>
+                      <WithTooltip content="Agendar horário">
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="size-7"
+                          onClick={() => handleSchedulePlayer(player)}
+                          title="Horário de funcionamento"
+                        >
+                          <Clock className="size-3.5" />
+                        </Button>
+                      </WithTooltip>
+                      <WithTooltip content="Editar player">
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="size-7"
+                          onClick={() => {
+                            setEditingPlayer(player)
+                            setEditOpen(true)
+                          }}
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                      </WithTooltip>
+                      <WithTooltip content="Excluir player">
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="size-7 text-destructive"
+                          onClick={() => {
+                            setDeletingPlayer(player)
+                            setDeleteOpen(true)
+                          }}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </WithTooltip>
                     </div>
 
                     <div className="p-4 flex flex-col items-center text-center">

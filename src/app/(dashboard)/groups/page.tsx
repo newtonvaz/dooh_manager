@@ -34,6 +34,7 @@ import {
   X,
   Trash,
 } from "lucide-react"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
@@ -230,9 +231,11 @@ export default function GroupsPage() {
                   {!showCheckboxes && (
                     <TableCell>
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="flex items-center justify-center size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
-                          <MoreHorizontal className="size-4" />
-                        </DropdownMenuTrigger>
+                        <WithTooltip content="Ações do grupo">
+                          <DropdownMenuTrigger className="flex items-center justify-center size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
+                            <MoreHorizontal className="size-4" />
+                          </DropdownMenuTrigger>
+                        </WithTooltip>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEdit(group)}>
                             <Edit className="mr-2 size-4" />

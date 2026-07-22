@@ -8,6 +8,7 @@ import dynamic from "next/dynamic"
 
 const PlayerFormDialog = dynamic(() => import("@/components/players/player-form-dialog").then((m) => ({ default: m.PlayerFormDialog })), { ssr: false })
 import { Button } from "@/components/ui/button"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Plus, LayoutGrid, List } from "lucide-react"
 import { api } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
@@ -42,30 +43,34 @@ export default function PlayersPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex overflow-hidden rounded-lg border">
-            <button
-              onClick={() => setViewMode("list")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
-                viewMode === "list"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <List className="size-3.5" />
-              Lista
-            </button>
-            <button
-              onClick={() => setViewMode("grid")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
-                viewMode === "grid"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <LayoutGrid className="size-3.5" />
-              Grid
-            </button>
+            <WithTooltip content="Visualizar como lista">
+              <button
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
+                  viewMode === "list"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <List className="size-3.5" />
+                Lista
+              </button>
+            </WithTooltip>
+            <WithTooltip content="Visualizar como grade">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
+                  viewMode === "grid"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <LayoutGrid className="size-3.5" />
+                Grid
+              </button>
+            </WithTooltip>
           </div>
           <Button onClick={() => setFormOpen(true)}>
             <Plus className="mr-2 size-4" />

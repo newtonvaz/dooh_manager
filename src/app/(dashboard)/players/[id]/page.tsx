@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { PlayerStatusBadge } from "@/components/players/player-status-badge"
 import dynamic from "next/dynamic"
 
@@ -32,9 +33,11 @@ export default function PlayerDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/players">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="size-4" />
-          </Button>
+          <WithTooltip content="Voltar para lista de players">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="size-4" />
+            </Button>
+          </WithTooltip>
         </Link>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{player.name}</h1>

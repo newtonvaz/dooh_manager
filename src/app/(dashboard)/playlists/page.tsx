@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { WithTooltip } from "@/components/ui/tooltip"
 import {
   Table,
   TableBody,
@@ -175,30 +176,34 @@ export default function PlaylistsPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex overflow-hidden rounded-lg border">
-            <button
-              onClick={() => setViewMode("list")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
-                viewMode === "list"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <List className="size-3.5" />
-              Lista
-            </button>
-            <button
-              onClick={() => setViewMode("grid")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
-                viewMode === "grid"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <LayoutGrid className="size-3.5" />
-              Grid
-            </button>
+            <WithTooltip content="Visualizar como lista">
+              <button
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
+                  viewMode === "list"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <List className="size-3.5" />
+                Lista
+              </button>
+            </WithTooltip>
+            <WithTooltip content="Visualizar como grade">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
+                  viewMode === "grid"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <LayoutGrid className="size-3.5" />
+                Grid
+              </button>
+            </WithTooltip>
           </div>
           <Button onClick={handleNew}>
             <Plus className="mr-2 size-4" />
@@ -296,12 +301,14 @@ export default function PlaylistsPage() {
                               >
                                 {!showCheckboxes && (
                                   <TableCell className="w-10 p-0 pl-2">
-                                    <div
-                                      {...dragProvided.dragHandleProps}
-                                      className="flex items-center justify-center size-8 text-muted-foreground cursor-grab active:cursor-grabbing"
-                                    >
-                                      <GripVertical className="size-4" />
-                                    </div>
+                                <WithTooltip content="Reordenar playlist">
+                                  <div
+                                    {...dragProvided.dragHandleProps}
+                                    className="flex items-center justify-center size-8 text-muted-foreground cursor-grab active:cursor-grabbing"
+                                  >
+                                    <GripVertical className="size-4" />
+                                  </div>
+                                </WithTooltip>
                                   </TableCell>
                                 )}
                                 {showCheckboxes && (
@@ -314,13 +321,15 @@ export default function PlaylistsPage() {
                                 )}
                                 <TableCell>
                                   <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => handleEdit(pl)}
-                                      className="font-medium text-left hover:underline cursor-pointer"
-                                    >
-                                      {pl.name}
-                                    </button>
-                                    {pl.isSubplaylist ? (
+                                <WithTooltip content="Editar playlist">
+                                  <button
+                                    onClick={() => handleEdit(pl)}
+                                    className="font-medium text-left hover:underline cursor-pointer"
+                                  >
+                                    {pl.name}
+                                  </button>
+                                </WithTooltip>
+                                {pl.isSubplaylist ? (
                                       <Badge variant="secondary" className="text-[10px]">Subplaylist</Badge>
                                     ) : (
                                       <Badge variant="outline" className="text-[10px]">Playlist</Badge>

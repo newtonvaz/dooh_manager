@@ -46,6 +46,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import type { MediaType, MediaContent } from "@/types/content"
 import { cn } from "@/lib/utils"
+import { WithTooltip } from "@/components/ui/tooltip"
 
 type ViewMode = "grid" | "list"
 
@@ -162,30 +163,34 @@ export default function ContentPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex overflow-hidden rounded-lg border">
-            <button
-              onClick={() => setView("list")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
-                view === "list"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <List className="size-3.5" />
-              Lista
-            </button>
-            <button
-              onClick={() => setView("grid")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
-                view === "grid"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <LayoutGrid className="size-3.5" />
-              Grid
-            </button>
+            <WithTooltip content="Visualizar como lista">
+              <button
+                onClick={() => setView("list")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
+                  view === "list"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <List className="size-3.5" />
+                Lista
+              </button>
+            </WithTooltip>
+            <WithTooltip content="Visualizar como grade">
+              <button
+                onClick={() => setView("grid")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
+                  view === "grid"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <LayoutGrid className="size-3.5" />
+                Grid
+              </button>
+            </WithTooltip>
           </div>
           <Button onClick={() => setUploadOpen(true)}>
             <Plus className="mr-2 size-4" />
@@ -302,22 +307,26 @@ export default function ContentPage() {
                   )}
                   {!showCheckboxes && (
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="size-7"
-                        onClick={(e) => { e.stopPropagation(); openEdit(item) }}
-                      >
-                        <Pencil className="size-3" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="size-7"
-                        onClick={(e) => { e.stopPropagation(); confirmDelete(item) }}
-                      >
-                        <Trash2 className="size-3" />
-                      </Button>
+                      <WithTooltip content="Editar conteúdo">
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="size-7"
+                          onClick={(e) => { e.stopPropagation(); openEdit(item) }}
+                        >
+                          <Pencil className="size-3" />
+                        </Button>
+                      </WithTooltip>
+                      <WithTooltip content="Excluir conteúdo">
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="size-7"
+                          onClick={(e) => { e.stopPropagation(); confirmDelete(item) }}
+                        >
+                          <Trash2 className="size-3" />
+                        </Button>
+                      </WithTooltip>
                     </div>
                   )}
                   <div className={`rounded-lg p-3 ${color}`}>
@@ -423,22 +432,26 @@ export default function ContentPage() {
                       {!showCheckboxes && (
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
-                              onClick={() => openEdit(item)}
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 text-destructive"
-                              onClick={() => confirmDelete(item)}
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
+                            <WithTooltip content="Editar conteúdo">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                onClick={() => openEdit(item)}
+                              >
+                                <Pencil className="size-4" />
+                              </Button>
+                            </WithTooltip>
+                            <WithTooltip content="Excluir conteúdo">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8 text-destructive"
+                                onClick={() => confirmDelete(item)}
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </WithTooltip>
                           </div>
                         </TableCell>
                       )}

@@ -63,4 +63,27 @@ function TooltipContent({
   )
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+function WithTooltip({
+  children,
+  content,
+  side = "top",
+  align = "center",
+  sideOffset = 4,
+}: {
+  children: React.ReactNode
+  content: string
+  side?: "top" | "bottom" | "left" | "right"
+  align?: "start" | "center" | "end"
+  sideOffset?: number
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger>{children}</TooltipTrigger>
+      <TooltipContent side={side} align={align} sideOffset={sideOffset}>
+        {content}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, WithTooltip }

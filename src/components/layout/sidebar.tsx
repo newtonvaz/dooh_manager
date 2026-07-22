@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { navItems } from "./nav-items"
 import { useAuth } from "@/hooks/use-auth"
 import { Monitor, LogOut, ChevronDown } from "lucide-react"
+import { WithTooltip } from "@/components/ui/tooltip"
 
 interface SidebarProps {
   collapsed: boolean

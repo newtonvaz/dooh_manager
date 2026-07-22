@@ -5,6 +5,7 @@ import { Search, Bell, Menu, LogOut, User, ChevronDown, Settings } from "lucide-
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { WithTooltip } from "@/components/ui/tooltip"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,14 +27,16 @@ export function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/80 backdrop-blur-xl px-4">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onMenuClick}
-        className="shrink-0 size-9 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95"
-      >
-        <Menu className="size-5" />
-      </Button>
+      <WithTooltip content="Abrir menu">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onMenuClick}
+          className="shrink-0 size-9 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95"
+        >
+          <Menu className="size-5" />
+        </Button>
+      </WithTooltip>
 
       <div
         className={cn(
@@ -58,20 +61,23 @@ export function Header({ onMenuClick }: HeaderProps) {
       <div className="flex items-center gap-1.5 ml-auto">
         <ThemeToggle />
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative size-9 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95"
-        >
-          <Bell className="size-5" />
-          <span className="absolute -top-0.5 -right-0.5 flex size-4.5 animate-pulse items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground ring-2 ring-background">
-            3
-          </span>
-        </Button>
+        <WithTooltip content="Notificações">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative size-9 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95"
+          >
+            <Bell className="size-5" />
+            <span className="absolute -top-0.5 -right-0.5 flex size-4.5 animate-pulse items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground ring-2 ring-background">
+              3
+            </span>
+          </Button>
+        </WithTooltip>
 
         <DropdownMenu>
-          <DropdownMenuTrigger className="cursor-pointer outline-none">
-            <div className="flex items-center gap-2 rounded-xl border border-transparent bg-muted/50 px-3 py-1.5 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted hover:border-muted-foreground/20 active:scale-[0.98]">
+          <WithTooltip content="Menu do usuário">
+            <DropdownMenuTrigger className="cursor-pointer outline-none">
+              <div className="flex items-center gap-2 rounded-xl border border-transparent bg-muted/50 px-3 py-1.5 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted hover:border-muted-foreground/20 active:scale-[0.98]">
               <div className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                 {user?.name?.charAt(0).toUpperCase() ?? "A"}
               </div>
@@ -79,6 +85,7 @@ export function Header({ onMenuClick }: HeaderProps) {
               <ChevronDown className="size-3.5 text-muted-foreground transition-transform duration-200 ui-open:rotate-180" />
             </div>
           </DropdownMenuTrigger>
+          </WithTooltip>
           <DropdownMenuContent align="end" className="w-56 mt-1.5">
             <DropdownMenuLabel>
               <div className="flex items-center gap-3 py-1">
