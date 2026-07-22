@@ -271,6 +271,29 @@ export async function POST(request: Request) {
         result = dbAdmin.deleteProgrammingGroup(params.id)
         break
 
+      // Layout Areas
+      case "getLayoutAreas":
+        result = dbAdmin.getLayoutAreas(params.layoutId)
+        break
+      case "getLayoutArea":
+        result = dbAdmin.getLayoutArea(params.id)
+        break
+      case "createLayoutArea":
+        result = dbAdmin.createLayoutArea(data)
+        break
+      case "updateLayoutArea":
+        result = dbAdmin.updateLayoutArea(params.id, data)
+        break
+      case "deleteLayoutArea":
+        result = dbAdmin.deleteLayoutArea(params.id)
+        break
+      case "deleteLayoutAreasByLayout":
+        result = dbAdmin.deleteLayoutAreasByLayout(params.layoutId)
+        break
+      case "reorderLayoutAreas":
+        result = dbAdmin.reorderLayoutAreas(data.orderedIds)
+        break
+
       // Seed
       case "seed":
         result = await runSeed()

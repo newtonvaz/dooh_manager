@@ -5,6 +5,7 @@ import type { MediaContent, Playlist } from "@/types/content"
 import type { OperatingSchedule, TimeSlot } from "@/types/schedule"
 import type { ProgrammingGroup } from "@/types/programming-group"
 import type { ContentReportQuery, ContentReportRow, PlaybackLog, PlaybackLogRow } from "@/types/playback"
+import type { LayoutArea, LayoutAreaConfig } from "@/types/layout"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 interface Group {
@@ -1096,6 +1097,86 @@ function createDb(client?: SupabaseClient) {
     async deleteSchedulesByGroup(groupId: string): Promise<void> {
       await c.from("schedules").delete().eq("replicated_from_group", groupId)
     },
+
+    // Layout Areas
+    async getLayoutAreas(layoutId?: string): Promise<LayoutArea[]> {
+      let query = c.from("layout_areas").select("*").order("z_index").order("created_at")
+      if (layoutId) {
+        query = query.eq("layout_id", layoutId)
+      }
+      const { data, error } = await query
+      if (error) throw error
+      return (data || []).map(mapLayoutArea)
+    },
+
+    async getLayoutArea(id: string): Promise<LayoutArea | undefined> {
+      const { data, error } = await c.from("layout_areas").select("*").eq("id", id).single()
+      if (error) return undefined
+      return mapLayoutArea(data)
+    },
+
+    async createLayoutArea(data: Omit<LayoutArea, "id" | "createdAt" | "updatedAt">): Promise<LayoutArea> {
+      const area = {
+        id: `la_${Date.now()}`,
+        name: data.name,
+        type: data.type,
+        layout_id: data.layoutId || "default",
+        x: data.x,
+        y: data.y,
+        width: data.width,
+        height: data.height,
+        z_index: data.zIndex || 0,
+        enabled: data.enabled !== false,
+        config: JSON.stringify(data.config || {}),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      const { data: created, error } = await c.from("layout_areas").insert(area).select().single()
+      if (error) throw error
+      recordActivity(c, { type: "layout", description: `Área "${data.name}" criada no layout` })
+      return mapLayoutArea(created)
+    },
+
+    async updateLayoutArea(id: string, data: Partial<LayoutArea>): Promise<LayoutArea | undefined> {
+      const update: Record<string, any> = {}
+      if (data.name !== undefined) update.name = data.name
+      if (data.type !== undefined) update.type = data.type
+      if (data.layoutId !== undefined) update.layout_id = data.layoutId
+      if (data.x !== undefined) update.x = data.x
+      if (data.y !== undefined) update.y = data.y
+      if (data.width !== undefined) update.width = data.width
+      if (data.height !== undefined) update.height = data.height
+      if (data.zIndex !== undefined) update.z_index = data.zIndex
+      if (data.enabled !== undefined) update.enabled = data.enabled
+      if (data.config !== undefined) update.config = JSON.stringify(data.config)
+      update.updated_at = new Date().toISOString()
+
+      const { data: updated, error } = await c.from("layout_areas").update(update).eq("id", id).select().single()
+      if (error) return undefined
+      return mapLayoutArea(updated)
+    },
+
+    async deleteLayoutArea(id: string): Promise<boolean> {
+      const { data: area } = await c.from("layout_areas").select("name").eq("id", id).single()
+      const { error } = await c.from("layout_areas").delete().eq("id", id)
+      if (error) return false
+      if (area) recordActivity(c, { type: "layout", description: `Área "${area.name}" excluída do layout` })
+      return true
+    },
+
+    async deleteLayoutAreasByLayout(layoutId: string): Promise<boolean> {
+      const { error } = await c.from("layout_areas").delete().eq("layout_id", layoutId)
+      if (error) return false
+      recordActivity(c, { type: "layout", description: `Todas as áreas do layout "${layoutId}" excluídas` })
+      return true
+    },
+
+    async reorderLayoutAreas(orderedIds: string[]): Promise<boolean> {
+      for (let i = 0; i < orderedIds.length; i++) {
+        await c.from("layout_areas").update({ z_index: i }).eq("id", orderedIds[i])
+      }
+      return true
+    },
   }
 }
 
@@ -1185,6 +1266,25 @@ function mapGroup(data: any): Group {
     id: data.id,
     name: data.name,
     createdAt: data.created_at,
+  }
+}
+
+function mapLayoutArea(data: any): LayoutArea {
+  const config = typeof data.config === "string" ? JSON.parse(data.config) : data.config || {}
+  return {
+    id: data.id,
+    name: data.name,
+    type: data.type,
+    layoutId: data.layout_id,
+    x: data.x,
+    y: data.y,
+    width: data.width,
+    height: data.height,
+    zIndex: data.z_index,
+    enabled: data.enabled,
+    config,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
   }
 }
 

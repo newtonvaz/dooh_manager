@@ -3,6 +3,7 @@ import type { MediaContent, Playlist } from "@/types/content"
 import type { OperatingSchedule } from "@/types/schedule"
 import type { ProgrammingGroup } from "@/types/programming-group"
 import type { TimeSlot } from "@/types/schedule"
+import type { LayoutArea } from "@/types/layout"
 import type { ContentReportQuery, ContentReportRow, PlaybackLogRow } from "@/types/playback"
 
 interface Group {
@@ -346,5 +347,43 @@ export const api = {
   async deleteProgrammingGroup(id: string): Promise<void> {
     await delay(150)
     await dbCall("deleteProgrammingGroup", { id })
+  },
+
+  // Layout Areas
+  async getLayoutAreas(layoutId?: string): Promise<LayoutArea[]> {
+    await delay(100)
+    return dbCall("getLayoutAreas", { layoutId })
+  },
+
+  async getLayoutArea(id: string): Promise<LayoutArea | undefined> {
+    await delay(100)
+    return dbCall("getLayoutArea", { id })
+  },
+
+  async createLayoutArea(
+    data: Omit<LayoutArea, "id" | "createdAt" | "updatedAt">
+  ): Promise<LayoutArea> {
+    await delay(200)
+    return dbCall("createLayoutArea", {}, data)
+  },
+
+  async updateLayoutArea(id: string, data: Partial<LayoutArea>): Promise<LayoutArea | undefined> {
+    await delay(150)
+    return dbCall("updateLayoutArea", { id }, data)
+  },
+
+  async deleteLayoutArea(id: string): Promise<boolean> {
+    await delay(150)
+    return dbCall("deleteLayoutArea", { id })
+  },
+
+  async deleteLayoutAreasByLayout(layoutId: string): Promise<boolean> {
+    await delay(150)
+    return dbCall("deleteLayoutAreasByLayout", { layoutId })
+  },
+
+  async reorderLayoutAreas(orderedIds: string[]): Promise<boolean> {
+    await delay(100)
+    return dbCall("reorderLayoutAreas", {}, { orderedIds })
   },
 }
