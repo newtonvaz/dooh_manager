@@ -172,7 +172,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       className={cn(
         "flex flex-col border-r bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out",
         "relative overflow-hidden",
-        collapsed ? "w-16" : "w-60"
+        collapsed ? "w-20" : "w-60"
       )}
     >
       <div

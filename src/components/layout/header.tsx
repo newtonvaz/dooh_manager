@@ -14,7 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ThemeToggle } from "@/components/layout/theme-toggle"
 import { useAuth } from "@/hooks/use-auth"
 
 interface HeaderProps {
@@ -59,8 +58,6 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-1.5 ml-auto">
-        <ThemeToggle />
-
         <WithTooltip content="Notificações">
           <Button
             variant="ghost"
