@@ -43,12 +43,10 @@ export async function GET(
           if (config.playerId) {
             const resolved = await dbAdmin.resolvePlayerPlaylistById(config.playerId)
             items = resolved?.items || []
-          } else {
+          }
+          if (items.length === 0) {
             const resolved = await dbAdmin.resolvePlayerPlaylist(code)
             items = resolved?.items || []
-          }
-          if (items.length === 0 && Array.isArray(zone.contentId) && zone.contentId.length > 0) {
-            items = zone.contentId
           }
         }
 
