@@ -191,7 +191,7 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Relatório de Veiculação</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Veiculação de Conteúdos</h1>
         <p className="text-sm text-muted-foreground">
           Conteúdos veiculados por período
         </p>

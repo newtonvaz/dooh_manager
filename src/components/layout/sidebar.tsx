@@ -137,7 +137,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   key={child.href}
                   href={child.href}
                   className={cn(
-                    "group/child-link relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
+                    "sidebar-child-link group/child-link relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
                     "hover:translate-x-0.5",
                     childActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"

@@ -45,8 +45,8 @@ export const navItems: NavItem[] = [
     href: "/reports",
     icon: BarChart3,
     children: [
-      { title: "Relatório de Ativação", href: "/reports/activation", icon: Activity },
-      { title: "Relatório de Veiculação", href: "/reports/playback", icon: FileText },
+      { title: "Ativação de Players", href: "/reports/activation", icon: Activity },
+      { title: "Veiculação de Conteúdos", href: "/reports/playback", icon: FileText },
       { title: "Captura de Tela", href: "/reports/screenshot", icon: Camera },
     ],
   },
