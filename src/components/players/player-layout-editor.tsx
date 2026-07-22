@@ -45,7 +45,7 @@ export function PlayerLayoutEditor({ playerId, currentLayoutId }: PlayerLayoutEd
     setSaving(true)
     try {
       const lid = selectedLayoutId === "__none__" ? null : selectedLayoutId
-      await api.updatePlayer(playerId, { layoutId: lid ?? undefined })
+      await api.updatePlayer(playerId, { layoutId: lid } as any)
       queryClient.invalidateQueries({ queryKey: ["players"] })
       queryClient.invalidateQueries({ queryKey: ["player", playerId] })
       toast.success("Layout atribuído com sucesso!")
