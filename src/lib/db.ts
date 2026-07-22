@@ -186,7 +186,7 @@ function createDb(client?: SupabaseClient) {
       if (data.layoutId !== undefined) update.layout_id = data.layoutId || null
 
       const { data: updated, error } = await c.from("players").update(update).eq("id", id).select().single()
-      if (error) return undefined
+      if (error) throw error
       return mapPlayer(updated)
     },
 
