@@ -1179,6 +1179,13 @@ function createDb(client?: SupabaseClient) {
     },
 
     async createLayoutArea(data: Omit<LayoutArea, "id" | "createdAt" | "updatedAt">): Promise<LayoutArea> {
+      let contentItems: any[] | undefined
+      const playerId = data.config?.playerId
+      if (data.type === "content" && playerId) {
+        const resolved = await this.resolvePlayerPlaylistById(playerId)
+        contentItems = resolved?.items
+      }
+
       const area: Record<string, any> = {
         id: `la_${Date.now()}`,
         name: data.name,
@@ -1191,10 +1198,10 @@ function createDb(client?: SupabaseClient) {
         z_index: data.zIndex || 0,
         enabled: data.enabled !== false,
         config: JSON.stringify(data.config || {}),
+        content_id: contentItems ? JSON.stringify(contentItems) : null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
-      if (data.contentId) area.content_id = data.contentId
       const { data: created, error } = await c.from("layout_areas").insert(area).select().single()
       if (error) throw error
       recordActivity(c, { type: "layout", description: `Área "${data.name}" criada no layout` })
@@ -1213,7 +1220,16 @@ function createDb(client?: SupabaseClient) {
       if (data.zIndex !== undefined) update.z_index = data.zIndex
       if (data.enabled !== undefined) update.enabled = data.enabled
       if (data.config !== undefined) update.config = JSON.stringify(data.config)
-      if (data.contentId !== undefined) update.content_id = data.contentId || null
+      if (data.config !== undefined || data.type !== undefined) {
+        const currentConfig = data.config || {}
+        const pid = currentConfig.playerId
+        if (data.type === "content" && pid) {
+          const resolved = await this.resolvePlayerPlaylistById(pid)
+          update.content_id = resolved?.items ? JSON.stringify(resolved.items) : null
+        } else if (data.config !== undefined) {
+          update.content_id = null
+        }
+      }
       update.updated_at = new Date().toISOString()
 
       const { data: updated, error } = await c.from("layout_areas").update(update).eq("id", id).select().single()
@@ -1347,6 +1363,20 @@ function mapLayout(data: any): Layout {
   }
 }
 
+function parseContentId(raw: any): any[] | undefined {
+  if (!raw) return undefined
+  if (Array.isArray(raw)) return raw
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? parsed : undefined
+    } catch {
+      return undefined
+    }
+  }
+  return undefined
+}
+
 function mapLayoutArea(data: any): LayoutArea {
   const config = typeof data.config === "string" ? JSON.parse(data.config) : data.config || {}
   return {
@@ -1375,7 +1405,7 @@ function mapLayoutZone(data: any): LayoutZone {
     y: data.y,
     width: data.width,
     height: data.height,
-    contentId: data.content_id || undefined,
+    contentId: parseContentId(data.content_id),
     type: data.type,
     zIndex: data.z_index,
     enabled: data.enabled,

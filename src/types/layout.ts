@@ -11,13 +11,21 @@ export interface Layout {
   zones?: LayoutZone[]
 }
 
+export interface PlaylistItemResolved {
+  type: string
+  url: string
+  name: string
+  duration: number
+  contentId: string
+}
+
 export interface LayoutZone {
   id: string
   x: number
   y: number
   width: number
   height: number
-  contentId?: string
+  contentId?: string | PlaylistItemResolved[]
   type?: LayoutAreaType
   zIndex?: number
   enabled?: boolean
