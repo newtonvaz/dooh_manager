@@ -736,6 +736,12 @@ function createDb(client?: SupabaseClient) {
       return this.recordHeartbeat(player.id, deviceInfo)
     },
 
+    async resolvePlayerPlaylistById(playerId: string) {
+      const player = await this.getPlayer(playerId)
+      if (!player || !player.code) return null
+      return this.resolvePlayerPlaylist(player.code)
+    },
+
     async resolvePlayerPlaylist(code: string) {
       const player = await this.getPlayerByCode(code)
       if (!player) return null

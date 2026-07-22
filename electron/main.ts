@@ -133,12 +133,27 @@ async function sendDeviceInfoToCms(code: string): Promise<void> {
 let deviceInfoInterval: ReturnType<typeof setInterval> | null = null
 
 function getRendererUrl(): string {
-  if (isDev) return process.env.CMS_URL || 'http://localhost:3000'
-  const outDir = path.join(__dirname, '../out')
-  const indexHtml = path.join(outDir, 'player-info.html')
-  if (fs.existsSync(indexHtml)) {
-    return `file://${indexHtml}`
+  const code = getPlayerCode()
+
+  if (isDev) {
+    const baseUrl = process.env.CMS_URL || 'http://localhost:3000'
+    if (code) {
+      return `${baseUrl}/player-view/${code}`
+    }
+    return baseUrl
   }
+
+  const outDir = path.join(__dirname, '../out')
+  const indexHtml = path.join(outDir, 'player-view.html')
+
+  if (code && fs.existsSync(path.join(outDir, `player-view/${code}.html`))) {
+    return `file://${path.join(outDir, `player-view/${code}.html`)}`
+  }
+
+  if (fs.existsSync(indexHtml)) {
+    return `file://${indexHtml}?code=${code || ''}`
+  }
+
   return `file://${path.join(outDir, 'index.html')}`
 }
 
