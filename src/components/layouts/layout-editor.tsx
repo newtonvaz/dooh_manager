@@ -12,15 +12,17 @@ import {
   Plus,
   Trash2,
   Pencil,
-  GripVertical,
   Monitor,
   FileImage,
   AppWindow,
-  AlertTriangle,
-  Move,
-  Maximize2,
 } from "lucide-react"
 import type { LayoutArea } from "@/types/layout"
+
+const CANVAS_W = 1920
+const CANVAS_H = 1080
+
+function pctToPxX(pct: number) { return Math.round((pct / 100) * CANVAS_W) }
+function pctToPxY(pct: number) { return Math.round((pct / 100) * CANVAS_H) }
 
 interface DragInfo {
   areaId: string
@@ -210,13 +212,6 @@ export function LayoutEditor() {
     return type === "content" ? FileImage : AppWindow
   }
 
-  function getConfigSummary(area: LayoutArea): string {
-    if (area.type === "content") {
-      return area.config.playlistId ? `Playlist: ${area.config.playlistId.slice(0, 8)}...` : "Sem playlist"
-    }
-    return area.config.appId ? `App: ${area.config.appId}` : "Sem app"
-  }
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
@@ -237,6 +232,9 @@ export function LayoutEditor() {
           </WithTooltip>
           <span className="text-sm text-muted-foreground">
             {areas.length} área{areas.length !== 1 ? "s" : ""}
+          </span>
+          <span className="text-xs text-muted-foreground ml-2">
+            Resolução de referência: {CANVAS_W}x{CANVAS_H}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -281,6 +279,11 @@ export function LayoutEditor() {
             const isSelected = selectedAreaId === area.id
             const colors = area.enabled ? AREA_COLORS[area.type] : AREA_COLORS.inactive
             const TypeIcon = getTypeIcon(area.type)
+
+            const px = pctToPxX(area.x)
+            const py = pctToPxY(area.y)
+            const pw = pctToPxX(area.width)
+            const ph = pctToPxY(area.height)
 
             return (
               <div
@@ -349,12 +352,12 @@ export function LayoutEditor() {
                   </div>
                 )}
 
-                <div className="absolute bottom-1 left-1 right-1 flex items-center justify-between pointer-events-none">
-                  <span className="text-[9px] text-muted-foreground truncate max-w-[60%]">
-                    {area.width}% × {area.height}%
+                <div className="absolute bottom-1 left-1 right-1 flex flex-col gap-0.5 pointer-events-none">
+                  <span className="text-[9px] text-muted-foreground truncate">
+                    {pw}×{ph} px ({area.width}% × {area.height}%)
                   </span>
-                  <span className="text-[9px] text-muted-foreground truncate max-w-[40%] text-right">
-                    [{area.x}%, {area.y}%]
+                  <span className="text-[9px] text-muted-foreground truncate">
+                    ({px}, {py}) px — [{area.x}%, {area.y}%]
                   </span>
                 </div>
 

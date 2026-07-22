@@ -20,11 +20,20 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import type { LayoutArea, LayoutAreaType, LayoutAreaConfig } from "@/types/layout"
 import type { Playlist } from "@/types/content"
+
+const CANVAS_W = 1920
+const CANVAS_H = 1080
+
+function pxToPctX(px: number) { return Math.round((px / CANVAS_W) * 1000) / 10 }
+function pxToPctY(px: number) { return Math.round((px / CANVAS_H) * 1000) / 10 }
+function pctToPxX(pct: number) { return Math.round((pct / 100) * CANVAS_W) }
+function pctToPxY(pct: number) { return Math.round((pct / 100) * CANVAS_H) }
 
 interface AreaFormDialogProps {
   open: boolean
@@ -47,14 +56,21 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
 
   const [name, setName] = useState("")
   const [type, setType] = useState<LayoutAreaType>("content")
-  const [x, setX] = useState(0)
-  const [y, setY] = useState(0)
-  const [width, setWidth] = useState(100)
-  const [height, setHeight] = useState(100)
+
+  const [px, setPx] = useState(0)
+  const [py, setPy] = useState(0)
+  const [pw, setPw] = useState(CANVAS_W)
+  const [ph, setPh] = useState(CANVAS_H)
+
   const [zIndex, setZIndex] = useState(0)
   const [enabled, setEnabled] = useState(true)
   const [config, setConfig] = useState<LayoutAreaConfig>({})
   const [loading, setLoading] = useState(false)
+
+  const pctX = pxToPctX(px)
+  const pctY = pxToPctY(py)
+  const pctW = pxToPctX(pw)
+  const pctH = pxToPctY(ph)
 
   const { data: playlists } = useQuery({
     queryKey: ["playlists"],
@@ -67,20 +83,20 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
       if (area) {
         setName(area.name)
         setType(area.type)
-        setX(area.x)
-        setY(area.y)
-        setWidth(area.width)
-        setHeight(area.height)
+        setPx(pctToPxX(area.x))
+        setPy(pctToPxY(area.y))
+        setPw(pctToPxX(area.width))
+        setPh(pctToPxY(area.height))
         setZIndex(area.zIndex)
         setEnabled(area.enabled)
         setConfig(area.config || {})
       } else {
         setName("")
         setType("content")
-        setX(0)
-        setY(0)
-        setWidth(100)
-        setHeight(100)
+        setPx(0)
+        setPy(0)
+        setPw(CANVAS_W)
+        setPh(CANVAS_H)
         setZIndex(0)
         setEnabled(true)
         setConfig({})
@@ -101,10 +117,10 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
         name: name.trim(),
         type,
         layoutId: "default",
-        x,
-        y,
-        width: Math.min(100, Math.max(1, width)),
-        height: Math.min(100, Math.max(1, height)),
+        x: Math.max(0, Math.min(100, pxToPctX(px))),
+        y: Math.max(0, Math.min(100, pxToPctY(py))),
+        width: Math.max(1, Math.min(100, pxToPctX(pw))),
+        height: Math.max(1, Math.min(100, pxToPctY(ph))),
         zIndex,
         enabled,
         config,
@@ -180,53 +196,71 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
             </div>
           </div>
 
+          <Separator />
+
+          <div className="text-xs text-muted-foreground">
+            Resolução de referência: {CANVAS_W}×{CANVAS_H} px
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="x">Posição X (%)</Label>
+              <Label htmlFor="px">Posição X (px)</Label>
               <Input
-                id="x"
+                id="px"
                 type="number"
                 min={0}
-                max={100}
-                value={x}
-                onChange={(e) => setX(Number(e.target.value))}
+                max={CANVAS_W}
+                value={px}
+                onChange={(e) => setPx(Math.max(0, Number(e.target.value)))}
               />
+              <span className="text-[10px] text-muted-foreground">
+                {pctX}% do canvas
+              </span>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="y">Posição Y (%)</Label>
+              <Label htmlFor="py">Posição Y (px)</Label>
               <Input
-                id="y"
+                id="py"
                 type="number"
                 min={0}
-                max={100}
-                value={y}
-                onChange={(e) => setY(Number(e.target.value))}
+                max={CANVAS_H}
+                value={py}
+                onChange={(e) => setPy(Math.max(0, Number(e.target.value)))}
               />
+              <span className="text-[10px] text-muted-foreground">
+                {pctY}% do canvas
+              </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="width">Largura (%)</Label>
+              <Label htmlFor="pw">Largura (px)</Label>
               <Input
-                id="width"
+                id="pw"
                 type="number"
                 min={1}
-                max={100}
-                value={width}
-                onChange={(e) => setWidth(Number(e.target.value))}
+                max={CANVAS_W}
+                value={pw}
+                onChange={(e) => setPw(Math.max(1, Number(e.target.value)))}
               />
+              <span className="text-[10px] text-muted-foreground">
+                {pctW}% do canvas
+              </span>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="height">Altura (%)</Label>
+              <Label htmlFor="ph">Altura (px)</Label>
               <Input
-                id="height"
+                id="ph"
                 type="number"
                 min={1}
-                max={100}
-                value={height}
-                onChange={(e) => setHeight(Number(e.target.value))}
+                max={CANVAS_H}
+                value={ph}
+                onChange={(e) => setPh(Math.max(1, Number(e.target.value)))}
               />
+              <span className="text-[10px] text-muted-foreground">
+                {pctH}% do canvas
+              </span>
             </div>
           </div>
 
