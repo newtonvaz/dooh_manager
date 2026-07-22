@@ -40,9 +40,11 @@ export async function GET(
         let items: any[] = []
 
         if (zone.type === "content") {
-          const playerId = config.playerId
-          if (playerId) {
-            const resolved = await dbAdmin.resolvePlayerPlaylistById(playerId)
+          if (config.playerId) {
+            const resolved = await dbAdmin.resolvePlayerPlaylistById(config.playerId)
+            items = resolved?.items || []
+          } else {
+            const resolved = await dbAdmin.resolvePlayerPlaylist(code)
             items = resolved?.items || []
           }
         }
