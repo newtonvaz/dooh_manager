@@ -95,7 +95,7 @@ export default function PlayerViewPage() {
 
   if (data.items && data.items.length > 0 && data.areas.length === 0) {
     return (
-      <div className="size-full min-h-screen bg-black">
+      <div className="h-screen w-full bg-black">
         <AreaContentPlayer items={data.items} />
       </div>
     )
@@ -110,7 +110,7 @@ export default function PlayerViewPage() {
   }
 
   return (
-    <div className="relative size-full min-h-screen overflow-hidden bg-black">
+    <div className="relative h-screen w-full overflow-hidden bg-black">
       {data.areas.map((area) => (
         <div
           key={area.id}
