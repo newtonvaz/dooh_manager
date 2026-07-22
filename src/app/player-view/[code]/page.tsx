@@ -36,14 +36,45 @@ export default function PlayerViewPage() {
   const code = params.code as string
   const [data, setData] = useState<PlayerData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!code) return
-    fetch(`/api/player/${code}/playlist`)
-      .then((res) => (res.ok ? res.json() : Promise.reject("Falha ao carregar")))
-      .then(setData)
-      .catch((err) => setError(String(err)))
+
+    let cancelled = false
+
+    async function fetchData() {
+      try {
+        const res = await fetch(`/api/player/${code}/playlist`)
+        if (!res.ok) throw new Error("Falha ao carregar")
+        const json = await res.json()
+        if (!cancelled) {
+          setData(json)
+          setError(null)
+        }
+      } catch (err) {
+        if (!cancelled) setError(String(err))
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    fetchData()
+    const interval = setInterval(fetchData, 30_000)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
   }, [code])
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-black text-white/40">
+        <p className="text-sm">Carregando...</p>
+      </div>
+    )
+  }
 
   if (error) {
     return (
