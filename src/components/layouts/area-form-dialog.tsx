@@ -26,6 +26,7 @@ import { api } from "@/lib/api-client"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import type { LayoutArea, LayoutAreaType, LayoutAreaConfig } from "@/types/layout"
 import type { Player } from "@/types/player"
+import type { MediaContent } from "@/types/content"
 
 const CANVAS_W = 1920
 const CANVAS_H = 1080
@@ -66,6 +67,7 @@ export function AreaFormDialog({ open, onOpenChange, area, layoutId }: AreaFormD
   const [zIndex, setZIndex] = useState(0)
   const [enabled, setEnabled] = useState(true)
   const [config, setConfig] = useState<LayoutAreaConfig>({})
+  const [contentId, setContentId] = useState("")
   const [loading, setLoading] = useState(false)
 
   const pctX = pxToPctX(px)
@@ -77,6 +79,12 @@ export function AreaFormDialog({ open, onOpenChange, area, layoutId }: AreaFormD
     queryKey: ["players"],
     queryFn: api.getPlayers,
     enabled: open,
+  })
+
+  const { data: allContent } = useQuery({
+    queryKey: ["content"],
+    queryFn: api.getContent,
+    enabled: open && type === "content",
   })
 
   useEffect(() => {
@@ -91,6 +99,7 @@ export function AreaFormDialog({ open, onOpenChange, area, layoutId }: AreaFormD
         setZIndex(area.zIndex)
         setEnabled(area.enabled)
         setConfig(area.config || {})
+        setContentId(area.contentId || "")
       } else {
         setName("")
         setType("content")
@@ -101,6 +110,7 @@ export function AreaFormDialog({ open, onOpenChange, area, layoutId }: AreaFormD
         setZIndex(0)
         setEnabled(true)
         setConfig({})
+        setContentId("")
       }
     }
   }, [open, area])
@@ -114,7 +124,7 @@ export function AreaFormDialog({ open, onOpenChange, area, layoutId }: AreaFormD
 
     setLoading(true)
     try {
-      const payload = {
+      const payload: Omit<LayoutArea, "id" | "createdAt" | "updatedAt"> & { contentId?: string } = {
         name: name.trim(),
         type,
         layoutId,
@@ -125,6 +135,7 @@ export function AreaFormDialog({ open, onOpenChange, area, layoutId }: AreaFormD
         zIndex,
         enabled,
         config,
+        contentId: contentId || undefined,
       }
 
       if (isEditing) {
@@ -288,26 +299,51 @@ export function AreaFormDialog({ open, onOpenChange, area, layoutId }: AreaFormD
           </div>
 
           {type === "content" && (
-            <div className="space-y-2">
-              <Label>Player</Label>
-              <Select
-                value={config.playerId || ""}
-                onValueChange={(v) => setConfig((prev) => ({ ...prev, playerId: v || undefined }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue>
-                    {config.playerId ? getPlayerName(config.playerId) : "Selecionar player..."}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Nenhum player</SelectItem>
-                  {players?.map((pl: any) => (
-                    <SelectItem key={pl.id} value={pl.id}>
-                      {pl.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Conteúdo (direto)</Label>
+                <Select
+                  value={contentId}
+                  onValueChange={(v) => setContentId(v || "")}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {contentId
+                        ? allContent?.find((c: MediaContent) => c.id === contentId)?.name || "Conteúdo removido"
+                        : "Nenhum conteúdo"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhum conteúdo</SelectItem>
+                    {allContent?.map((c: MediaContent) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Player (fallback se não houver conteúdo direto)</Label>
+                <Select
+                  value={config.playerId || ""}
+                  onValueChange={(v) => setConfig((prev) => ({ ...prev, playerId: v || undefined }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {config.playerId ? getPlayerName(config.playerId) : "Selecionar player..."}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Nenhum player</SelectItem>
+                    {players?.map((pl: any) => (
+                      <SelectItem key={pl.id} value={pl.id}>
+                        {pl.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
 

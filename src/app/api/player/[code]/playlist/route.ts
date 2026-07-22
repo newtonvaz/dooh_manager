@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { dbAdmin } from "@/lib/db"
-import { supabaseAdmin } from "@/lib/supabase-admin"
 
 export const dynamic = "force-dynamic"
 
@@ -16,48 +15,65 @@ export async function GET(
       return NextResponse.json({ error: "Player não encontrado" }, { status: 404 })
     }
 
-    if (!player.layoutId) {
-      return NextResponse.json({
-        player: { id: player.id, name: player.name, code: player.code },
-        areas: [],
-      })
+    const response: any = {
+      player: { id: player.id, name: player.name, code: player.code },
+      areas: [],
+      items: [],
     }
 
-    const areas = await dbAdmin.getLayoutAreas(player.layoutId)
+    if (!player.layoutId) {
+      const resolved = await dbAdmin.resolvePlayerPlaylist(code)
+      response.items = resolved?.items || []
+      return NextResponse.json(response)
+    }
+
+    const layout = await dbAdmin.getLayout(player.layoutId)
+    if (!layout || !layout.zones || layout.zones.length === 0) {
+      const resolved = await dbAdmin.resolvePlayerPlaylist(code)
+      response.items = resolved?.items || []
+      return NextResponse.json(response)
+    }
 
     const resolvedAreas = await Promise.all(
-      areas.map(async (area: any) => {
-        const config = typeof area.config === "string" ? JSON.parse(area.config) : area.config || {}
+      layout.zones.map(async (zone: any) => {
+        const config = typeof zone.config === "string" ? JSON.parse(zone.config) : zone.config || {}
         let items: any[] = []
 
-        if (area.type === "content" && config.playerId) {
-          const resolved = await dbAdmin.resolvePlayerPlaylistById(config.playerId)
-          items = resolved?.items || []
+        if (zone.type === "content") {
+          if (zone.contentId) {
+            const content = await dbAdmin.getContentById(zone.contentId)
+            if (content) {
+              items.push({
+                type: content.type === "video" ? "video" : content.type === "web" ? "html5" : "image",
+                url: content.url,
+                name: content.name,
+                duration: content.duration || 10,
+                contentId: content.id,
+              })
+            }
+          } else if (config.playerId) {
+            const resolved = await dbAdmin.resolvePlayerPlaylistById(config.playerId)
+            items = resolved?.items || []
+          }
         }
 
         return {
-          id: area.id,
-          name: area.name,
-          type: area.type,
-          x: area.x,
-          y: area.y,
-          width: area.width,
-          height: area.height,
-          zIndex: area.z_index,
+          id: zone.id,
+          name: zone.name,
+          type: zone.type,
+          x: zone.x,
+          y: zone.y,
+          width: zone.width,
+          height: zone.height,
+          zIndex: zone.zIndex,
           config,
           items,
         }
       })
     )
 
-    return NextResponse.json({
-      player: {
-        id: player.id,
-        name: player.name,
-        code: player.code,
-      },
-      areas: resolvedAreas,
-    })
+    response.areas = resolvedAreas
+    return NextResponse.json(response)
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }

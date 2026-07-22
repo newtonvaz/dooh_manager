@@ -29,6 +29,7 @@ interface AreaData {
 interface PlayerData {
   player: { id: string; name: string; code: string }
   areas: AreaData[]
+  items?: PlaylistItem[]
 }
 
 export default function PlayerViewPage() {
@@ -88,6 +89,14 @@ export default function PlayerViewPage() {
     return (
       <div className="flex h-screen items-center justify-center bg-black text-white/40">
         <p className="text-sm">Carregando...</p>
+      </div>
+    )
+  }
+
+  if (data.items && data.items.length > 0 && data.areas.length === 0) {
+    return (
+      <div className="size-full min-h-screen bg-black">
+        <AreaContentPlayer items={data.items} />
       </div>
     )
   }

@@ -5,7 +5,7 @@ import type { MediaContent, Playlist } from "@/types/content"
 import type { OperatingSchedule, TimeSlot } from "@/types/schedule"
 import type { ProgrammingGroup } from "@/types/programming-group"
 import type { ContentReportQuery, ContentReportRow, PlaybackLog, PlaybackLogRow } from "@/types/playback"
-import type { Layout, LayoutArea, LayoutAreaConfig } from "@/types/layout"
+import type { Layout, LayoutArea, LayoutAreaConfig, LayoutZone } from "@/types/layout"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 interface Group {
@@ -1116,7 +1116,12 @@ function createDb(client?: SupabaseClient) {
     async getLayout(id: string): Promise<Layout | undefined> {
       const { data, error } = await c.from("layouts").select("*").eq("id", id).single()
       if (error) return undefined
-      return mapLayout(data)
+      const layout = mapLayout(data)
+      const { data: areas } = await c.from("layout_areas").select("*").eq("layout_id", id).order("z_index").order("created_at")
+      if (areas) {
+        layout.zones = areas.map(mapLayoutZone)
+      }
+      return layout
     },
 
     async createLayout(data: Omit<Layout, "id" | "createdAt" | "updatedAt">): Promise<Layout> {
@@ -1174,7 +1179,7 @@ function createDb(client?: SupabaseClient) {
     },
 
     async createLayoutArea(data: Omit<LayoutArea, "id" | "createdAt" | "updatedAt">): Promise<LayoutArea> {
-      const area = {
+      const area: Record<string, any> = {
         id: `la_${Date.now()}`,
         name: data.name,
         type: data.type,
@@ -1189,6 +1194,7 @@ function createDb(client?: SupabaseClient) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
+      if (data.contentId) area.content_id = data.contentId
       const { data: created, error } = await c.from("layout_areas").insert(area).select().single()
       if (error) throw error
       recordActivity(c, { type: "layout", description: `Área "${data.name}" criada no layout` })
@@ -1207,6 +1213,7 @@ function createDb(client?: SupabaseClient) {
       if (data.zIndex !== undefined) update.z_index = data.zIndex
       if (data.enabled !== undefined) update.enabled = data.enabled
       if (data.config !== undefined) update.config = JSON.stringify(data.config)
+      if (data.contentId !== undefined) update.content_id = data.contentId || null
       update.updated_at = new Date().toISOString()
 
       const { data: updated, error } = await c.from("layout_areas").update(update).eq("id", id).select().single()
@@ -1354,8 +1361,24 @@ function mapLayoutArea(data: any): LayoutArea {
     zIndex: data.z_index,
     enabled: data.enabled,
     config,
+    contentId: data.content_id || undefined,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
+  }
+}
+
+function mapLayoutZone(data: any): LayoutZone {
+  return {
+    id: data.id,
+    x: data.x,
+    y: data.y,
+    width: data.width,
+    height: data.height,
+    contentId: data.content_id || undefined,
+    type: data.type,
+    zIndex: data.z_index,
+    enabled: data.enabled,
+    name: data.name,
   }
 }
 

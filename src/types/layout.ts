@@ -8,6 +8,20 @@ export interface Layout {
   canvasHeight: number
   createdAt: string
   updatedAt: string
+  zones?: LayoutZone[]
+}
+
+export interface LayoutZone {
+  id: string
+  x: number
+  y: number
+  width: number
+  height: number
+  contentId?: string
+  type?: LayoutAreaType
+  zIndex?: number
+  enabled?: boolean
+  name?: string
 }
 
 export interface LayoutAreaConfig {
@@ -28,6 +42,7 @@ export interface LayoutArea {
   zIndex: number
   enabled: boolean
   config: LayoutAreaConfig
+  contentId?: string
   createdAt: string
   updatedAt: string
 }
