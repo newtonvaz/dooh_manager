@@ -32,7 +32,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-2">
-            <img src="/doohos.png" alt="DOOHOS" className="h-10 w-auto" />
+            <img src="/doohos.png" alt="DOOHOS" className="h-12 w-auto" />
           </div>
           <CardTitle className="sr-only">DOOHOS</CardTitle>
           <CardDescription>Entre com suas credenciais</CardDescription>

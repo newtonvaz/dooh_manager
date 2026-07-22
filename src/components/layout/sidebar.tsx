@@ -176,7 +176,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         )}
       >
         {collapsed ? (
-          <div className="flex size-8 items-center justify-center overflow-hidden rounded-lg bg-sidebar-primary/10 ring-1 ring-sidebar-primary/20">
+          <div className="flex size-10 items-center justify-center overflow-hidden rounded-lg bg-sidebar-primary/10 ring-1 ring-sidebar-primary/20">
             <img
               src="/doohos.png"
               alt="D"
@@ -187,7 +187,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <img
             src="/doohos.png"
             alt="DOOHOS"
-            className="h-8 w-auto object-contain"
+            className="h-10 w-auto object-contain"
           />
         )}
       </div>
