@@ -145,7 +145,7 @@ export default function LayoutsPage() {
               layouts.map((layout) => (
                 <div
                   key={layout.id}
-                  className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm cursor-pointer transition-colors ${
+                  className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm cursor-pointer transition-colors ${
                     selectedLayoutId === layout.id
                       ? "bg-primary/10 text-primary font-medium"
                       : "hover:bg-muted"
@@ -196,8 +196,19 @@ export default function LayoutsPage() {
                     <p className="text-sm text-muted-foreground">{selectedLayout.description}</p>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {selectedLayout?.canvasWidth}×{selectedLayout?.canvasHeight}
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => deleteLayout(selectedLayoutId)}
+                  >
+                    <Trash2 className="mr-1 size-3.5" />
+                    Excluir
+                  </Button>
+                  <div className="text-xs text-muted-foreground">
+                    {selectedLayout?.canvasWidth}×{selectedLayout?.canvasHeight}
+                  </div>
                 </div>
               </div>
 
