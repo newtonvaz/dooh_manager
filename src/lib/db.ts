@@ -169,6 +169,7 @@ function createDb(client?: SupabaseClient) {
         name: data.name,
         group: data.group,
         location: data.location,
+        layout_id: data.layoutId || null,
       }
       const { data: created, error } = await c.from("players").insert(player).select().single()
       if (error) throw error
@@ -182,6 +183,7 @@ function createDb(client?: SupabaseClient) {
       if (data.group !== undefined) update.group = data.group
       if (data.location !== undefined) update.location = data.location
       if (data.playlistId !== undefined) update.playlist_id = data.playlistId || null
+      if (data.layoutId !== undefined) update.layout_id = data.layoutId || null
 
       const { data: updated, error } = await c.from("players").update(update).eq("id", id).select().single()
       if (error) return undefined
@@ -1266,6 +1268,7 @@ function mapPlayer(data: any): Player {
     publicIp: data.public_ip || undefined,
     storageFree: data.storage_free != null ? toBytes(data.storage_free, 0) : undefined,
     playlistId: data.playlist_id || undefined,
+    layoutId: data.layout_id || undefined,
     createdAt: data.created_at,
   }
 }

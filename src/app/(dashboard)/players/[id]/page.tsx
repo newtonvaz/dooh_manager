@@ -10,6 +10,7 @@ import { PlayerStatusBadge } from "@/components/players/player-status-badge"
 import dynamic from "next/dynamic"
 
 const PlayerPlaylistEditor = dynamic(() => import("@/components/players/player-playlist-editor").then((m) => ({ default: m.PlayerPlaylistEditor })), { ssr: false })
+const PlayerLayoutEditor = dynamic(() => import("@/components/players/player-layout-editor").then((m) => ({ default: m.PlayerLayoutEditor })), { ssr: false })
 const PlayerScheduleSection = dynamic(() => import("@/components/players/player-schedule-section").then((m) => ({ default: m.PlayerScheduleSection })), { ssr: false })
 const DeviceInfoSection = dynamic(() => import("@/components/players/device-info-section").then((m) => ({ default: m.DeviceInfoSection })), { ssr: false })
 import { ArrowLeft, Monitor, HardDrive, Wifi, Calendar } from "lucide-react"
@@ -124,10 +125,16 @@ export default function PlayerDetailPage() {
           </CardContent>
         </Card>
 
-        <PlayerPlaylistEditor
-          playerId={player.id}
-          currentPlaylistId={player.playlistId}
-        />
+        <div className="space-y-4">
+          <PlayerPlaylistEditor
+            playerId={player.id}
+            currentPlaylistId={player.playlistId}
+          />
+          <PlayerLayoutEditor
+            playerId={player.id}
+            currentLayoutId={player.layoutId}
+          />
+        </div>
       </div>
 
       <DeviceInfoSection player={player} />

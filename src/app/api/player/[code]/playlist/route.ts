@@ -16,17 +16,17 @@ export async function GET(
       return NextResponse.json({ error: "Player não encontrado" }, { status: 404 })
     }
 
-    // Get layout areas for the default layout (or player-specific layout)
-    // Fetch layout areas - for now use 'default' or a layout assigned to the player
-    const { data: areas } = await supabaseAdmin
-      .from("layout_areas")
-      .select("*")
-      .eq("enabled", true)
-      .order("z_index")
-      .order("created_at")
+    if (!player.layoutId) {
+      return NextResponse.json({
+        player: { id: player.id, name: player.name, code: player.code },
+        areas: [],
+      })
+    }
+
+    const areas = await dbAdmin.getLayoutAreas(player.layoutId)
 
     const resolvedAreas = await Promise.all(
-      (areas || []).map(async (area: any) => {
+      areas.map(async (area: any) => {
         const config = typeof area.config === "string" ? JSON.parse(area.config) : area.config || {}
         let items: any[] = []
 
