@@ -36,23 +36,13 @@ export async function GET(
 
     const resolvedAreas = await Promise.all(
       layout.zones.map(async (zone: any) => {
-        const config = typeof zone.config === "string" ? JSON.parse(zone.config) : zone.config || {}
+        const config = (zone.config || {}) as Record<string, any>
         let items: any[] = []
 
         if (zone.type === "content") {
-          if (zone.contentId) {
-            const content = await dbAdmin.getContentById(zone.contentId)
-            if (content) {
-              items.push({
-                type: content.type === "video" ? "video" : content.type === "web" ? "html5" : "image",
-                url: content.url,
-                name: content.name,
-                duration: content.duration || 10,
-                contentId: content.id,
-              })
-            }
-          } else if (config.playerId) {
-            const resolved = await dbAdmin.resolvePlayerPlaylistById(config.playerId)
+          const playerId = config.playerId
+          if (playerId) {
+            const resolved = await dbAdmin.resolvePlayerPlaylistById(playerId)
             items = resolved?.items || []
           }
         }

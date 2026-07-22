@@ -1368,6 +1368,7 @@ function mapLayoutArea(data: any): LayoutArea {
 }
 
 function mapLayoutZone(data: any): LayoutZone {
+  const config = typeof data.config === "string" ? JSON.parse(data.config) : data.config || {}
   return {
     id: data.id,
     x: data.x,
@@ -1379,6 +1380,7 @@ function mapLayoutZone(data: any): LayoutZone {
     zIndex: data.z_index,
     enabled: data.enabled,
     name: data.name,
+    config,
   }
 }
 

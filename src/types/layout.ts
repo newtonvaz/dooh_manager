@@ -22,6 +22,8 @@ export interface LayoutZone {
   zIndex?: number
   enabled?: boolean
   name?: string
+  config?: LayoutAreaConfig
+  playlistId?: string
 }
 
 export interface LayoutAreaConfig {
