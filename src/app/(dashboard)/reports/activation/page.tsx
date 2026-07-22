@@ -82,7 +82,7 @@ export default function ActivationReportPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Ativação de Players</h1>
           <p className="text-sm text-muted-foreground">
-            Ativação de players
+            Monitoramento de Ativação
           </p>
         </div>
         <div className="flex items-center gap-3">
