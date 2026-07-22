@@ -55,7 +55,7 @@ function getStorageInfo(): { total: number; used: number; free: number } {
 async function getPublicIp(): Promise<string> {
   try {
     const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(5000) })
-    const data = await res.json()
+    const data: any = await res.json()
     return data.ip
   } catch {
     return 'Não disponível'
@@ -134,27 +134,13 @@ let deviceInfoInterval: ReturnType<typeof setInterval> | null = null
 
 function getRendererUrl(): string {
   const code = getPlayerCode()
+  const baseUrl = getCmsBaseUrl()
 
-  if (isDev) {
-    const baseUrl = process.env.CMS_URL || 'http://localhost:3000'
-    if (code) {
-      return `${baseUrl}/player-view/${code}`
-    }
-    return baseUrl
+  if (code) {
+    return `${baseUrl}/player-view/${code}`
   }
 
-  const outDir = path.join(__dirname, '../out')
-  const indexHtml = path.join(outDir, 'player-view.html')
-
-  if (code && fs.existsSync(path.join(outDir, `player-view/${code}.html`))) {
-    return `file://${path.join(outDir, `player-view/${code}.html`)}`
-  }
-
-  if (fs.existsSync(indexHtml)) {
-    return `file://${indexHtml}?code=${code || ''}`
-  }
-
-  return `file://${path.join(outDir, 'index.html')}`
+  return baseUrl
 }
 
 async function createWindow() {
