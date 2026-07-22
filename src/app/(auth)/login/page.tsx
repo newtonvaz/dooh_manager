@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Monitor, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
 
@@ -32,11 +32,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-2">
-            <div className="rounded-xl bg-primary/10 p-3">
-              <Monitor className="size-8 text-primary" />
-            </div>
+            <img src="/doohos.png" alt="DOOHOS" className="h-10 w-auto" />
           </div>
-          <CardTitle className="text-xl">DOOH Manager</CardTitle>
+          <CardTitle className="sr-only">DOOHOS</CardTitle>
           <CardDescription>Entre com suas credenciais</CardDescription>
         </CardHeader>
         <CardContent>

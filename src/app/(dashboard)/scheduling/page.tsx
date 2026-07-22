@@ -19,6 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { WithTooltip } from "@/components/ui/tooltip"
 import {
   Dialog,
   DialogContent,
@@ -311,9 +312,11 @@ export default function SchedulingPage() {
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="flex items-center justify-center size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
-                          <MoreHorizontal className="size-4" />
-                        </DropdownMenuTrigger>
+                        <WithTooltip content="Ações do grupo">
+                          <DropdownMenuTrigger className="flex items-center justify-center size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
+                            <MoreHorizontal className="size-4" />
+                          </DropdownMenuTrigger>
+                        </WithTooltip>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleView(group)}>
                             <Eye className="mr-2 size-4" />

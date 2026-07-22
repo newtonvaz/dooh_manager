@@ -14,24 +14,28 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className="size-8">
-        <Sun className="size-4" />
-      </Button>
+      <WithTooltip content="Alternar tema">
+        <Button variant="ghost" size="icon" className="size-8">
+          <Sun className="size-4" />
+        </Button>
+      </WithTooltip>
     )
   }
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="size-8"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-    >
-      {resolvedTheme === "dark" ? (
-        <Sun className="size-4" />
-      ) : (
-        <Moon className="size-4" />
-      )}
-    </Button>
+    <WithTooltip content="Alternar tema">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-8"
+        onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      >
+        {resolvedTheme === "dark" ? (
+          <Sun className="size-4" />
+        ) : (
+          <Moon className="size-4" />
+        )}
+      </Button>
+    </WithTooltip>
   )
 }

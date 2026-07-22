@@ -30,6 +30,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { PlayerStatusBadge } from "@/components/players/player-status-badge"
 
 type ViewMode = "list" | "grid"
@@ -86,30 +87,34 @@ export default function ActivationReportPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex overflow-hidden rounded-lg border">
-            <button
-              onClick={() => setViewMode("list")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
-                viewMode === "list"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <List className="size-3.5" />
-              Lista
-            </button>
-            <button
-              onClick={() => setViewMode("grid")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
-                viewMode === "grid"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <LayoutGrid className="size-3.5" />
-              Grid
-            </button>
+            <WithTooltip content="Visualizar como lista">
+              <button
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
+                  viewMode === "list"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <List className="size-3.5" />
+                Lista
+              </button>
+            </WithTooltip>
+            <WithTooltip content="Visualizar como grade">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors",
+                  viewMode === "grid"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <LayoutGrid className="size-3.5" />
+                Grid
+              </button>
+            </WithTooltip>
           </div>
         </div>
       </div>

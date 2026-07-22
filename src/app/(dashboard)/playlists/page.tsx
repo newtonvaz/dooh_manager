@@ -345,9 +345,11 @@ export default function PlaylistsPage() {
                                 {!showCheckboxes && (
                                   <TableCell>
                                     <DropdownMenu>
-                                      <DropdownMenuTrigger className="flex items-center justify-center size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
-                                        <MoreHorizontal className="size-4" />
-                                      </DropdownMenuTrigger>
+                                  <WithTooltip content="Ações da playlist">
+                                    <DropdownMenuTrigger className="flex items-center justify-center size-8 rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
+                                      <MoreHorizontal className="size-4" />
+                                    </DropdownMenuTrigger>
+                                  </WithTooltip>
                                       <DropdownMenuContent align="end">
                                         <DropdownMenuItem onClick={() => handleEdit(pl)}>
                                           <Edit className="mr-2 size-4" />
@@ -467,12 +469,14 @@ function PlaylistCard({ pl, showCheckboxes, selectedIds, toggleSelect, handleEdi
         <div className={cn("flex items-start justify-between gap-2", showCheckboxes && "ml-7")}>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleEdit(pl)}
-                className="font-medium truncate text-left hover:underline cursor-pointer"
-              >
-                {pl.name}
-              </button>
+              <WithTooltip content="Editar playlist">
+                <button
+                  onClick={() => handleEdit(pl)}
+                  className="font-medium truncate text-left hover:underline cursor-pointer"
+                >
+                  {pl.name}
+                </button>
+              </WithTooltip>
               {isSub ? (
                 <Badge variant="secondary" className="text-[10px] shrink-0">Subplaylist</Badge>
               ) : (
@@ -486,9 +490,11 @@ function PlaylistCard({ pl, showCheckboxes, selectedIds, toggleSelect, handleEdi
           </div>
           {!showCheckboxes && (
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center justify-center size-8 rounded-md opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
-                <MoreHorizontal className="size-4" />
-              </DropdownMenuTrigger>
+              <WithTooltip content="Ações da playlist">
+                <DropdownMenuTrigger className="flex items-center justify-center size-8 rounded-md opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
+                  <MoreHorizontal className="size-4" />
+                </DropdownMenuTrigger>
+              </WithTooltip>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleEdit(pl)}>
                   <Edit className="mr-2 size-4" />

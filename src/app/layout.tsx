@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DOOH Manager",
+  title: "DOOHOS",
   description: "Plataforma de gerenciamento de mídia indoor e digital signage",
 };
 

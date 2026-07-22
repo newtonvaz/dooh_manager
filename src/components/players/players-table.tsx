@@ -486,12 +486,14 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
                       <div className="mb-3">
                         <MonitorDisplay player={player} size="sm" />
                       </div>
-                      <button
-                        onClick={() => router.push(`/players/${player.id}`)}
-                        className="text-sm font-medium leading-tight hover:underline cursor-pointer"
-                      >
-                        {player.name}
-                      </button>
+                      <WithTooltip content="Abrir detalhes do player">
+                        <button
+                          onClick={() => router.push(`/players/${player.id}`)}
+                          className="text-sm font-medium leading-tight hover:underline cursor-pointer"
+                        >
+                          {player.name}
+                        </button>
+                      </WithTooltip>
                       <p className="text-[10px] font-mono text-muted-foreground mt-0.5">{player.code}</p>
                       <div className="mt-2">
                         <PlayerStatusBadge status={player.status} />

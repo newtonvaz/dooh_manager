@@ -78,13 +78,13 @@ export function Header({ onMenuClick }: HeaderProps) {
           <WithTooltip content="Menu do usuário">
             <DropdownMenuTrigger className="cursor-pointer outline-none">
               <div className="flex items-center gap-2 rounded-xl border border-transparent bg-muted/50 px-3 py-1.5 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted hover:border-muted-foreground/20 active:scale-[0.98]">
-              <div className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                {user?.name?.charAt(0).toUpperCase() ?? "A"}
+                <div className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                  {user?.name?.charAt(0).toUpperCase() ?? "A"}
+                </div>
+                <span className="hidden sm:inline">{user?.name ?? "Admin"}</span>
+                <ChevronDown className="size-3.5 text-muted-foreground transition-transform duration-200 ui-open:rotate-180" />
               </div>
-              <span className="hidden sm:inline">{user?.name ?? "Admin"}</span>
-              <ChevronDown className="size-3.5 text-muted-foreground transition-transform duration-200 ui-open:rotate-180" />
-            </div>
-          </DropdownMenuTrigger>
+            </DropdownMenuTrigger>
           </WithTooltip>
           <DropdownMenuContent align="end" className="w-56 mt-1.5">
             <DropdownMenuLabel>

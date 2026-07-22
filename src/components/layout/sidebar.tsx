@@ -85,22 +85,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
     if (isCollapsed) {
       return (
-        <Link
-          href={href}
-          className={cn(
-            "group/nav-link relative flex items-center justify-center rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
-            "hover:translate-x-0.5",
-            active
-              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
-              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-          )}
-          title={title}
-        >
-          {active && (
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-sidebar-primary" />
-          )}
-          <Icon className="size-5 shrink-0 transition-transform duration-200 group-hover/nav-link:scale-110" />
-        </Link>
+        <WithTooltip content={title}>
+          <Link
+            href={href}
+            className={cn(
+              "group/nav-link relative flex items-center justify-center rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
+              "hover:translate-x-0.5",
+              active
+                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            )}
+            title={title}
+          >
+            {active && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-sidebar-primary" />
+            )}
+            <Icon className="size-5 shrink-0 transition-transform duration-200 group-hover/nav-link:scale-110" />
+          </Link>
+        </WithTooltip>
       )
     }
 
@@ -169,17 +171,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       <div
         className={cn(
-          "flex h-14 items-center gap-2.5 border-b border-sidebar-border px-4 transition-all duration-300",
-          collapsed && "justify-center px-0"
+          "flex h-14 items-center gap-2.5 border-b border-sidebar-border transition-all duration-300",
+          collapsed ? "justify-center px-0" : "px-4"
         )}
       >
-        <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary/10 ring-1 ring-sidebar-primary/20">
-          <Monitor className="size-5 text-sidebar-primary" />
-        </div>
-        {!collapsed && (
-          <span className="text-base font-semibold tracking-tight">
-            DOOH Manager
-          </span>
+        {collapsed ? (
+          <div className="flex size-8 items-center justify-center overflow-hidden rounded-lg bg-sidebar-primary/10 ring-1 ring-sidebar-primary/20">
+            <img
+              src="/doohos.png"
+              alt="D"
+              className="h-full w-full object-cover object-left"
+            />
+          </div>
+        ) : (
+          <img
+            src="/doohos.png"
+            alt="DOOHOS"
+            className="h-8 w-auto object-contain"
+          />
         )}
       </div>
 
@@ -196,20 +205,22 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         ))}
 
         <div className="pt-3">
-          <button
-            type="button"
-            onClick={logout}
-            className={cn(
-              "group/logout flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
-              "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground cursor-pointer",
-              "hover:translate-x-0.5",
-              collapsed && "justify-center px-0"
-            )}
-            title={collapsed ? "Sair" : undefined}
-          >
-            <LogOut className="size-5 shrink-0 transition-transform duration-200 group-hover/logout:scale-110" />
-            {!collapsed && <span>Sair</span>}
-          </button>
+          <WithTooltip content="Sair">
+            <button
+              type="button"
+              onClick={logout}
+              className={cn(
+                "group/logout flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
+                "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground cursor-pointer",
+                "hover:translate-x-0.5",
+                collapsed && "justify-center px-0"
+              )}
+              title={collapsed ? "Sair" : undefined}
+            >
+              <LogOut className="size-5 shrink-0 transition-transform duration-200 group-hover/logout:scale-110" />
+              {!collapsed && <span>Sair</span>}
+            </button>
+          </WithTooltip>
         </div>
       </nav>
 
@@ -226,7 +237,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </div>
             <div className="text-[11px] leading-tight">
               <p className="font-medium text-sidebar-foreground/80">v1.0.0</p>
-              <p className="text-sidebar-foreground/40">DOOH Manager</p>
+              <p className="text-sidebar-foreground/40">DOOHOS</p>
             </div>
           </div>
         ) : (
