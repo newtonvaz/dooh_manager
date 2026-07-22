@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Monitor } from "lucide-react"
 
 export default function ForgotPasswordPage() {
@@ -19,12 +20,14 @@ export default function ForgotPasswordPage() {
           <p className="text-sm text-muted-foreground">
             O módulo de recuperação de senha está sendo implementado.
           </p>
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center rounded-lg border border-input bg-background hover:bg-muted hover:text-foreground h-9 px-4 text-sm font-medium whitespace-nowrap transition-colors w-full"
-          >
-            Voltar ao login
-          </Link>
+          <WithTooltip content="Voltar para a página de login">
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center rounded-lg border border-input bg-background hover:bg-muted hover:text-foreground h-9 px-4 text-sm font-medium whitespace-nowrap transition-colors w-full"
+            >
+              Voltar ao login
+            </Link>
+          </WithTooltip>
         </CardContent>
       </Card>
     </div>

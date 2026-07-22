@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
@@ -56,13 +57,13 @@ export function DeleteProgrammingGroupDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          <WithTooltip content="Cancelar"><Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancelar
-          </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+          </Button></WithTooltip>
+          <WithTooltip content="Excluir"><Button variant="destructive" onClick={handleDelete} disabled={loading}>
             {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
             {loading ? "Excluindo..." : "Excluir"}
-          </Button>
+          </Button></WithTooltip>
         </DialogFooter>
       </DialogContent>
     </Dialog>

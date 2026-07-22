@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Loader2, Upload, FileImage, Video, Globe, X } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
@@ -248,7 +249,7 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
                           {formatSize(file.size)}
                         </p>
                       </div>
-                      <Button
+                      <WithTooltip content="Remover arquivo"><Button
                         type="button"
                         variant="ghost"
                         size="icon"
@@ -256,7 +257,7 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
                         onClick={() => removeFile(i)}
                       >
                         <X className="size-3" />
-                      </Button>
+                      </Button></WithTooltip>
                     </div>
                   )
                 })}
@@ -266,13 +267,13 @@ export function UploadContentDialog({ open, onOpenChange }: UploadContentDialogP
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <WithTooltip content="Cancelar"><Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
-          </Button>
-          <Button onClick={handleUpload} disabled={uploading || files.length === 0}>
+          </Button></WithTooltip>
+          <WithTooltip content="Fazer upload"><Button onClick={handleUpload} disabled={uploading || files.length === 0}>
             {uploading && <Loader2 className="mr-2 size-4 animate-spin" />}
             {uploading ? "Enviando..." : `Upload (${files.length})`}
-          </Button>
+          </Button></WithTooltip>
         </DialogFooter>
       </DialogContent>
     </Dialog>

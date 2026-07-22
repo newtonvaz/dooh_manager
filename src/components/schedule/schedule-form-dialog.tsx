@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Loader2, Plus, Trash2, Clock, ToggleLeft, ToggleRight, Users } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
@@ -364,7 +365,7 @@ export function ScheduleFormDialog({
                     ? entry.days.map((d) => DAY_LABELS[d].slice(0, 3)).join(", ")
                     : "Selecione os dias abaixo"}
                 </span>
-                <Button
+                <WithTooltip content="Remover"><Button
                   variant="ghost"
                   size="sm"
                   className="h-6 text-xs text-destructive"
@@ -372,7 +373,7 @@ export function ScheduleFormDialog({
                 >
                   <Trash2 className="mr-1 size-3" />
                   Remover
-                </Button>
+                </Button></WithTooltip>
               </div>
 
               <div className="flex flex-wrap gap-1.5">
@@ -413,19 +414,19 @@ export function ScheduleFormDialog({
                       onChange={(e) => updateEntrySlot(entry.id, si, "endTime", e.target.value)}
                       className="h-8 w-[110px] text-xs"
                     />
-                    <Button
+                    <WithTooltip content="Remover horário"><Button
                       variant="ghost"
                       size="icon"
                       className="size-7 shrink-0 text-destructive"
                       onClick={() => removeSlotFromEntry(entry.id, si)}
                     >
                       <Trash2 className="size-3" />
-                    </Button>
+                    </Button></WithTooltip>
                   </div>
                 ))}
               </div>
 
-              <Button
+              <WithTooltip content="Adicionar horário"><Button
                 variant="outline"
                 size="sm"
                 className="h-7 text-xs"
@@ -433,14 +434,14 @@ export function ScheduleFormDialog({
               >
                 <Plus className="mr-1 size-3" />
                 Adicionar horário
-              </Button>
+              </Button></WithTooltip>
             </div>
           ))}
 
-          <Button variant="outline" size="sm" className="h-9 text-xs w-full" onClick={addEntry}>
+          <WithTooltip content="Adicionar entrada"><Button variant="outline" size="sm" className="h-9 text-xs w-full" onClick={addEntry}>
             <Plus className="mr-1 size-3" />
             Adicionar
-          </Button>
+          </Button></WithTooltip>
 
           {type === "player" && groups.length > 0 && (
             <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
@@ -489,7 +490,7 @@ export function ScheduleFormDialog({
           <div className="flex w-full items-center justify-between">
             <div>
               {schedule && (
-                <Button
+                <WithTooltip content="Remover programação"><Button
                   type="button"
                   variant="ghost"
                   size="sm"
@@ -512,17 +513,17 @@ export function ScheduleFormDialog({
                 >
                   <Trash2 className="mr-1 size-3" />
                   Remover programação
-                </Button>
+                </Button></WithTooltip>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <WithTooltip content="Cancelar"><Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
-              </Button>
-              <Button onClick={handleSave} disabled={saving}>
+              </Button></WithTooltip>
+              <WithTooltip content="Salvar alterações"><Button onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
                 {saving ? "Salvando..." : "Salvar"}
-              </Button>
+              </Button></WithTooltip>
             </div>
           </div>
         </DialogFooter>

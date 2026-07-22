@@ -121,10 +121,12 @@ export default function GroupsPage() {
             Gerencie os grupos para organizar seus players
           </p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 size-4" />
-          Novo Grupo
-        </Button>
+        <WithTooltip content="Adicionar novo grupo">
+          <Button onClick={handleNew}>
+            <Plus className="mr-2 size-4" />
+            Novo Grupo
+          </Button>
+        </WithTooltip>
       </div>
 
       {showCheckboxes && (
@@ -132,31 +134,37 @@ export default function GroupsPage() {
           <div className="flex items-center gap-2 text-sm">
             <span className="font-medium">{selectedIds.size}</span>
             <span className="text-muted-foreground">de {groupList.length} selecionado(s)</span>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
-              <X className="mr-1 size-3" />
-              Cancelar
-            </Button>
+            <WithTooltip content="Cancelar seleção">
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
+                <X className="mr-1 size-3" />
+                Cancelar
+              </Button>
+            </WithTooltip>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => openBulk("selected")}
-              disabled={selectedIds.size === 0}
-            >
-              <Trash2 className="mr-1 size-3" />
-              Remover Selecionados
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => openBulk("all")}
-            >
-              <Trash className="mr-1 size-3" />
-              Remover Todos
-            </Button>
+            <WithTooltip content="Remover grupos selecionados">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => openBulk("selected")}
+                disabled={selectedIds.size === 0}
+              >
+                <Trash2 className="mr-1 size-3" />
+                Remover Selecionados
+              </Button>
+            </WithTooltip>
+            <WithTooltip content="Remover todos os grupos">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => openBulk("all")}
+              >
+                <Trash className="mr-1 size-3" />
+                Remover Todos
+              </Button>
+            </WithTooltip>
           </div>
         </div>
       )}
@@ -179,15 +187,17 @@ export default function GroupsPage() {
                 <div className="flex items-center gap-2">
                   <span>Nome</span>
                   {!showCheckboxes && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs font-normal text-muted-foreground"
-                      onClick={() => setSelectionMode(true)}
-                    >
-                      <CheckSquare className="mr-1 size-3" />
-                      Selecionar
-                    </Button>
+                    <WithTooltip content="Selecionar grupos">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs font-normal text-muted-foreground"
+                        onClick={() => setSelectionMode(true)}
+                      >
+                        <CheckSquare className="mr-1 size-3" />
+                        Selecionar
+                      </Button>
+                    </WithTooltip>
                   )}
                 </div>
               </TableHead>
@@ -202,10 +212,12 @@ export default function GroupsPage() {
                   <div className="flex flex-col items-center gap-2">
                     <Users className="size-8 opacity-50" />
                     <p>Nenhum grupo encontrado</p>
-                    <Button variant="outline" size="sm" onClick={handleNew}>
-                      <Plus className="mr-1 size-3" />
-                      Criar primeiro grupo
-                    </Button>
+                    <WithTooltip content="Adicionar novo grupo">
+                      <Button variant="outline" size="sm" onClick={handleNew}>
+                        <Plus className="mr-1 size-3" />
+                        Criar primeiro grupo
+                      </Button>
+                    </WithTooltip>
                   </div>
                 </TableCell>
               </TableRow>

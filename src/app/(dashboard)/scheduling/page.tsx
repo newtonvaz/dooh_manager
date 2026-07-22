@@ -166,9 +166,11 @@ function ViewProgrammingGroupDialog({
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Fechar
-          </Button>
+          <WithTooltip content="Fechar detalhes">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Fechar
+            </Button>
+          </WithTooltip>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -239,10 +241,12 @@ export default function SchedulingPage() {
             Gerencie os horários de funcionamento dos grupos de players
           </p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 size-4" />
-          Novo Grupo de Programação
-        </Button>
+        <WithTooltip content="Adicionar novo grupo de programação">
+          <Button onClick={handleNew}>
+            <Plus className="mr-2 size-4" />
+            Novo Grupo de Programação
+          </Button>
+        </WithTooltip>
       </div>
 
       <div className="rounded-lg border">
@@ -269,10 +273,12 @@ export default function SchedulingPage() {
                         Crie grupos para programar horários de funcionamento
                       </p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={handleNew}>
-                      <Plus className="mr-1 size-3" />
-                      Criar primeiro grupo
-                    </Button>
+                    <WithTooltip content="Adicionar novo grupo de programação">
+                      <Button variant="outline" size="sm" onClick={handleNew}>
+                        <Plus className="mr-1 size-3" />
+                        Criar primeiro grupo
+                      </Button>
+                    </WithTooltip>
                   </div>
                 </TableCell>
               </TableRow>

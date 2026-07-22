@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { WithTooltip } from "@/components/ui/tooltip"
 import {
   Dialog,
   DialogContent,
@@ -416,22 +417,22 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Button type="button" variant="outline" size="sm" onClick={handleInsertContent}>
+            <WithTooltip content="Inserir conteúdos na playlist"><Button type="button" variant="outline" size="sm" onClick={handleInsertContent}>
               <Plus className="mr-1.5 size-4" />
               Inserir Conteúdos
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={handleInsertSubplaylist} disabled={isSubplaylist}>
+            </Button></WithTooltip>
+            <WithTooltip content="Inserir subplaylist"><Button type="button" variant="outline" size="sm" onClick={handleInsertSubplaylist} disabled={isSubplaylist}>
               <Layers className="mr-1.5 size-4" />
               Inserir Subplaylist
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={handleInsertApps}>
+            </Button></WithTooltip>
+            <WithTooltip content="Inserir apps"><Button type="button" variant="outline" size="sm" onClick={handleInsertApps}>
               <AppWindow className="mr-1.5 size-4" />
               Inserir Apps
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={handleInsertUrl}>
+            </Button></WithTooltip>
+            <WithTooltip content="Inserir URL"><Button type="button" variant="outline" size="sm" onClick={handleInsertUrl}>
               <Link2 className="mr-1.5 size-4" />
               Inserir URL
-            </Button>
+            </Button></WithTooltip>
           </div>
 
           <div className="flex-1 min-h-0 space-y-2">
@@ -440,7 +441,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">{items.length} item(ns)</span>
                 <div className="inline-flex items-center rounded-md border bg-muted/50 p-0.5">
-                  <button
+                  <WithTooltip content="Visualizar em lista"><button
                     type="button"
                     role="radio"
                     aria-checked={view === "list"}
@@ -450,8 +451,8 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                     }`}
                   >
                     <LayoutList className="size-3.5" />
-                  </button>
-                  <button
+                  </button></WithTooltip>
+                  <WithTooltip content="Visualizar em grade"><button
                     type="button"
                     role="radio"
                     aria-checked={view === "grid"}
@@ -461,7 +462,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                     }`}
                   >
                     <Grid3X3 className="size-3.5" />
-                  </button>
+                  </button></WithTooltip>
                 </div>
               </div>
             </div>
@@ -648,39 +649,39 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                         />
                                         <span className="text-xs text-muted-foreground">s</span>
                                       </div>
-                                      {isContent && (
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          className={`size-7 shrink-0 ${item.timeSlots && item.timeSlots.length > 0 ? "text-primary" : "text-muted-foreground"}`}
-                                          onClick={() => handleEditSchedule(idx)}
-                                          title="Agendar exibição"
-                                        >
-                                          <Calendar className="size-3" />
-                                        </Button>
-                                      )}
-                                      {isUrl && (
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="icon"
-                                          className="size-7 shrink-0 text-muted-foreground"
-                                          onClick={() => handleEditUrl(idx)}
-                                          title="Editar URL"
-                                        >
-                                          <Pencil className="size-3" />
-                                        </Button>
-                                      )}
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="size-7 text-destructive shrink-0"
-                                        onClick={() => handleRemoveItem(idx)}
-                                      >
-                                        <Trash2 className="size-3" />
-                                      </Button>
+                      {isContent && (
+                        <WithTooltip content="Agendar exibição"><Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className={`size-7 shrink-0 ${item.timeSlots && item.timeSlots.length > 0 ? "text-primary" : "text-muted-foreground"}`}
+                          onClick={() => handleEditSchedule(idx)}
+                          title="Agendar exibição"
+                        >
+                          <Calendar className="size-3" />
+                        </Button></WithTooltip>
+                      )}
+                      {isUrl && (
+                        <WithTooltip content="Editar URL"><Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-7 shrink-0 text-muted-foreground"
+                          onClick={() => handleEditUrl(idx)}
+                          title="Editar URL"
+                        >
+                          <Pencil className="size-3" />
+                        </Button></WithTooltip>
+                      )}
+                      <WithTooltip content="Remover item"><Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 text-destructive shrink-0"
+                        onClick={() => handleRemoveItem(idx)}
+                      >
+                        <Trash2 className="size-3" />
+                      </Button></WithTooltip>
                                     </div>
                                 </div>
                               )}
@@ -716,7 +717,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                 return (
                   <div className="space-y-0.5">
                     {isContent && (
-                      <button
+                      <WithTooltip content="Editar período"><button
                         type="button"
                         className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
                         onClick={() => {
@@ -726,10 +727,10 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                       >
                         <Calendar className="size-4" />
                         Editar Período
-                      </button>
+                      </button></WithTooltip>
                     )}
                     {isUrl && (
-                      <button
+                      <WithTooltip content="Editar URL"><button
                         type="button"
                         className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
                         onClick={() => {
@@ -739,9 +740,9 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                       >
                         <Pencil className="size-4" />
                         Editar URL
-                      </button>
+                      </button></WithTooltip>
                     )}
-                    <button
+                    <WithTooltip content="Excluir item"><button
                       type="button"
                       className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none text-destructive hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => {
@@ -751,7 +752,7 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                     >
                       <Trash2 className="size-4" />
                       Excluir
-                    </button>
+                    </button></WithTooltip>
                   </div>
                 )
               })()}
@@ -789,12 +790,12 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setUrlDialogOpen(false)}>
+                <WithTooltip content="Cancelar"><Button variant="outline" onClick={() => setUrlDialogOpen(false)}>
                   Cancelar
-                </Button>
-                <Button onClick={handleUrlSave}>
+                </Button></WithTooltip>
+                <WithTooltip content={urlEditIndex != null ? "Salvar alterações" : "Adicionar URL"}><Button onClick={handleUrlSave}>
                   {urlEditIndex != null ? "Salvar" : "Adicionar"}
-                </Button>
+                </Button></WithTooltip>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -849,13 +850,13 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
           </div>
 
           <DialogFooter className="shrink-0">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <WithTooltip content="Cancelar"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
+            </Button></WithTooltip>
+            <WithTooltip content="Salvar alterações"><Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
               Salvar
-            </Button>
+            </Button></WithTooltip>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Loader2, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
@@ -75,13 +76,13 @@ export function BulkDeleteGroupsDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <WithTooltip content="Cancelar"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
-          </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+          </Button></WithTooltip>
+          <WithTooltip content="Confirmar exclusão"><Button variant="destructive" onClick={handleDelete} disabled={loading}>
             {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
             Remover {mode === "all" ? "Todos" : `${count} grupo(s)`}
-          </Button>
+          </Button></WithTooltip>
         </DialogFooter>
       </DialogContent>
     </Dialog>

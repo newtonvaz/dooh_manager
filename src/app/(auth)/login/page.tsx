@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
@@ -61,10 +62,12 @@ export default function LoginPage() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoggingIn}>
-              {isLoggingIn && <Loader2 className="mr-2 size-4 animate-spin" />}
-              Entrar
-            </Button>
+            <WithTooltip content="Fazer login">
+              <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                {isLoggingIn && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Entrar
+              </Button>
+            </WithTooltip>
           </form>
           <div className="mt-4 text-center text-sm text-muted-foreground">
             <span className="text-xs block mt-2">

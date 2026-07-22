@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
@@ -50,13 +51,13 @@ export function DeleteContentDialog({ open, onOpenChange, contentId, contentName
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <WithTooltip content="Cancelar"><Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
-          </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+          </Button></WithTooltip>
+          <WithTooltip content="Excluir"><Button variant="destructive" onClick={handleDelete} disabled={loading}>
             {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
             Remover
-          </Button>
+          </Button></WithTooltip>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -15,6 +15,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table"
+import { WithTooltip } from "@/components/ui/tooltip"
 import {
   FileText,
   Loader2,
@@ -229,14 +230,15 @@ export default function ReportsPage() {
                     className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border bg-popover shadow-md"
                   >
                     {suggestions.map((name, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onMouseDown={() => selectSuggestion(name)}
-                        className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
-                      >
-                        <span className="font-medium truncate">{name}</span>
-                      </button>
+                      <WithTooltip key={i} content="Selecionar conteúdo">
+                        <button
+                          type="button"
+                          onMouseDown={() => selectSuggestion(name)}
+                          className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+                        >
+                          <span className="font-medium truncate">{name}</span>
+                        </button>
+                      </WithTooltip>
                     ))}
                   </div>
                 )}
@@ -267,14 +269,16 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <Button onClick={handleSearch} disabled={loading} className="h-8">
-              {loading ? (
-                <Loader2 className="size-4 mr-1.5 animate-spin" />
-              ) : (
-                <Search className="size-4 mr-1.5" />
-              )}
-              Buscar
-            </Button>
+            <WithTooltip content="Buscar conteúdos">
+              <Button onClick={handleSearch} disabled={loading} className="h-8">
+                {loading ? (
+                  <Loader2 className="size-4 mr-1.5 animate-spin" />
+                ) : (
+                  <Search className="size-4 mr-1.5" />
+                )}
+                Buscar
+              </Button>
+            </WithTooltip>
           </div>
           {error && (
             <p className="mt-2 text-xs text-destructive flex items-center gap-1">
@@ -304,32 +308,36 @@ export default function ReportsPage() {
             </div>
             {results && results.length > 0 && (
               <div className="flex gap-2">
-                <Button
-                  variant="outline" size="sm"
-                  onClick={exportPDF}
-                  disabled={exporting !== null}
-                  className="h-8"
-                >
-                  {exporting === "pdf" ? (
-                    <Loader2 className="size-4 mr-1.5 animate-spin" />
-                  ) : (
-                    <FileText className="size-4 mr-1.5" />
-                  )}
-                  PDF
-                </Button>
-                <Button
-                  variant="outline" size="sm"
-                  onClick={exportXLSX}
-                  disabled={exporting !== null}
-                  className="h-8"
-                >
-                  {exporting === "xlsx" ? (
-                    <Loader2 className="size-4 mr-1.5 animate-spin" />
-                  ) : (
-                    <FileSpreadsheet className="size-4 mr-1.5" />
-                  )}
-                  XLSX
-                </Button>
+                <WithTooltip content="Exportar PDF">
+                  <Button
+                    variant="outline" size="sm"
+                    onClick={exportPDF}
+                    disabled={exporting !== null}
+                    className="h-8"
+                  >
+                    {exporting === "pdf" ? (
+                      <Loader2 className="size-4 mr-1.5 animate-spin" />
+                    ) : (
+                      <FileText className="size-4 mr-1.5" />
+                    )}
+                    PDF
+                  </Button>
+                </WithTooltip>
+                <WithTooltip content="Exportar XLSX">
+                  <Button
+                    variant="outline" size="sm"
+                    onClick={exportXLSX}
+                    disabled={exporting !== null}
+                    className="h-8"
+                  >
+                    {exporting === "xlsx" ? (
+                      <Loader2 className="size-4 mr-1.5 animate-spin" />
+                    ) : (
+                      <FileSpreadsheet className="size-4 mr-1.5" />
+                    )}
+                    XLSX
+                  </Button>
+                </WithTooltip>
               </div>
             )}
           </CardHeader>

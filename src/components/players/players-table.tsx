@@ -180,15 +180,17 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
         </Select>
 
         {isGroupFilterActive && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 text-xs"
-            onClick={handleScheduleGroup}
-          >
-            <CalendarClock className="mr-1 size-3" />
-            Horário do Grupo
-          </Button>
+          <WithTooltip content="Agendar horário para grupo">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-xs"
+              onClick={handleScheduleGroup}
+            >
+              <CalendarClock className="mr-1 size-3" />
+              Horário do Grupo
+            </Button>
+          </WithTooltip>
         )}
       </div>
 
@@ -197,31 +199,37 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
           <div className="flex items-center gap-2 text-sm">
             <span className="font-medium">{selectedIds.size}</span>
             <span className="text-muted-foreground">de {filtered.length} selecionado(s)</span>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
-              <X className="mr-1 size-3" />
-              Cancelar
-            </Button>
+            <WithTooltip content="Cancelar seleção">
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
+                <X className="mr-1 size-3" />
+                Cancelar
+              </Button>
+            </WithTooltip>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => openBulk("selected")}
-              disabled={selectedIds.size === 0}
-            >
-              <Trash2 className="mr-1 size-3" />
-              Remover Selecionados
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => openBulk("all")}
-            >
-              <Trash className="mr-1 size-3" />
-              Remover Todos
-            </Button>
+            <WithTooltip content="Remover players selecionados">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => openBulk("selected")}
+                disabled={selectedIds.size === 0}
+              >
+                <Trash2 className="mr-1 size-3" />
+                Remover Selecionados
+              </Button>
+            </WithTooltip>
+            <WithTooltip content="Remover todos os players">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => openBulk("all")}
+              >
+                <Trash className="mr-1 size-3" />
+                Remover Todos
+              </Button>
+            </WithTooltip>
           </div>
         </div>
       )}
@@ -245,15 +253,17 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
                   <div className="flex items-center gap-2">
                     <span>Nome</span>
                     {!showCheckboxes && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-xs font-normal text-muted-foreground"
-                        onClick={() => setSelectionMode(true)}
-                      >
-                        <CheckSquare className="mr-1 size-3" />
-                        Selecionar
-                      </Button>
+                      <WithTooltip content="Selecionar players">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-xs font-normal text-muted-foreground"
+                          onClick={() => setSelectionMode(true)}
+                        >
+                          <CheckSquare className="mr-1 size-3" />
+                          Selecionar
+                        </Button>
+                      </WithTooltip>
                     )}
                   </div>
                 </TableHead>
@@ -385,15 +395,17 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
         <>
           <div className="flex items-center justify-between">
             {!showCheckboxes && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-xs font-normal text-muted-foreground"
-                onClick={() => setSelectionMode(true)}
-              >
-                <CheckSquare className="mr-1 size-3" />
-                Selecionar
-              </Button>
+              <WithTooltip content="Selecionar players">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs font-normal text-muted-foreground"
+                  onClick={() => setSelectionMode(true)}
+                >
+                  <CheckSquare className="mr-1 size-3" />
+                  Selecionar
+                </Button>
+              </WithTooltip>
             )}
           </div>
 
@@ -530,15 +542,17 @@ export function PlayersTable({ players, groups, viewMode }: PlayersTableProps) {
           Mostrando {filtered.length} de {players.length} players
         </p>
         {players.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-destructive hover:text-destructive h-8 text-xs"
-            onClick={() => openBulk("all")}
-          >
-            <Trash className="mr-1 size-3" />
-            Remover Todos
-          </Button>
+          <WithTooltip content="Remover todos os players">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive h-8 text-xs"
+              onClick={() => openBulk("all")}
+            >
+              <Trash className="mr-1 size-3" />
+              Remover Todos
+            </Button>
+          </WithTooltip>
         )}
       </div>
 

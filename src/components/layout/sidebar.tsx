@@ -60,27 +60,29 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     const hasChildren = !!subItems?.length
     const isExpanded = expanded.has(href)
     const link = (
-      <Link
-        href={href}
-        className={cn(
-          "group/nav-link relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
-          "hover:translate-x-0.5",
-          active
-            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
-            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-        )}
-      >
-        {active && (
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-sidebar-primary" />
-        )}
-        <Icon
+      <WithTooltip content={title}>
+        <Link
+          href={href}
           className={cn(
-            "size-5 shrink-0 transition-transform duration-200",
-            "group-hover/nav-link:scale-110"
+            "group/nav-link relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
+            "hover:translate-x-0.5",
+            active
+              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
+              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
           )}
-        />
-        {!isCollapsed && <span className="flex-1 truncate">{title}</span>}
-      </Link>
+        >
+          {active && (
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-sidebar-primary" />
+          )}
+          <Icon
+            className={cn(
+              "size-5 shrink-0 transition-transform duration-200",
+              "group-hover/nav-link:scale-110"
+            )}
+          />
+          {!isCollapsed && <span className="flex-1 truncate">{title}</span>}
+        </Link>
+      </WithTooltip>
     )
 
     if (isCollapsed) {
@@ -111,23 +113,25 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="relative">
           {link}
           {hasChildren && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                toggleExpanded(href)
-              }}
-              className={cn(
-                "absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center size-7 rounded-md text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200 cursor-pointer"
-              )}
-            >
-              <ChevronDown
+            <WithTooltip content={isExpanded ? "Recolher" : "Expandir"}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  toggleExpanded(href)
+                }}
                 className={cn(
-                  "size-4 transition-transform duration-200",
-                  isExpanded && "rotate-180"
+                  "absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center size-7 rounded-md text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200 cursor-pointer"
                 )}
-              />
-            </button>
+              >
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform duration-200",
+                    isExpanded && "rotate-180"
+                  )}
+                />
+              </button>
+            </WithTooltip>
           )}
         </div>
 
@@ -136,23 +140,25 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {subItems!.map((child) => {
               const childActive = isActive(child.href)
               return (
-                <Link
-                  key={child.href}
-                  href={child.href}
-                  className={cn(
-                    "sidebar-child-link group/child-link relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
-                    "hover:translate-x-0.5",
-                    childActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                  )}
-                >
-                  {childActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-full bg-sidebar-primary" />
-                  )}
-                  <child.icon className="size-4 shrink-0 transition-transform duration-200 group-hover/child-link:scale-110" />
-                  <span className="truncate">{child.title}</span>
-                </Link>
+                <WithTooltip content={child.title}>
+                  <Link
+                    key={child.href}
+                    href={child.href}
+                    className={cn(
+                      "sidebar-child-link group/child-link relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200",
+                      "hover:translate-x-0.5",
+                      childActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    )}
+                  >
+                    {childActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-full bg-sidebar-primary" />
+                    )}
+                    <child.icon className="size-4 shrink-0 transition-transform duration-200 group-hover/child-link:scale-110" />
+                    <span className="truncate">{child.title}</span>
+                  </Link>
+                </WithTooltip>
               )
             })}
           </div>
@@ -172,7 +178,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div
         className={cn(
           "flex h-14 items-center gap-2.5 border-b border-sidebar-border transition-all duration-300",
-          collapsed ? "justify-center px-0" : "px-4"
+          "justify-center px-4"
         )}
       >
         {collapsed ? (

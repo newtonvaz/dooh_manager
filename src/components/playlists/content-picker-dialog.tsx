@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Search, FileImage, Video, Globe, Plus, CheckCheck } from "lucide-react"
 import type { MediaContent } from "@/types/content"
 
@@ -163,9 +164,9 @@ export function ContentPickerDialog({
               {selectedIds.size} conteúdo{selectedIds.size !== 1 ? "s" : ""} selecionado
               {selectedIds.size !== 1 ? "s" : ""}
             </span>
-            <Button type="button" size="sm" className="ml-auto" onClick={handleConfirm}>
+            <WithTooltip content="Adicionar à playlist"><Button type="button" size="sm" className="ml-auto" onClick={handleConfirm}>
               Adicionar {selectedIds.size > 1 ? `(${selectedIds.size})` : ""}
-            </Button>
+            </Button></WithTooltip>
           </div>
         )}
 

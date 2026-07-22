@@ -192,10 +192,12 @@ export default function ContentPage() {
               </button>
             </WithTooltip>
           </div>
-          <Button onClick={() => setUploadOpen(true)}>
-            <Plus className="mr-2 size-4" />
-            Upload
-          </Button>
+          <WithTooltip content="Fazer upload de conteúdo">
+            <Button onClick={() => setUploadOpen(true)}>
+              <Plus className="mr-2 size-4" />
+              Upload
+            </Button>
+          </WithTooltip>
         </div>
       </div>
 
@@ -222,15 +224,17 @@ export default function ContentPage() {
           </SelectContent>
         </Select>
         {!showCheckboxes && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 text-xs"
-            onClick={() => setSelectionMode(true)}
-          >
-            <CheckSquare className="mr-1 size-3" />
-            Selecionar
-          </Button>
+          <WithTooltip content="Selecionar conteúdos">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-xs"
+              onClick={() => setSelectionMode(true)}
+            >
+              <CheckSquare className="mr-1 size-3" />
+              Selecionar
+            </Button>
+          </WithTooltip>
         )}
       </div>
 
@@ -239,31 +243,37 @@ export default function ContentPage() {
           <div className="flex items-center gap-2 text-sm">
             <span className="font-medium">{selectedIds.size}</span>
             <span className="text-muted-foreground">de {filtered.length} selecionado(s)</span>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
-              <X className="mr-1 size-3" />
-              Cancelar
-            </Button>
+            <WithTooltip content="Cancelar seleção">
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
+                <X className="mr-1 size-3" />
+                Cancelar
+              </Button>
+            </WithTooltip>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => openBulk("selected")}
-              disabled={selectedIds.size === 0}
-            >
-              <Trash2 className="mr-1 size-3" />
-              Remover Selecionados
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => openBulk("all")}
-            >
-              <Trash className="mr-1 size-3" />
-              Remover Todos
-            </Button>
+            <WithTooltip content="Remover conteúdos selecionados">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => openBulk("selected")}
+                disabled={selectedIds.size === 0}
+              >
+                <Trash2 className="mr-1 size-3" />
+                Remover Selecionados
+              </Button>
+            </WithTooltip>
+            <WithTooltip content="Remover todos os conteúdos">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => openBulk("all")}
+              >
+                <Trash className="mr-1 size-3" />
+                Remover Todos
+              </Button>
+            </WithTooltip>
           </div>
         </div>
       )}
@@ -372,15 +382,17 @@ export default function ContentPage() {
                   <div className="flex items-center gap-2">
                     <span>Nome</span>
                     {!showCheckboxes && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-xs font-normal text-muted-foreground"
-                        onClick={() => setSelectionMode(true)}
-                      >
-                        <CheckSquare className="mr-1 size-3" />
-                        Selecionar
-                      </Button>
+                      <WithTooltip content="Selecionar conteúdos">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-xs font-normal text-muted-foreground"
+                          onClick={() => setSelectionMode(true)}
+                        >
+                          <CheckSquare className="mr-1 size-3" />
+                          Selecionar
+                        </Button>
+                      </WithTooltip>
                     )}
                   </div>
                 </TableHead>

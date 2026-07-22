@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Plus, Trash2, Calendar, FileImage, Video, Globe } from "lucide-react"
 import type { MediaContent, ContentTimeSlot } from "@/types/content"
 
@@ -140,7 +141,7 @@ export function ContentScheduleDialog({
                 <Calendar className="size-3.5" />
                 Períodos de Exibição
               </Label>
-              <Button
+              <WithTooltip content="Adicionar período"><Button
                 type="button"
                 variant="outline"
                 size="sm"
@@ -148,7 +149,7 @@ export function ContentScheduleDialog({
               >
                 <Plus className="size-3 mr-1" />
                 Adicionar Período
-              </Button>
+              </Button></WithTooltip>
             </div>
 
             {timeSlots.map((slot, idx) => (
@@ -157,7 +158,7 @@ export function ContentScheduleDialog({
                 className="rounded-lg border p-3 space-y-3 relative"
               >
                 {timeSlots.length > 1 && (
-                  <Button
+                  <WithTooltip content="Remover período"><Button
                     type="button"
                     variant="ghost"
                     size="icon"
@@ -165,7 +166,7 @@ export function ContentScheduleDialog({
                     onClick={() => handleRemoveSlot(idx)}
                   >
                     <Trash2 className="size-3" />
-                  </Button>
+                  </Button></WithTooltip>
                 )}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
@@ -197,12 +198,12 @@ export function ContentScheduleDialog({
         </div>
 
         <DialogFooter className="gap-2">
-          <Button type="button" variant="outline" onClick={handleSkip}>
+          <WithTooltip content="Cancelar"><Button type="button" variant="outline" onClick={handleSkip}>
             {isEditing ? "Cancelar" : "Sem agendamento"}
-          </Button>
-          <Button type="button" onClick={handleConfirm}>
+          </Button></WithTooltip>
+          <WithTooltip content="Confirmar"><Button type="button" onClick={handleConfirm}>
             {isEditing ? "Salvar Agendamento" : "Adicionar com Agendamento"}
-          </Button>
+          </Button></WithTooltip>
         </DialogFooter>
       </DialogContent>
     </Dialog>

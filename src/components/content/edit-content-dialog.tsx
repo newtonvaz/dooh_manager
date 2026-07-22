@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient, useQuery } from "@tanstack/react-query"
@@ -107,13 +108,13 @@ export function EditContentDialog({ open, onOpenChange, content }: EditContentDi
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <WithTooltip content="Cancelar"><Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          </Button></WithTooltip>
+          <WithTooltip content="Salvar alterações"><Button onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
             {saving ? "Salvando..." : "Salvar"}
-          </Button>
+          </Button></WithTooltip>
         </DialogFooter>
       </DialogContent>
     </Dialog>

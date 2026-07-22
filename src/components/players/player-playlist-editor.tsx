@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -229,10 +230,12 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleAssign} disabled={saving}>
-              {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
-              Vincular
-            </Button>
+            <WithTooltip content="Vincular playlist ao player">
+              <Button onClick={handleAssign} disabled={saving}>
+                {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Vincular
+              </Button>
+            </WithTooltip>
           </div>
 
           {currentPlaylist && (
@@ -250,14 +253,16 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
                   {formatDuration(currentPlaylist.totalDuration)}
                 </span>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={() => setEditPlaylistOpen(true)}
-              >
-                Editar Playlist
-              </Button>
+              <WithTooltip content="Editar playlist">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setEditPlaylistOpen(true)}
+                >
+                  Editar Playlist
+                </Button>
+              </WithTooltip>
             </div>
           )}
         </CardContent>
@@ -276,22 +281,26 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium">Itens da Playlist</h4>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={() => {
-                  setUrlValue("")
-                  setUrlDuration(30)
-                  setAddUrlOpen(true)
-                }}>
-                  <Link2 className="mr-1 size-3" />
-                  Inserir URL
-                </Button>
-                <Button size="sm" onClick={() => {
-                  setNewItemDuration(10)
-                  setSelectedContentId(null)
-                  setAddContentOpen(true)
-                }}>
-                  <Plus className="mr-1 size-3" />
-                  Adicionar
-                </Button>
+                <WithTooltip content="Adicionar conteúdo por URL">
+                  <Button size="sm" variant="outline" onClick={() => {
+                    setUrlValue("")
+                    setUrlDuration(30)
+                    setAddUrlOpen(true)
+                  }}>
+                    <Link2 className="mr-1 size-3" />
+                    Inserir URL
+                  </Button>
+                </WithTooltip>
+                <WithTooltip content="Adicionar conteúdo">
+                  <Button size="sm" onClick={() => {
+                    setNewItemDuration(10)
+                    setSelectedContentId(null)
+                    setAddContentOpen(true)
+                  }}>
+                    <Plus className="mr-1 size-3" />
+                    Adicionar
+                  </Button>
+                </WithTooltip>
               </div>
             </div>
 
@@ -336,14 +345,16 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
                             <Clock className="size-3" />
                             {formatDuration(item.duration)}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-destructive"
-                            onClick={() => handleRemoveFromPlaylist(item.contentId!)}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
+                          <WithTooltip content="Remover conteúdo">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-destructive"
+                              onClick={() => handleRemoveFromPlaylist(item.contentId!)}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </WithTooltip>
                         </div>
                       </div>
                     )
@@ -369,14 +380,16 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
                             <Clock className="size-3" />
                             {formatDuration(item.duration)}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-destructive"
-                            onClick={() => handleRemoveFromPlaylistByUrl(item.url!)}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
+                          <WithTooltip content="Remover conteúdo">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-destructive"
+                              onClick={() => handleRemoveFromPlaylistByUrl(item.url!)}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </WithTooltip>
                         </div>
                       </div>
                     )
@@ -395,7 +408,9 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setEditPlaylistOpen(false)}>Fechar</Button>
+            <WithTooltip content="Fechar">
+              <Button onClick={() => setEditPlaylistOpen(false)}>Fechar</Button>
+            </WithTooltip>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -477,20 +492,26 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setPendingTimeSlots(undefined)
-              setAddContentOpen(false)
-            }}>
-              Cancelar
-            </Button>
+            <WithTooltip content="Cancelar">
+              <Button variant="outline" onClick={() => {
+                setPendingTimeSlots(undefined)
+                setAddContentOpen(false)
+              }}>
+                Cancelar
+              </Button>
+            </WithTooltip>
             <div className="flex gap-2">
-              <Button variant="secondary" onClick={handleScheduleClick} disabled={!selectedContentId}>
-                <Calendar className="mr-1 size-4" />
-                Agendar
-              </Button>
-              <Button onClick={handleAddContent} disabled={!selectedContentId}>
-                Adicionar
-              </Button>
+              <WithTooltip content="Agendar">
+                <Button variant="secondary" onClick={handleScheduleClick} disabled={!selectedContentId}>
+                  <Calendar className="mr-1 size-4" />
+                  Agendar
+                </Button>
+              </WithTooltip>
+              <WithTooltip content="Adicionar">
+                <Button onClick={handleAddContent} disabled={!selectedContentId}>
+                  Adicionar
+                </Button>
+              </WithTooltip>
             </div>
           </DialogFooter>
         </DialogContent>
@@ -526,12 +547,16 @@ export function PlayerPlaylistEditor({ playerId, currentPlaylistId }: PlayerPlay
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddUrlOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleAddUrl} disabled={!urlValue.trim()}>
-              Adicionar
-            </Button>
+            <WithTooltip content="Cancelar">
+              <Button variant="outline" onClick={() => setAddUrlOpen(false)}>
+                Cancelar
+              </Button>
+            </WithTooltip>
+            <WithTooltip content="Adicionar">
+              <Button onClick={handleAddUrl} disabled={!urlValue.trim()}>
+                Adicionar
+              </Button>
+            </WithTooltip>
           </DialogFooter>
         </DialogContent>
       </Dialog>

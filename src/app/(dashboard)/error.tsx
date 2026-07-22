@@ -2,6 +2,7 @@
 
 import { AlertTriangle, RefreshCw } from "lucide-react"
 import { useEffect } from "react"
+import { WithTooltip } from "@/components/ui/tooltip"
 
 export default function DashboardError({
   error,
@@ -22,13 +23,15 @@ export default function DashboardError({
         <p className="max-w-md text-center text-xs text-muted-foreground">
           {error.message || "Ocorreu um erro inesperado. Verifique se as variáveis de ambiente do Supabase estão configuradas no Vercel."}
         </p>
-        <button
-          onClick={reset}
-          className="mt-2 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-medium transition-colors hover:bg-accent"
-        >
-          <RefreshCw className="size-3" />
-          Tentar novamente
-        </button>
+        <WithTooltip content="Recarregar página">
+          <button
+            onClick={reset}
+            className="mt-2 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-medium transition-colors hover:bg-accent"
+          >
+            <RefreshCw className="size-3" />
+            Tentar novamente
+          </button>
+        </WithTooltip>
       </div>
     </div>
   )

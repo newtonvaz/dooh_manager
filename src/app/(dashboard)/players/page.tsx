@@ -72,10 +72,12 @@ export default function PlayersPage() {
               </button>
             </WithTooltip>
           </div>
-          <Button onClick={() => setFormOpen(true)}>
-            <Plus className="mr-2 size-4" />
-            Novo Player
-          </Button>
+          <WithTooltip content="Adicionar novo player">
+            <Button onClick={() => setFormOpen(true)}>
+              <Plus className="mr-2 size-4" />
+              Novo Player
+            </Button>
+          </WithTooltip>
         </div>
       </div>
 

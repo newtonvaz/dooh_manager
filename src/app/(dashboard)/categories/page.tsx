@@ -120,10 +120,12 @@ export default function CategoriesPage() {
             Gerencie as categorias para organizar seus conteúdos
           </p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 size-4" />
-          Nova Categoria
-        </Button>
+        <WithTooltip content="Adicionar nova categoria">
+          <Button onClick={handleNew}>
+            <Plus className="mr-2 size-4" />
+            Nova Categoria
+          </Button>
+        </WithTooltip>
       </div>
 
       {showCheckboxes && (
@@ -131,31 +133,37 @@ export default function CategoriesPage() {
           <div className="flex items-center gap-2 text-sm">
             <span className="font-medium">{selectedIds.size}</span>
             <span className="text-muted-foreground">de {categoryList.length} selecionado(s)</span>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
-              <X className="mr-1 size-3" />
-              Cancelar
-            </Button>
+            <WithTooltip content="Cancelar seleção">
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
+                <X className="mr-1 size-3" />
+                Cancelar
+              </Button>
+            </WithTooltip>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => openBulk("selected")}
-              disabled={selectedIds.size === 0}
-            >
-              <Trash2 className="mr-1 size-3" />
-              Remover Selecionadas
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => openBulk("all")}
-            >
-              <Trash className="mr-1 size-3" />
-              Remover Todas
-            </Button>
+            <WithTooltip content="Remover categorias selecionadas">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => openBulk("selected")}
+                disabled={selectedIds.size === 0}
+              >
+                <Trash2 className="mr-1 size-3" />
+                Remover Selecionadas
+              </Button>
+            </WithTooltip>
+            <WithTooltip content="Remover todas as categorias">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => openBulk("all")}
+              >
+                <Trash className="mr-1 size-3" />
+                Remover Todas
+              </Button>
+            </WithTooltip>
           </div>
         </div>
       )}
@@ -178,15 +186,17 @@ export default function CategoriesPage() {
                 <div className="flex items-center gap-2">
                   <span>Nome</span>
                   {!showCheckboxes && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-xs font-normal text-muted-foreground"
-                      onClick={() => setSelectionMode(true)}
-                    >
-                      <CheckSquare className="mr-1 size-3" />
-                      Selecionar
-                    </Button>
+                    <WithTooltip content="Selecionar categorias">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs font-normal text-muted-foreground"
+                        onClick={() => setSelectionMode(true)}
+                      >
+                        <CheckSquare className="mr-1 size-3" />
+                        Selecionar
+                      </Button>
+                    </WithTooltip>
                   )}
                 </div>
               </TableHead>
@@ -201,10 +211,12 @@ export default function CategoriesPage() {
                   <div className="flex flex-col items-center gap-2">
                     <Tags className="size-8 opacity-50" />
                     <p>Nenhuma categoria encontrada</p>
-                    <Button variant="outline" size="sm" onClick={handleNew}>
-                      <Plus className="mr-1 size-3" />
-                      Criar primeira categoria
-                    </Button>
+                    <WithTooltip content="Adicionar nova categoria">
+                      <Button variant="outline" size="sm" onClick={handleNew}>
+                        <Plus className="mr-1 size-3" />
+                        Criar primeira categoria
+                      </Button>
+                    </WithTooltip>
                   </div>
                 </TableCell>
               </TableRow>

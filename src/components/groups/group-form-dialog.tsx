@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api-client"
@@ -74,13 +75,13 @@ export function GroupFormDialog({ open, onOpenChange, group }: GroupFormDialogPr
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <WithTooltip content="Cancelar"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
+            </Button></WithTooltip>
+            <WithTooltip content="Salvar alterações"><Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
               {group ? "Salvar" : "Criar"}
-            </Button>
+            </Button></WithTooltip>
           </DialogFooter>
         </form>
       </DialogContent>

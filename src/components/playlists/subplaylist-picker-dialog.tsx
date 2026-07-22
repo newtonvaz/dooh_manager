@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Search, Layers, Plus, CopyPlus } from "lucide-react"
 import type { Playlist } from "@/types/content"
 
@@ -126,9 +127,9 @@ export function SubplaylistPickerDialog({
                 className="w-20 h-8 text-sm"
               />
             </div>
-            <Button type="button" size="sm" className="ml-auto" onClick={() => handleConfirm()}>
+            <WithTooltip content="Adicionar à playlist"><Button type="button" size="sm" className="ml-auto" onClick={() => handleConfirm()}>
               Adicionar {quantity > 1 ? `(${quantity}x)` : ""}
-            </Button>
+            </Button></WithTooltip>
           </div>
         )}
 

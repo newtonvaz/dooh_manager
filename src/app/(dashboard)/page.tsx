@@ -5,6 +5,7 @@ import { Monitor, Wifi, HardDrive, Play, Activity, AlertTriangle, RefreshCw } fr
 import { StatsCard } from "@/components/dashboard/stats-card"
 import dynamic from "next/dynamic"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { api } from "@/lib/api-client"
 
 const PlayersStatusChart = dynamic(
@@ -69,13 +70,15 @@ export default function DashboardPage() {
           <p className="text-xs text-muted-foreground">
             Verifique se as variáveis de ambiente do Supabase estão configuradas no Vercel.
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-2 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-medium transition-colors hover:bg-accent"
-          >
-            <RefreshCw className="size-3" />
-            Tentar novamente
-          </button>
+          <WithTooltip content="Recarregar página">
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-2 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-medium transition-colors hover:bg-accent"
+            >
+              <RefreshCw className="size-3" />
+              Tentar novamente
+            </button>
+          </WithTooltip>
         </div>
       </div>
     )

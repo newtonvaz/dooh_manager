@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { WithTooltip } from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
 import { ScheduleFormDialog } from "@/components/schedule/schedule-form-dialog"
 import { api } from "@/lib/api-client"
@@ -74,35 +75,39 @@ export function PlayerScheduleSection({ player }: PlayerScheduleSectionProps) {
             Programação de Funcionamento
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs"
-              onClick={schedule ? handleEdit : handleCreate}
-            >
-              {schedule ? (
-                <>
-                  <Pencil className="mr-1 size-3" />
-                  Editar
-                </>
-              ) : (
-                <>
-                  <Plus className="mr-1 size-3" />
-                  Adicionar
-                </>
-              )}
-            </Button>
-            {schedule && (
+            <WithTooltip content="Gerenciar programação">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="h-8 text-xs text-destructive hover:text-destructive"
-                onClick={handleRemove}
-                disabled={removing}
+                className="h-8 text-xs"
+                onClick={schedule ? handleEdit : handleCreate}
               >
-                <Trash2 className="mr-1 size-3" />
-                Remover
+                {schedule ? (
+                  <>
+                    <Pencil className="mr-1 size-3" />
+                    Editar
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-1 size-3" />
+                    Adicionar
+                  </>
+                )}
               </Button>
+            </WithTooltip>
+            {schedule && (
+              <WithTooltip content="Remover programação">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs text-destructive hover:text-destructive"
+                  onClick={handleRemove}
+                  disabled={removing}
+                >
+                  <Trash2 className="mr-1 size-3" />
+                  Remover
+                </Button>
+              </WithTooltip>
             )}
           </div>
         </CardHeader>

@@ -205,10 +205,12 @@ export default function PlaylistsPage() {
               </button>
             </WithTooltip>
           </div>
-          <Button onClick={handleNew}>
-            <Plus className="mr-2 size-4" />
-            Nova Playlist
-          </Button>
+          <WithTooltip content="Adicionar nova playlist">
+            <Button onClick={handleNew}>
+              <Plus className="mr-2 size-4" />
+              Nova Playlist
+            </Button>
+          </WithTooltip>
         </div>
       </div>
 
@@ -217,31 +219,37 @@ export default function PlaylistsPage() {
           <div className="flex items-center gap-2 text-sm">
             <span className="font-medium">{selectedIds.size}</span>
             <span className="text-muted-foreground">de {playlistList.length} selecionado(s)</span>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
-              <X className="mr-1 size-3" />
-              Cancelar
-            </Button>
+            <WithTooltip content="Cancelar seleção">
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
+                <X className="mr-1 size-3" />
+                Cancelar
+              </Button>
+            </WithTooltip>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => openBulk("selected")}
-              disabled={selectedIds.size === 0}
-            >
-              <Trash2 className="mr-1 size-3" />
-              Remover Selecionadas
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => openBulk("all")}
-            >
-              <Trash className="mr-1 size-3" />
-              Remover Todas
-            </Button>
+            <WithTooltip content="Remover playlists selecionadas">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => openBulk("selected")}
+                disabled={selectedIds.size === 0}
+              >
+                <Trash2 className="mr-1 size-3" />
+                Remover Selecionadas
+              </Button>
+            </WithTooltip>
+            <WithTooltip content="Remover todas as playlists">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => openBulk("all")}
+              >
+                <Trash className="mr-1 size-3" />
+                Remover Todas
+              </Button>
+            </WithTooltip>
           </div>
         </div>
       )}
@@ -380,10 +388,12 @@ export default function PlaylistsPage() {
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <ListVideo className="size-12 mb-4 opacity-50" />
           <p>Nenhuma playlist encontrada</p>
-          <Button variant="outline" className="mt-4" onClick={handleNew}>
-            <Plus className="mr-2 size-4" />
-            Criar primeira playlist
-          </Button>
+          <WithTooltip content="Adicionar nova playlist">
+            <Button variant="outline" className="mt-4" onClick={handleNew}>
+              <Plus className="mr-2 size-4" />
+              Criar primeira playlist
+            </Button>
+          </WithTooltip>
         </div>
       )}
 
