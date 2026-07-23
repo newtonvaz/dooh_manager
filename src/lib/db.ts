@@ -1031,7 +1031,7 @@ function createDb(client?: SupabaseClient) {
       }
 
       return Array.from(grouped.values())
-        .sort((a, b) => b.date.localeCompare(a.date) || b.contentName.localeCompare(a.contentName))
+        .sort((a, b) => a.date.localeCompare(b.date) || a.contentName.localeCompare(b.contentName))
     },
 
     async getContentSuggestions(
