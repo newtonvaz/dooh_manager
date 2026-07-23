@@ -638,15 +638,23 @@ export function PlaylistFormDialog({ open, onOpenChange, playlist }: PlaylistFor
                                     <div className="flex items-center gap-2 shrink-0">
                                       <div className="flex items-center gap-1">
                                         <Clock className="size-3 text-muted-foreground" />
-                                        <Input
-                                          type="number"
-                                          min={1}
-                                          value={item.duration}
-                                          onChange={(e) =>
-                                            handleDurationChange(idx, Number(e.target.value))
-                                          }
-                                          className="w-16 h-7 text-xs"
-                                        />
+                                        {isContent && content?.type === "video" ? (
+                                          <WithTooltip content="Duração fixa do vídeo">
+                                            <span className="text-xs font-medium tabular-nums w-16 text-center">
+                                              {content.duration ?? item.duration}s
+                                            </span>
+                                          </WithTooltip>
+                                        ) : (
+                                          <Input
+                                            type="number"
+                                            min={1}
+                                            value={item.duration}
+                                            onChange={(e) =>
+                                              handleDurationChange(idx, Number(e.target.value))
+                                            }
+                                            className="w-16 h-7 text-xs"
+                                          />
+                                        )}
                                         <span className="text-xs text-muted-foreground">s</span>
                                       </div>
                       {isContent && (
