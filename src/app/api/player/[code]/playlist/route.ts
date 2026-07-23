@@ -34,30 +34,24 @@ export async function GET(
       return NextResponse.json(response)
     }
 
-    const resolvedAreas = await Promise.all(
-      layout.zones.map(async (zone: any) => {
-        const config = (zone.config || {}) as Record<string, any>
-        let items: any[] = []
+    const resolved = await dbAdmin.resolvePlayerPlaylist(code)
+    const resolvedContentItems = resolved?.items || []
 
-        if (zone.type === "content") {
-          const resolved = await dbAdmin.resolvePlayerPlaylist(code)
-          items = resolved?.items || []
-        }
-
-        return {
-          id: zone.id,
-          name: zone.name,
-          type: zone.type,
-          x: zone.x,
-          y: zone.y,
-          width: zone.width,
-          height: zone.height,
-          zIndex: zone.zIndex,
-          config,
-          items,
-        }
-      })
-    )
+    const resolvedAreas = layout.zones.map((zone: any) => {
+      const config = (zone.config || {}) as Record<string, any>
+      return {
+        id: zone.id,
+        name: zone.name,
+        type: zone.type,
+        x: zone.x,
+        y: zone.y,
+        width: zone.width,
+        height: zone.height,
+        zIndex: zone.zIndex,
+        config,
+        items: zone.type === "content" ? resolvedContentItems : [],
+      }
+    })
 
     response.areas = resolvedAreas
     return NextResponse.json(response)

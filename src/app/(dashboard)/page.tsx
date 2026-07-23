@@ -23,7 +23,7 @@ const PointsByLocationChart = dynamic(
   { ssr: false }
 )
 
-const POLL = 5000
+const POLL = 30000
 
 export default function DashboardPage() {
   const { data: stats, isLoading: statsLoading } = useQuery({

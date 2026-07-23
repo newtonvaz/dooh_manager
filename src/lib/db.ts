@@ -265,9 +265,11 @@ function createDb(client?: SupabaseClient) {
     },
 
     async reorderPlaylists(orderedIds: string[]): Promise<boolean> {
-      for (let i = 0; i < orderedIds.length; i++) {
-        await c.from("playlists").update({ order: i }).eq("id", orderedIds[i])
-      }
+      await Promise.all(
+        orderedIds.map((id, i) =>
+          c.from("playlists").update({ order: i }).eq("id", id)
+        )
+      )
       return true
     },
 
@@ -481,12 +483,21 @@ function createDb(client?: SupabaseClient) {
       if (error) throw error
       const groups = (data || []).map(mapProgrammingGroup)
 
-      for (const group of groups) {
-        const { count } = await c
+      if (groups.length > 0) {
+        const groupIds = groups.map((g) => g.id)
+        const { data: counts } = await c
           .from("programming_group_players")
-          .select("*", { count: "exact", head: true })
-          .eq("group_id", group.id)
-        group.playerCount = count ?? 0
+          .select("group_id")
+          .in("group_id", groupIds)
+        const countMap = new Map<string, number>()
+        if (counts) {
+          for (const rel of counts) {
+            countMap.set(rel.group_id, (countMap.get(rel.group_id) || 0) + 1)
+          }
+        }
+        for (const group of groups) {
+          group.playerCount = countMap.get(group.id) || 0
+        }
       }
       return groups
     },
@@ -611,9 +622,11 @@ function createDb(client?: SupabaseClient) {
           if (enabled !== undefined) scheduleUpdate.enabled = enabled
           if (name !== undefined) scheduleUpdate.name = name
           scheduleUpdate.updated_at = new Date().toISOString()
-          for (const s of schedules) {
-            await c.from("schedules").update(scheduleUpdate).eq("id", s.id)
-          }
+          await Promise.all(
+            schedules.map((s) =>
+              c.from("schedules").update(scheduleUpdate).eq("id", s.id)
+            )
+          )
         }
       }
 
@@ -789,38 +802,66 @@ function createDb(client?: SupabaseClient) {
         })
       }
 
+      const contentIds = new Set<string>()
+      const subPlaylistIds = new Set<string>()
+      for (const item of playlist.items) {
+        if (item.type === "content" && item.contentId) contentIds.add(item.contentId)
+        else if (item.type === "playlist" && item.playlistId) subPlaylistIds.add(item.playlistId)
+      }
+
+      const subPlaylists: any[] = []
+      if (subPlaylistIds.size > 0) {
+        const { data: subData } = await c
+          .from("playlists")
+          .select("*")
+          .in("id", Array.from(subPlaylistIds))
+        for (const sp of subData || []) {
+          const parsed = mapPlaylist(sp)
+          subPlaylists.push(parsed)
+          for (const si of parsed.items) {
+            if (si.type === "content" && si.contentId) contentIds.add(si.contentId)
+          }
+        }
+      }
+
+      const contentMap = new Map<string, any>()
+      if (contentIds.size > 0) {
+        const { data: allContent } = await c
+          .from("content")
+          .select("*")
+          .in("id", Array.from(contentIds))
+        for (const ct of allContent || []) {
+          contentMap.set(ct.id, ct)
+        }
+      }
+
+      function resolveContent(item: any, duration: number): any {
+        const content = contentMap.get(item.contentId)
+        if (!content) return null
+        return {
+          type: content.type === "video" ? "video" : content.type === "web" ? "html5" : "image",
+          url: content.url,
+          name: content.name,
+          duration: duration || content.duration || 10,
+          contentId: content.id,
+          timeSlots: item.timeSlots ?? null,
+        }
+      }
+
       const items: any[] = []
       for (const item of playlist.items) {
         if (item.type === "content" && item.contentId) {
           if (!isTimeSlotActive(item.timeSlots)) continue
-          const content = await this.getContentById(item.contentId)
-          if (content) {
-            items.push({
-              type: content.type === "video" ? "video" : content.type === "web" ? "html5" : "image",
-              url: content.url,
-              name: content.name,
-              duration: item.duration || content.duration || 10,
-              contentId: content.id,
-              timeSlots: item.timeSlots ?? null,
-            })
-          }
+          const resolved = resolveContent(item, item.duration)
+          if (resolved) items.push(resolved)
         } else if (item.type === "playlist" && item.playlistId) {
-          const subPlaylist = await this.getPlaylist(item.playlistId)
+          const subPlaylist = subPlaylists.find((sp) => sp.id === item.playlistId)
           if (subPlaylist) {
             for (const subItem of subPlaylist.items) {
               if (subItem.type === "content" && subItem.contentId) {
                 if (!isTimeSlotActive(subItem.timeSlots)) continue
-                const content = await this.getContentById(subItem.contentId)
-                if (content) {
-                  items.push({
-                    type: content.type === "video" ? "video" : content.type === "web" ? "html5" : "image",
-                    url: content.url,
-                    name: content.name,
-                    duration: subItem.duration || content.duration || 10,
-                    contentId: content.id,
-                    timeSlots: subItem.timeSlots ?? null,
-                  })
-                }
+                const resolved = resolveContent(subItem, subItem.duration)
+                if (resolved) items.push(resolved)
               } else if (subItem.type === "url" && subItem.url) {
                 items.push({
                   type: "html5",
@@ -1084,21 +1125,29 @@ function createDb(client?: SupabaseClient) {
       playerIds: string[]
     ): Promise<void> {
       const now = new Date().toISOString()
-      for (const playerId of playerIds) {
-        const { data: player } = await c.from("players").select("name").eq("id", playerId).single()
-        const scheduleId = `sch${Date.now()}${Math.random().toString(36).slice(2, 6)}`
-        await c.from("schedules").insert({
-          id: scheduleId,
-          name,
-          type: "player",
-          target_id: playerId,
-          target_name: player?.name || "",
-          time_slots: JSON.stringify(timeSlots),
-          enabled,
-          replicated_from_group: groupId,
-          created_at: now,
-          updated_at: now,
-        })
+
+      const { data: players } = await c
+        .from("players")
+        .select("id, name")
+        .in("id", playerIds)
+      const playerMap = new Map((players || []).map((p: any) => [p.id, p.name || ""]))
+
+      const schedules = playerIds.map((playerId) => ({
+        id: `sch${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
+        name,
+        type: "player",
+        target_id: playerId,
+        target_name: playerMap.get(playerId) || "",
+        time_slots: JSON.stringify(timeSlots),
+        enabled,
+        replicated_from_group: groupId,
+        created_at: now,
+        updated_at: now,
+      }))
+
+      if (schedules.length > 0) {
+        const { error } = await c.from("schedules").insert(schedules)
+        if (error) throw error
       }
     },
 
@@ -1253,9 +1302,11 @@ function createDb(client?: SupabaseClient) {
     },
 
     async reorderLayoutAreas(orderedIds: string[]): Promise<boolean> {
-      for (let i = 0; i < orderedIds.length; i++) {
-        await c.from("layout_areas").update({ z_index: i }).eq("id", orderedIds[i])
-      }
+      await Promise.all(
+        orderedIds.map((id, i) =>
+          c.from("layout_areas").update({ z_index: i }).eq("id", id)
+        )
+      )
       return true
     },
   }

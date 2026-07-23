@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api-client"
 
-const POLL_INTERVAL = 5000 // 5 segundos
+const POLL_INTERVAL = 30000 // 30 segundos
 
 export function usePlayers() {
   return useQuery({
