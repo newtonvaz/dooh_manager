@@ -34,24 +34,37 @@ export async function GET(
       return NextResponse.json(response)
     }
 
-    const resolved = await dbAdmin.resolvePlayerPlaylist(code)
-    const resolvedContentItems = resolved?.items || []
+    const resolvedAreas = await Promise.all(
+      layout.zones.map(async (zone: any) => {
+        const config = (zone.config || {}) as Record<string, any>
+        let items: any[] = []
 
-    const resolvedAreas = layout.zones.map((zone: any) => {
-      const config = (zone.config || {}) as Record<string, any>
-      return {
-        id: zone.id,
-        name: zone.name,
-        type: zone.type,
-        x: zone.x,
-        y: zone.y,
-        width: zone.width,
-        height: zone.height,
-        zIndex: zone.zIndex,
-        config,
-        items: zone.type === "content" ? resolvedContentItems : [],
-      }
-    })
+        if (zone.type === "content") {
+          if (Array.isArray(zone.contentId) && zone.contentId.length > 0) {
+            items = zone.contentId
+          } else if (config.playerId) {
+            const resolved = await dbAdmin.resolvePlayerPlaylistById(config.playerId)
+            items = resolved?.items || []
+          } else {
+            const resolved = await dbAdmin.resolvePlayerPlaylist(code)
+            items = resolved?.items || []
+          }
+        }
+
+        return {
+          id: zone.id,
+          name: zone.name,
+          type: zone.type,
+          x: zone.x,
+          y: zone.y,
+          width: zone.width,
+          height: zone.height,
+          zIndex: zone.zIndex,
+          config,
+          items,
+        }
+      })
+    )
 
     response.areas = resolvedAreas
     return NextResponse.json(response)
