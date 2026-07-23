@@ -13,6 +13,7 @@ import {
   Activity,
   Camera,
   FileText,
+  Shield,
   type LucideIcon,
 } from "lucide-react"
 
@@ -52,4 +53,5 @@ export const navItems: NavItem[] = [
   },
   { title: "Apps", href: "/apps", icon: AppWindow },
   { title: "Configurações", href: "/settings", icon: Settings },
+  { title: "Painel Administrativo", href: "/admin", icon: Shield },
 ]

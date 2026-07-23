@@ -1309,6 +1309,202 @@ function createDb(client?: SupabaseClient) {
       )
       return true
     },
+
+    // Admin - Branding
+    async getBranding(): Promise<any> {
+      const { data, error } = await c.from("admin_branding").select("*").single()
+      if (error) throw error
+      if (!data) return null
+      return {
+        id: data.id,
+        systemName: data.system_name,
+        systemSubtitle: data.system_subtitle,
+        logoUrl: data.logo_url,
+        logoSmalUrl: data.logo_small_url,
+        faviconUrl: data.favicon_url,
+        loginLogoUrl: data.login_logo_url,
+        loginBackgroundUrl: data.login_background_url,
+        reportLogoUrl: data.report_logo_url,
+        updatedAt: data.updated_at,
+      }
+    },
+
+    async updateBranding(data: Record<string, any>): Promise<any> {
+      const update: Record<string, any> = { updated_at: new Date().toISOString() }
+      if (data.systemName !== undefined) update.system_name = data.systemName
+      if (data.systemSubtitle !== undefined) update.system_subtitle = data.systemSubtitle
+      if (data.logoUrl !== undefined) update.logo_url = data.logoUrl
+      if (data.logoSmalUrl !== undefined) update.logo_small_url = data.logoSmalUrl
+      if (data.faviconUrl !== undefined) update.favicon_url = data.faviconUrl
+      if (data.loginLogoUrl !== undefined) update.login_logo_url = data.loginLogoUrl
+      if (data.loginBackgroundUrl !== undefined) update.login_background_url = data.loginBackgroundUrl
+      if (data.reportLogoUrl !== undefined) update.report_logo_url = data.reportLogoUrl
+      const { data: updated, error } = await c.from("admin_branding").update(update).eq("id", "default").select().single()
+      if (error) throw error
+      return updated
+    },
+
+    async resetBranding(): Promise<any> {
+      const defaults = {
+        system_name: "DOOH Manager",
+        system_subtitle: "Sistema de Gerenciamento DOOH",
+        logo_url: null,
+        logo_small_url: null,
+        favicon_url: null,
+        login_logo_url: null,
+        login_background_url: null,
+        report_logo_url: null,
+        updated_at: new Date().toISOString(),
+      }
+      const { data, error } = await c.from("admin_branding").update(defaults).eq("id", "default").select().single()
+      if (error) throw error
+      return data
+    },
+
+    // Admin - Themes
+    async getThemes(): Promise<any[]> {
+      const { data, error } = await c.from("admin_themes").select("*").order("name")
+      if (error) throw error
+      return (data || []).map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        mode: t.mode,
+        isActive: t.is_active,
+        colors: typeof t.colors === "string" ? JSON.parse(t.colors) : (t.colors || {}),
+        createdAt: t.created_at,
+        updatedAt: t.updated_at,
+      }))
+    },
+
+    async createTheme(data: { name: string; mode: string; colors: any }): Promise<any> {
+      const theme = {
+        id: `th_${Date.now()}`,
+        name: data.name,
+        mode: data.mode || "custom",
+        is_active: false,
+        colors: JSON.stringify(data.colors || {}),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      const { data: created, error } = await c.from("admin_themes").insert(theme).select().single()
+      if (error) throw error
+      return created
+    },
+
+    async updateTheme(id: string, data: Record<string, any>): Promise<any> {
+      const update: Record<string, any> = { updated_at: new Date().toISOString() }
+      if (data.name !== undefined) update.name = data.name
+      if (data.mode !== undefined) update.mode = data.mode
+      if (data.colors !== undefined) update.colors = JSON.stringify(data.colors)
+      const { data: updated, error } = await c.from("admin_themes").update(update).eq("id", id).select().single()
+      if (error) throw error
+      return updated
+    },
+
+    async setActiveTheme(id: string | null): Promise<void> {
+      await c.from("admin_themes").update({ is_active: false, updated_at: new Date().toISOString() }).eq("is_active", true)
+      if (id) {
+        await c.from("admin_themes").update({ is_active: true, updated_at: new Date().toISOString() }).eq("id", id)
+      }
+    },
+
+    async deleteTheme(id: string): Promise<boolean> {
+      const { error } = await c.from("admin_themes").delete().eq("id", id)
+      return !error
+    },
+
+    // Admin - Settings
+    async getAdminSettings(): Promise<Record<string, any>> {
+      const { data, error } = await c.from("admin_settings").select("*")
+      if (error) throw error
+      const result: Record<string, any> = {}
+      for (const row of data || []) {
+        result[row.id] = typeof row.value === "string" ? JSON.parse(row.value) : row.value
+      }
+      return result
+    },
+
+    async updateAdminSetting(id: string, value: any): Promise<void> {
+      const { error } = await c.from("admin_settings").upsert(
+        { id, value: JSON.stringify(value), updated_at: new Date().toISOString() },
+        { onConflict: "id" }
+      )
+      if (error) throw error
+    },
+
+    // Admin - Audit
+    async recordAuditLog(entry: {
+      userName: string
+      userEmail: string
+      action: string
+      entityType?: string
+      entityId?: string
+      description: string
+      ip: string
+    }): Promise<void> {
+      await c.from("audit_logs").insert({
+        id: `aud_${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
+        user_name: entry.userName,
+        user_email: entry.userEmail,
+        action: entry.action,
+        entity_type: entry.entityType || null,
+        entity_id: entry.entityId || null,
+        description: entry.description,
+        ip: entry.ip,
+        created_at: new Date().toISOString(),
+      }).then()
+    },
+
+    async getAuditLogs(limit = 200, offset = 0): Promise<any[]> {
+      const { data, error } = await c
+        .from("audit_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1)
+      if (error) throw error
+      return (data || []).map((l: any) => ({
+        id: l.id,
+        userName: l.user_name,
+        userEmail: l.user_email,
+        action: l.action,
+        entityType: l.entity_type,
+        entityId: l.entity_id,
+        description: l.description,
+        ip: l.ip,
+        createdAt: l.created_at,
+      }))
+    },
+
+    // Admin - Stats / Monitoring
+    async getAdminStats(): Promise<any> {
+      const [players, content, playlists, activities] = await Promise.all([
+        c.from("players").select("status, storage_used, total_storage"),
+        c.from("content").select("id", { count: "exact", head: true }),
+        c.from("playlists").select("id", { count: "exact", head: true }),
+        c.from("activities").select("id", { count: "exact", head: true }),
+      ])
+
+      const allPlayers = players.data || []
+      const online = allPlayers.filter((p: any) => p.status === "online").length
+      const offline = allPlayers.filter((p: any) => p.status === "offline").length
+      const never = allPlayers.filter((p: any) => p.status === "never").length
+      const totalStorage = allPlayers.reduce((s: number, p: any) => s + (p.total_storage || 0), 0)
+      const usedStorage = allPlayers.reduce((s: number, p: any) => s + (p.storage_used || 0), 0)
+
+      return {
+        totalPlayers: allPlayers.length,
+        onlinePlayers: online,
+        offlinePlayers: offline,
+        neverPlayers: never,
+        errorPlayers: 0,
+        totalContent: content.count || 0,
+        totalPlaylists: playlists.count || 0,
+        totalActivities: activities.count || 0,
+        storageUsed: usedStorage,
+        storageTotal: totalStorage,
+        storageUsagePercent: totalStorage > 0 ? Math.round((usedStorage / totalStorage) * 100) : 0,
+      }
+    },
   }
 }
 

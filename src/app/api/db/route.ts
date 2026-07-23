@@ -311,6 +311,55 @@ export async function POST(request: Request) {
         result = dbAdmin.reorderLayoutAreas(data.orderedIds)
         break
 
+      // Admin - Branding
+      case "getBranding":
+        result = dbAdmin.getBranding()
+        break
+      case "updateBranding":
+        result = dbAdmin.updateBranding(data)
+        break
+      case "resetBranding":
+        result = dbAdmin.resetBranding()
+        break
+
+      // Admin - Themes
+      case "getThemes":
+        result = dbAdmin.getThemes()
+        break
+      case "createTheme":
+        result = dbAdmin.createTheme(data)
+        break
+      case "updateTheme":
+        result = dbAdmin.updateTheme(params.id, data)
+        break
+      case "setActiveTheme":
+        result = dbAdmin.setActiveTheme(params.id)
+        break
+      case "deleteTheme":
+        result = dbAdmin.deleteTheme(params.id)
+        break
+
+      // Admin - Settings
+      case "getAdminSettings":
+        result = dbAdmin.getAdminSettings()
+        break
+      case "updateAdminSetting":
+        result = dbAdmin.updateAdminSetting(params.id, data)
+        break
+
+      // Admin - Audit
+      case "recordAuditLog":
+        result = dbAdmin.recordAuditLog(data)
+        break
+      case "getAuditLogs":
+        result = dbAdmin.getAuditLogs(params.limit, params.offset)
+        break
+
+      // Admin - Stats
+      case "getAdminStats":
+        result = dbAdmin.getAdminStats()
+        break
+
       // Seed
       case "seed":
         result = await runSeed()

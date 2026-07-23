@@ -5,6 +5,7 @@ import type { ProgrammingGroup } from "@/types/programming-group"
 import type { TimeSlot } from "@/types/schedule"
 import type { Layout, LayoutArea } from "@/types/layout"
 import type { ContentReportQuery, ContentReportRow, PlaybackLogRow } from "@/types/playback"
+import type { AdminBranding, AdminTheme, AdminSettings, AuditLog } from "@/types/admin"
 
 interface Group {
   id: string
@@ -413,5 +414,97 @@ export const api = {
   async reorderLayoutAreas(orderedIds: string[]): Promise<boolean> {
     await delay(100)
     return dbCall("reorderLayoutAreas", {}, { orderedIds })
+  },
+
+  // Admin - Branding
+  async getBranding(): Promise<AdminBranding | null> {
+    return dbCall("getBranding")
+  },
+
+  async updateBranding(data: Record<string, any>): Promise<any> {
+    await delay(100)
+    return dbCall("updateBranding", {}, data)
+  },
+
+  async resetBranding(): Promise<any> {
+    await delay(100)
+    return dbCall("resetBranding")
+  },
+
+  // Admin - Themes
+  async getThemes(): Promise<AdminTheme[]> {
+    return dbCall("getThemes")
+  },
+
+  async createTheme(data: { name: string; mode: string; colors: any }): Promise<any> {
+    await delay(200)
+    return dbCall("createTheme", {}, data)
+  },
+
+  async updateTheme(id: string, data: Record<string, any>): Promise<any> {
+    await delay(150)
+    return dbCall("updateTheme", { id }, data)
+  },
+
+  async setActiveTheme(id: string | null): Promise<void> {
+    await delay(100)
+    return dbCall("setActiveTheme", { id })
+  },
+
+  async deleteTheme(id: string): Promise<boolean> {
+    await delay(150)
+    return dbCall("deleteTheme", { id })
+  },
+
+  // Admin - Settings
+  async getAdminSettings(): Promise<AdminSettings> {
+    return dbCall("getAdminSettings")
+  },
+
+  async updateAdminSetting(id: string, data: any): Promise<void> {
+    await delay(100)
+    return dbCall("updateAdminSetting", { id }, data)
+  },
+
+  // Admin - Audit
+  async recordAuditLog(data: {
+    userName?: string
+    userEmail?: string
+    action: string
+    entityType?: string
+    entityId?: string
+    description: string
+    ip?: string
+  }): Promise<void> {
+    return dbCall("recordAuditLog", {}, {
+      userName: data.userName || "Admin",
+      userEmail: data.userEmail || "admin@dooh.com",
+      action: data.action,
+      entityType: data.entityType,
+      entityId: data.entityId,
+      description: data.description,
+      ip: data.ip || "127.0.0.1",
+    })
+  },
+
+  async getAuditLogs(limit = 200, offset = 0): Promise<AuditLog[]> {
+    return dbCall("getAuditLogs", { limit, offset })
+  },
+
+  // Admin - Stats
+  async getAdminStats(): Promise<{
+    totalPlayers: number
+    onlinePlayers: number
+    offlinePlayers: number
+    neverPlayers: number
+    errorPlayers: number
+    totalContent: number
+    totalPlaylists: number
+    totalActivities: number
+    storageUsed: number
+    storageTotal: number
+    storageUsagePercent: number
+  }> {
+    return dbCall("getAdminStats")
   },
 }

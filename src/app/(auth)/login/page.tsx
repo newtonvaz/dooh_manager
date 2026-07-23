@@ -2,21 +2,28 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { WithTooltip } from "@/components/ui/tooltip"
-import Image from "next/image"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
+import { api } from "@/lib/api-client"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const { login, isLoggingIn } = useAuth()
   const router = useRouter()
+
+  const { data: branding } = useQuery({
+    queryKey: ["admin-branding"],
+    queryFn: api.getBranding,
+    staleTime: 60000,
+  })
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -29,15 +36,28 @@ export default function LoginPage() {
     }
   }
 
+  const logoUrl = branding?.loginLogoUrl || branding?.logoUrl || "/doohos.png"
+  const bgUrl = branding?.loginBackgroundUrl
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
-      <Card className="w-full max-w-sm">
+    <div
+      className="flex min-h-screen items-center justify-center p-4 bg-cover bg-center"
+      style={bgUrl ? { backgroundImage: `url(${bgUrl})` } : {}}
+    >
+      <div className="absolute inset-0 bg-black/40" />
+      <Card className="w-full max-w-sm relative z-10">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-2">
-            <Image src="/doohos.png" alt="DOOHOS" width={188} height={46} className="h-[46px] w-auto" />
+            {logoUrl.endsWith(".svg") ? (
+              <img src={logoUrl} alt={branding?.systemName || "DOOHOS"} className="h-[46px] w-auto" />
+            ) : (
+              <img src={logoUrl} alt={branding?.systemName || "DOOHOS"} className="h-[46px] w-auto" />
+            )}
           </div>
-          <CardTitle className="sr-only">DOOHOS</CardTitle>
-          <CardDescription>Entre com suas credenciais</CardDescription>
+          <CardTitle className="sr-only">{branding?.systemName || "DOOHOS"}</CardTitle>
+          <CardDescription>
+            {branding?.systemSubtitle || "Entre com suas credenciais"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -70,11 +90,6 @@ export default function LoginPage() {
               </Button>
             </WithTooltip>
           </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            <span className="text-xs block mt-2">
-              Demo: admin@dooh.com / admin
-            </span>
-          </div>
         </CardContent>
       </Card>
     </div>

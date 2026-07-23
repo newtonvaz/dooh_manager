@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { navItems } from "./nav-items"
 import { useAuth } from "@/hooks/use-auth"
-import Image from "next/image"
+import { useBranding } from "@/hooks/use-branding"
 import { Monitor, LogOut, ChevronDown } from "lucide-react"
 import { WithTooltip } from "@/components/ui/tooltip"
 
@@ -18,6 +18,7 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const { logout } = useAuth()
+  const branding = useBranding()
   const [expanded, setExpanded] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set()
     try {
@@ -178,19 +179,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       >
         {collapsed ? (
           <div className="relative flex size-[38px] items-center justify-center overflow-hidden rounded-lg bg-sidebar-primary/10 ring-1 ring-sidebar-primary/20">
-            <Image
-              src="/doohos.png"
+            <img
+              id="brand-logo-small"
+              src={branding?.logoSmalUrl || "/doohos.png"}
               alt="D"
-              fill
-              className="object-cover object-left"
+              className="size-full object-cover object-left"
             />
           </div>
         ) : (
-          <Image
-            src="/doohos.png"
-            alt="DOOHOS"
-            width={164}
-            height={40}
+          <img
+            id="brand-logo"
+            src={branding?.logoUrl || "/doohos.png"}
+            alt={branding?.systemName || "DOOHOS"}
             className="h-[38px] w-auto object-contain"
           />
         )}
@@ -237,16 +237,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {!collapsed ? (
           <div className="flex items-center gap-2">
             <div className="flex size-6 items-center justify-center rounded-full bg-sidebar-primary/10 text-[10px] font-bold text-sidebar-primary">
-              D
+              {(branding?.systemName || "D")[0]}
             </div>
             <div className="text-[11px] leading-tight">
               <p className="font-medium text-sidebar-foreground/80">v1.0.0</p>
-              <p className="text-sidebar-foreground/40">DOOHOS</p>
+              <p className="text-sidebar-foreground/40">{branding?.systemName || "DOOHOS"}</p>
             </div>
           </div>
         ) : (
           <div className="flex size-6 items-center justify-center rounded-full bg-sidebar-primary/10 text-[10px] font-bold text-sidebar-primary">
-            D
+            {(branding?.systemName || "D")[0]}
           </div>
         )}
       </div>
