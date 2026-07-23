@@ -212,7 +212,7 @@ async function createWindow() {
   const code = getPlayerCode()
   if (code) {
     sendDeviceInfoToCms(code)
-    deviceInfoInterval = setInterval(() => sendDeviceInfoToCms(code), 5 * 60 * 1000)
+    deviceInfoInterval = setInterval(() => sendDeviceInfoToCms(code), 60 * 1000)
   }
 }
 

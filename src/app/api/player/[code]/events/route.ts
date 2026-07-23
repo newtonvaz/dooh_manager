@@ -38,6 +38,7 @@ export async function GET(
 
   const encoder = new TextEncoder()
   let lastToken = await getChangeToken(code)
+  let beatCount = 0
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -53,6 +54,11 @@ export async function GET(
           if (token && token !== lastToken) {
             lastToken = token
             send("reload")
+          }
+
+          beatCount++
+          if (beatCount % 12 === 0) {
+            await dbAdmin.recordHeartbeatByCode(code).catch(() => {})
           }
         } catch {
           // silent
