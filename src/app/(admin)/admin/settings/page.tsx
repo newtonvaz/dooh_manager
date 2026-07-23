@@ -11,6 +11,23 @@ import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import { Loader2, Save } from "lucide-react"
 
+function SettingField({ label, value, onChange, type = "text", placeholder }: {
+  label: string; value: any; onChange: (v: any) => void; type?: string; placeholder?: string
+}) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs">{label}</Label>
+      <Input
+        type={type}
+        value={value ?? ""}
+        onChange={(e) => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
+        placeholder={placeholder}
+        className="h-8 text-sm"
+      />
+    </div>
+  )
+}
+
 export default function AdminSettingsPage() {
   const queryClient = useQueryClient()
   const { data: settings, isLoading, isError } = useQuery({
@@ -47,23 +64,6 @@ export default function AdminSettingsPage() {
     } finally {
       setSaving(null)
     }
-  }
-
-  function SettingField({ label, value, onChange, type = "text", placeholder }: {
-    label: string; value: any; onChange: (v: any) => void; type?: string; placeholder?: string
-  }) {
-    return (
-      <div className="space-y-1">
-        <Label className="text-xs">{label}</Label>
-        <Input
-          type={type}
-          value={value ?? ""}
-          onChange={(e) => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
-          placeholder={placeholder}
-          className="h-8 text-sm"
-        />
-      </div>
-    )
   }
 
   if (isLoading) {
