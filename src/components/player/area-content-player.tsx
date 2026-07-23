@@ -28,6 +28,12 @@ export function AreaContentPlayer({ items }: AreaContentPlayerProps) {
   }, [])
 
   useEffect(() => {
+    if (currentIndex >= items.length) {
+      setCurrentIndex(0)
+    }
+  }, [items.length, currentIndex])
+
+  useEffect(() => {
     const currentItems = itemsRef.current
     if (currentItems.length === 0) return
     const currentItem = currentItems[currentIndex]

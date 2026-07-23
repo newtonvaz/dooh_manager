@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { AreaContentPlayer } from "@/components/player/area-content-player"
 import { AreaAppPlayer } from "@/components/player/area-app-player"
+import { preloadAssets } from "@/services/asset-manager"
+import type { PlaylistAsset } from "@/services/asset-manager"
 
 interface PlaylistItem {
   type: string
@@ -38,36 +40,91 @@ export default function PlayerViewPage() {
   const [data, setData] = useState<PlayerData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const mountedRef = useRef(true)
+  const dataRef = useRef<PlayerData | null>(null)
+
+  const fetchAndResolve = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/player/${code}/playlist`)
+      if (!res.ok) throw new Error("Falha ao carregar")
+      const json: PlayerData = await res.json()
+
+      const allAssets: PlaylistAsset[] = []
+      if (json.items) {
+        for (const item of json.items) {
+          allAssets.push({ contentId: item.contentId, url: item.url, type: item.type, name: item.name })
+        }
+      }
+      for (const area of json.areas) {
+        for (const item of area.items) {
+          allAssets.push({ contentId: item.contentId, url: item.url, type: item.type, name: item.name })
+        }
+      }
+
+      if (allAssets.length > 0) {
+        preloadAssets(allAssets).then((results) => {
+          const map = new Map(results.map((r) => [r.contentId, r.localUrl]))
+
+          if (json.items) {
+            for (const item of json.items) {
+              const local = map.get(item.contentId)
+              if (local) item.url = local
+            }
+          }
+          for (const area of json.areas) {
+            for (const item of area.items) {
+              const local = map.get(item.contentId)
+              if (local) item.url = local
+            }
+          }
+
+          if (mountedRef.current) {
+            setData({ ...json })
+          }
+        })
+      }
+
+      if (mountedRef.current) {
+        setData(json)
+        dataRef.current = json
+        setError(null)
+      }
+    } catch (err) {
+      if (mountedRef.current) setError(String(err))
+    } finally {
+      if (mountedRef.current) setLoading(false)
+    }
+  }, [code])
 
   useEffect(() => {
     if (!code) return
+    mountedRef.current = true
 
-    let cancelled = false
+    fetchAndResolve()
 
-    async function fetchData() {
-      try {
-        const res = await fetch(`/api/player/${code}/playlist`)
-        if (!res.ok) throw new Error("Falha ao carregar")
-        const json = await res.json()
-        if (!cancelled) {
-          setData(json)
-          setError(null)
+    const interval = setInterval(fetchAndResolve, 10_000)
+
+    let eventSource: EventSource | null = null
+    try {
+      eventSource = new EventSource(`/api/player/${code}/events`)
+      eventSource.onmessage = (event) => {
+        if (event.data === "reload") {
+          fetchAndResolve()
         }
-      } catch (err) {
-        if (!cancelled) setError(String(err))
-      } finally {
-        if (!cancelled) setLoading(false)
       }
+      eventSource.onerror = () => {
+        eventSource?.close()
+      }
+    } catch {
+      // SSE not available
     }
-
-    fetchData()
-    const interval = setInterval(fetchData, 30_000)
 
     return () => {
-      cancelled = true
+      mountedRef.current = false
       clearInterval(interval)
+      eventSource?.close()
     }
-  }, [code])
+  }, [code, fetchAndResolve])
 
   if (loading) {
     return (
@@ -77,7 +134,7 @@ export default function PlayerViewPage() {
     )
   }
 
-  if (error) {
+  if (error && !data) {
     return (
       <div className="flex h-screen items-center justify-center bg-black text-white/60">
         <p className="text-sm">{error}</p>

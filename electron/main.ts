@@ -1,12 +1,22 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, protocol } from 'electron'
 import * as path from 'path'
 import * as os from 'os'
 import { execSync } from 'child_process'
 import * as fs from 'fs'
 
 let mainWindow: BrowserWindow | null = null
+let assetsDir = ''
 
 const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev')
+
+function getAssetsDir(): string {
+  if (assetsDir) return assetsDir
+  assetsDir = path.join(app.getPath('userData'), 'assets')
+  if (!fs.existsSync(assetsDir)) {
+    fs.mkdirSync(assetsDir, { recursive: true })
+  }
+  return assetsDir
+}
 
 function getLocalIp(): string {
   const interfaces = os.networkInterfaces()
@@ -40,7 +50,7 @@ function getStorageInfo(): { total: number; used: number; free: number } {
       const stdout = execSync('wmic logicaldisk where drivetype=3 get size,freespace /format:csv', { encoding: 'utf-8', timeout: 3000 })
       const lines = stdout.trim().split('\n').filter(Boolean)
       if (lines.length >= 2) {
-        const parts = lines[1].split(',')
+        const parts = lines[2].split(',')
         const total = parseInt(parts[2], 10)
         const free = parseInt(parts[1], 10)
         return { total, used: total - free, free }
@@ -99,6 +109,8 @@ async function sendDeviceInfoToCms(code: string): Promise<void> {
     const info = getDeviceInfo()
     const publicIp = await getPublicIp()
 
+    const localAssets = getLocalAssetsSize()
+
     const payload = {
       code,
       version: info.playerVersion,
@@ -108,6 +120,7 @@ async function sendDeviceInfoToCms(code: string): Promise<void> {
       storageFree: info.storageFree,
       electronVersion: info.electronVersion,
       publicIp,
+      localAssets,
     }
 
     console.log('[DeviceInfo] Enviando para', `${cmsUrl}/api/heartbeat`, JSON.stringify(payload, null, 2))
@@ -127,6 +140,23 @@ async function sendDeviceInfoToCms(code: string): Promise<void> {
     }
   } catch (err) {
     console.error('[DeviceInfo] Erro ao enviar:', err)
+  }
+}
+
+function getLocalAssetsSize(): number {
+  try {
+    const dir = getAssetsDir()
+    let totalSize = 0
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        const stat = fs.statSync(path.join(dir, entry.name))
+        totalSize += stat.size
+      }
+    }
+    return totalSize
+  } catch {
+    return 0
   }
 }
 
@@ -167,12 +197,120 @@ async function createWindow() {
   }
 }
 
-app.whenReady().then(async () => {
+const MIME_TYPES: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.mov': 'video/quicktime',
+  '.avi': 'video/x-msvideo',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg',
+  '.pdf': 'application/pdf',
+  '.html': 'text/html',
+  '.htm': 'text/html',
+  '.svg': 'image/svg+xml',
+}
+
+function setupAssetProtocol() {
+  const assetDir = getAssetsDir()
+  protocol.handle('asset', (request) => {
+    const filePath = decodeURIComponent(request.url.replace('asset://', ''))
+    const fullPath = path.join(assetDir, path.basename(filePath))
+    if (fs.existsSync(fullPath)) {
+      const data = fs.readFileSync(fullPath)
+      const ext = path.extname(fullPath).toLowerCase()
+      const contentType = MIME_TYPES[ext] || 'application/octet-stream'
+      return new Response(data, {
+        headers: { 'Content-Type': contentType, 'Cache-Control': 'no-cache' },
+      })
+    }
+    return new Response('Not found', { status: 404 })
+  })
+}
+
+async function downloadAsset(url: string, contentId: string): Promise<string> {
+  const dir = getAssetsDir()
+  const ext = path.extname(new URL(url).pathname) || '.bin'
+  const filename = `${contentId}${ext}`
+  const filePath = path.join(dir, filename)
+
+  if (fs.existsSync(filePath)) {
+    return `asset://${filename}`
+  }
+
+  console.log(`[Assets] Downloading ${url} -> ${filename}`)
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(60000) })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const buffer = Buffer.from(await res.arrayBuffer())
+    fs.writeFileSync(filePath, buffer)
+    console.log(`[Assets] Downloaded ${filename} (${buffer.length} bytes)`)
+    return `asset://${filename}`
+  } catch (err) {
+    console.error(`[Assets] Falha ao baixar ${url}:`, err)
+    return url
+  }
+}
+
+function setupIpcHandlers() {
   ipcMain.handle('get-device-info', async () => {
     const info = getDeviceInfo()
     info.publicIp = await getPublicIp()
     return info
   })
+
+  ipcMain.handle('download-asset', async (_event, url: string, contentId: string) => {
+    return downloadAsset(url, contentId)
+  })
+
+  ipcMain.handle('check-asset', async (_event, contentId: string) => {
+    const dir = getAssetsDir()
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.startsWith(contentId)) {
+        return `asset://${entry.name}`
+      }
+    }
+    return null
+  })
+
+  ipcMain.handle('get-assets-path', async () => {
+    return getAssetsDir()
+  })
+
+  ipcMain.handle('get-asset-size', async (_event, contentId: string) => {
+    const dir = getAssetsDir()
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.startsWith(contentId)) {
+        const stat = fs.statSync(path.join(dir, entry.name))
+        return stat.size
+      }
+    }
+    return 0
+  })
+
+  ipcMain.handle('clear-assets', async () => {
+    const dir = getAssetsDir()
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        fs.unlinkSync(path.join(dir, entry.name))
+      }
+    }
+    return true
+  })
+}
+
+app.whenReady().then(async () => {
+  getAssetsDir()
+  setupAssetProtocol()
+  setupIpcHandlers()
 
   await createWindow()
 
