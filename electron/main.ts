@@ -94,8 +94,32 @@ function getPlayerCode(): string | null {
 }
 
 function getCmsBaseUrl(): string {
-  if (isDev) return process.env.CMS_URL || 'http://localhost:3000'
-  return process.env.CMS_URL || 'https://dooh-manager-app.vercel.app'
+  let url = process.env.CMS_URL
+  if (!url) {
+    url = isDev ? 'http://localhost:3000' : 'https://dooh-manager-app.vercel.app'
+  }
+  url = url.replace(/\/+$/, '')
+  if (url.includes('localhost')) {
+    url = url.replace('localhost', '127.0.0.1')
+  }
+  console.log('[CMS] URL base:', url)
+  return url
+}
+
+async function fetchWithRetry(url: string, options: RequestInit, retries = 2): Promise<Response> {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fetch(url, options)
+    } catch (err) {
+      if (i < retries) {
+        console.log(`[Fetch] Tentativa ${i + 1} falhou, tentando novamente...`)
+        await new Promise((r) => setTimeout(r, 2000))
+      } else {
+        throw err
+      }
+    }
+  }
+  throw new Error('unreachable')
 }
 
 async function sendDeviceInfoToCms(code: string): Promise<void> {
@@ -109,8 +133,6 @@ async function sendDeviceInfoToCms(code: string): Promise<void> {
     const info = getDeviceInfo()
     const publicIp = await getPublicIp()
 
-    const localAssets = getLocalAssetsSize()
-
     const payload = {
       code,
       version: info.playerVersion,
@@ -120,12 +142,9 @@ async function sendDeviceInfoToCms(code: string): Promise<void> {
       storageFree: info.storageFree,
       electronVersion: info.electronVersion,
       publicIp,
-      localAssets,
     }
 
-    console.log('[DeviceInfo] Enviando para', `${cmsUrl}/api/heartbeat`, JSON.stringify(payload, null, 2))
-
-    const res = await fetch(`${cmsUrl}/api/heartbeat`, {
+    const res = await fetchWithRetry(`${cmsUrl}/api/heartbeat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -139,7 +158,7 @@ async function sendDeviceInfoToCms(code: string): Promise<void> {
       console.error(`[DeviceInfo] Falha (${res.status}): ${text}`)
     }
   } catch (err) {
-    console.error('[DeviceInfo] Erro ao enviar:', err)
+    console.error('[DeviceInfo] Erro ao enviar heartbeat:', (err as Error)?.message || err)
   }
 }
 
