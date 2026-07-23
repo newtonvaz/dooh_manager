@@ -17,20 +17,28 @@ interface AreaContentPlayerProps {
 export function AreaContentPlayer({ items }: AreaContentPlayerProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const item = items[currentIndex]
+  const itemsRef = useRef(items)
+  itemsRef.current = items
 
   const advance = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1 >= items.length ? 0 : prev + 1))
-  }, [items.length])
+    setCurrentIndex((prev) => {
+      const next = prev + 1
+      return next >= itemsRef.current.length ? 0 : next
+    })
+  }, [])
 
   useEffect(() => {
-    if (!item || items.length === 0) return
-    timerRef.current = setTimeout(advance, item.duration * 1000)
+    const currentItems = itemsRef.current
+    if (currentItems.length === 0) return
+    const currentItem = currentItems[currentIndex]
+    if (!currentItem) return
+    timerRef.current = setTimeout(advance, currentItem.duration * 1000)
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [currentIndex, item, items.length, advance])
+  }, [currentIndex, advance])
+
+  const item = items[currentIndex]
 
   if (items.length === 0) {
     return (
