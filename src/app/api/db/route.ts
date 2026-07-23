@@ -356,12 +356,13 @@ export async function POST(request: Request) {
         break
 
       // Admin - Users (via supabaseAdmin auth.admin API)
-      case "getAdminUsers":
+      case "getAdminUsers": {
         const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
         if (usersError) throw usersError
         result = usersData.users
         break
-      case "createAdminUser":
+      }
+      case "createAdminUser": {
         const created = await supabaseAdmin.auth.admin.createUser({
           email: data.email,
           password: data.password,
@@ -372,7 +373,8 @@ export async function POST(request: Request) {
         if (created.error) throw created.error
         result = created.data.user
         break
-      case "updateAdminUser":
+      }
+      case "updateAdminUser": {
         const updated = await supabaseAdmin.auth.admin.updateUserById(params.id, {
           email: data.email,
           password: data.password,
@@ -383,11 +385,13 @@ export async function POST(request: Request) {
         if (updated.error) throw updated.error
         result = updated.data.user
         break
-      case "deleteAdminUser":
+      }
+      case "deleteAdminUser": {
         const deleted = await supabaseAdmin.auth.admin.deleteUser(params.id)
         if (deleted.error) throw deleted.error
         result = true
         break
+      }
 
       // Admin - Stats
       case "getAdminStats":
