@@ -13,23 +13,27 @@ import { Loader2, Save } from "lucide-react"
 
 export default function AdminSettingsPage() {
   const queryClient = useQueryClient()
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings, isLoading, isError } = useQuery({
     queryKey: ["admin-settings"],
     queryFn: api.getAdminSettings,
+    staleTime: 60000,
+    retry: 1,
   })
 
   const [platform, setPlatform] = useState<Record<string, any>>({})
   const [email, setEmail] = useState<Record<string, any>>({})
   const [security, setSecurity] = useState<Record<string, any>>({})
   const [saving, setSaving] = useState<string | null>(null)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    if (settings) {
+    if (settings && !initialized) {
       setPlatform(settings.platform || {})
       setEmail(settings.email || {})
       setSecurity(settings.security || {})
+      setInitialized(true)
     }
-  }, [settings])
+  }, [settings, initialized])
 
   async function handleSave(section: string, data: Record<string, any>) {
     setSaving(section)
@@ -66,6 +70,23 @@ export default function AdminSettingsPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
+          <p className="text-sm text-muted-foreground">Configurações globais da plataforma</p>
+        </div>
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            <p>Erro ao carregar configurações.</p>
+            <p className="text-xs mt-1">Certifique-se de que a migration 009_admin_panel.sql foi executada no Supabase.</p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
