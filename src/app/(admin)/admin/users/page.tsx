@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { supabase } from "@/lib/supabase"
+import { api } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -35,7 +35,6 @@ interface AuthUser {
 export default function AdminUsersPage() {
   const queryClient = useQueryClient()
   const [users, setUsers] = useState<AuthUser[]>([])
-  const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [newEmail, setNewEmail] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -43,11 +42,10 @@ export default function AdminUsersPage() {
   const [newRole, setNewRole] = useState("operacional")
   const [creating, setCreating] = useState(false)
 
-  useQuery({
+  const { isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const { data: { users: list }, error } = await supabase.auth.admin.listUsers()
-      if (error) throw error
+      const list = await api.getAdminUsers()
       const mapped = list.map((u: any) => ({
         id: u.id,
         email: u.email || "",
@@ -55,10 +53,9 @@ export default function AdminUsersPage() {
         role: u.app_metadata?.role || "operacional",
         createdAt: u.created_at,
         lastSignIn: u.last_sign_in_at,
-        banned: false,
+        banned: u.banned_until && new Date(u.banned_until) > new Date(),
       }))
       setUsers(mapped)
-      setLoading(false)
       return mapped
     },
   })
@@ -70,14 +67,8 @@ export default function AdminUsersPage() {
     }
     setCreating(true)
     try {
-      const { data, error } = await supabase.auth.admin.createUser({
-        email: newEmail,
-        password: newPassword,
-        user_metadata: { name: newName, role: newRole },
-        app_metadata: { role: newRole },
-        email_confirm: true,
-      })
-      if (error) throw error
+      await api.createAdminUser({ email: newEmail, password: newPassword, name: newName, role: newRole })
+      api.recordAuditLog({ action: "create_user", description: `Usuário: ${newEmail} (${newRole})` }).catch(() => {})
       toast.success(`Usuário ${newEmail} criado`)
       setShowCreate(false)
       setNewEmail("")
@@ -94,11 +85,11 @@ export default function AdminUsersPage() {
 
   async function handleUpdateRole(userId: string, role: string) {
     try {
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
+      await api.updateAdminUser(userId, {
         app_metadata: { role },
         user_metadata: { role },
       })
-      if (error) throw error
+      api.recordAuditLog({ action: "update_user_role", description: `Usuário: ${userId} → ${role}` }).catch(() => {})
       toast.success("Permissão atualizada")
       queryClient.invalidateQueries({ queryKey: ["admin-users"] })
     } catch (e: any) {
@@ -108,15 +99,14 @@ export default function AdminUsersPage() {
 
   async function handleToggleBan(userId: string, banned: boolean) {
     try {
-      if (banned) {
-        const { error } = await supabase.auth.admin.updateUserById(userId, { ban_duration: "0" })
-        if (error) throw error
-        toast.success("Usuário desbloqueado")
-      } else {
-        const { error } = await supabase.auth.admin.updateUserById(userId, { ban_duration: "87600h" })
-        if (error) throw error
-        toast.success("Usuário bloqueado")
-      }
+      await api.updateAdminUser(userId, {
+        ban_duration: banned ? "0" : "87600h",
+      })
+      api.recordAuditLog({
+        action: banned ? "unban_user" : "ban_user",
+        description: `Usuário: ${userId}`,
+      }).catch(() => {})
+      toast.success(banned ? "Usuário desbloqueado" : "Usuário bloqueado")
       queryClient.invalidateQueries({ queryKey: ["admin-users"] })
     } catch (e: any) {
       toast.error(e.message || "Erro")
@@ -130,11 +120,23 @@ export default function AdminUsersPage() {
       return
     }
     try {
-      const { error } = await supabase.auth.admin.updateUserById(userId, { password })
-      if (error) throw error
+      await api.updateAdminUser(userId, { password })
+      api.recordAuditLog({ action: "reset_password", description: `Usuário: ${userId}` }).catch(() => {})
       toast.success("Senha alterada")
     } catch (e: any) {
       toast.error(e.message || "Erro ao alterar senha")
+    }
+  }
+
+  async function handleDelete(userId: string, email: string) {
+    if (!confirm(`Excluir usuário ${email}? Esta ação não pode ser desfeita.`)) return
+    try {
+      await api.deleteAdminUser(userId)
+      api.recordAuditLog({ action: "delete_user", description: `Usuário: ${email}` }).catch(() => {})
+      toast.success("Usuário excluído")
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] })
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao excluir")
     }
   }
 
@@ -203,7 +205,7 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {isLoading ? (
                 <tr>
                   <td colSpan={6} className="p-6 text-center text-muted-foreground">
                     <Loader2 className="size-6 animate-spin mx-auto" />
@@ -265,6 +267,13 @@ export default function AdminUsersPage() {
                         ) : (
                           <Ban className="size-3.5 text-muted-foreground" />
                         )}
+                      </button>
+                      <button
+                        className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-destructive"
+                        title="Excluir usuário"
+                        onClick={() => handleDelete(u.id, u.email)}
+                      >
+                        <Trash2 className="size-3.5" />
                       </button>
                     </div>
                   </td>

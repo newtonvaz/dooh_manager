@@ -466,6 +466,25 @@ export const api = {
     return dbCall("updateAdminSetting", { id }, data)
   },
 
+  // Admin - Users
+  async getAdminUsers(): Promise<any[]> {
+    return dbCall("getAdminUsers")
+  },
+
+  async createAdminUser(data: {
+    email: string; password: string; name: string; role: string
+  }): Promise<any> {
+    return dbCall("createAdminUser", {}, data)
+  },
+
+  async updateAdminUser(id: string, data: Record<string, any>): Promise<any> {
+    return dbCall("updateAdminUser", { id }, data)
+  },
+
+  async deleteAdminUser(id: string): Promise<any> {
+    return dbCall("deleteAdminUser", { id })
+  },
+
   // Admin - Audit
   async recordAuditLog(data: {
     userName?: string

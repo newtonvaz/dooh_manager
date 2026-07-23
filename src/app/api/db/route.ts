@@ -355,6 +355,40 @@ export async function POST(request: Request) {
         result = dbAdmin.getAuditLogs(params.limit, params.offset)
         break
 
+      // Admin - Users (via supabaseAdmin auth.admin API)
+      case "getAdminUsers":
+        const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers()
+        if (usersError) throw usersError
+        result = usersData.users
+        break
+      case "createAdminUser":
+        const created = await supabaseAdmin.auth.admin.createUser({
+          email: data.email,
+          password: data.password,
+          user_metadata: { name: data.name, role: data.role },
+          app_metadata: { role: data.role },
+          email_confirm: true,
+        })
+        if (created.error) throw created.error
+        result = created.data.user
+        break
+      case "updateAdminUser":
+        const updated = await supabaseAdmin.auth.admin.updateUserById(params.id, {
+          email: data.email,
+          password: data.password,
+          user_metadata: data.user_metadata,
+          app_metadata: data.app_metadata,
+          ban_duration: data.ban_duration,
+        })
+        if (updated.error) throw updated.error
+        result = updated.data.user
+        break
+      case "deleteAdminUser":
+        const deleted = await supabaseAdmin.auth.admin.deleteUser(params.id)
+        if (deleted.error) throw deleted.error
+        result = true
+        break
+
       // Admin - Stats
       case "getAdminStats":
         result = dbAdmin.getAdminStats()
