@@ -40,29 +40,8 @@ export async function GET(
         let items: any[] = []
 
         if (zone.type === "content") {
-          if (config.playerId) {
-            const resolved = await dbAdmin.resolvePlayerPlaylistById(config.playerId)
-            items = resolved?.items || []
-            if (items.length > 0) {
-              return {
-                id: zone.id,
-                name: zone.name,
-                type: zone.type,
-                x: zone.x,
-                y: zone.y,
-                width: zone.width,
-                height: zone.height,
-                zIndex: zone.zIndex,
-                config,
-                items,
-                _debug: `resolveu ${items.length} itens do playerId ${config.playerId}`,
-              }
-            }
-          }
-          if (items.length === 0) {
-            const resolved = await dbAdmin.resolvePlayerPlaylist(code)
-            items = resolved?.items || []
-          }
+          const resolved = await dbAdmin.resolvePlayerPlaylist(code)
+          items = resolved?.items || []
         }
 
         return {
@@ -76,7 +55,6 @@ export async function GET(
           zIndex: zone.zIndex,
           config,
           items,
-          _debug: `resolveu ${items.length} itens do code ${code}`,
         }
       })
     )
