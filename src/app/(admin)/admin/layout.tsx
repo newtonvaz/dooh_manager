@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard, Palette, PaintBucket, Settings, Users,
+  LayoutDashboard, Palette, PaintBucket, Users,
   ScrollText, Activity, Shield, ChevronLeft, ChevronRight,
   Monitor, ArrowLeft,
 } from "lucide-react"
@@ -14,7 +14,6 @@ const adminNav = [
   { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { title: "Identidade Visual", href: "/admin/branding", icon: Palette },
   { title: "Temas e Cores", href: "/admin/themes", icon: PaintBucket },
-  { title: "Configurações", href: "/admin/settings", icon: Settings },
   { title: "Usuários", href: "/admin/users", icon: Users },
   { title: "Monitoramento", href: "/admin/monitoring", icon: Monitor },
   { title: "Auditoria", href: "/admin/audit", icon: ScrollText },

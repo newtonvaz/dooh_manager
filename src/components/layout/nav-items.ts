@@ -7,7 +7,6 @@ import {
   Calendar,
   Grid3x3,
   BarChart3,
-  Settings,
   Tags,
   AppWindow,
   Activity,
@@ -52,6 +51,5 @@ export const navItems: NavItem[] = [
     ],
   },
   { title: "Apps", href: "/apps", icon: AppWindow },
-  { title: "Configurações", href: "/settings", icon: Settings },
   { title: "Painel Administrativo", href: "/admin", icon: Shield },
 ]
